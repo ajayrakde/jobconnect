@@ -20,6 +20,9 @@ export interface IStorage {
   createCandidate(candidate: InsertCandidate): Promise<Candidate>;
   updateCandidate(id: number, updates: Partial<Candidate>): Promise<Candidate>;
   getAllCandidates(): Promise<Candidate[]>;
+  getUnverifiedCandidates(): Promise<Candidate[]>;
+  verifyCandidate(id: number): Promise<Candidate>;
+  softDeleteCandidate(id: number): Promise<Candidate>;
   getCandidateStats(candidateId: number): Promise<any>;
   getRecommendedJobs(candidateId: number): Promise<any[]>;
   getCandidateApplications(candidateId: number): Promise<any[]>;
@@ -29,6 +32,9 @@ export interface IStorage {
   getEmployerByUserId(userId: number): Promise<Employer | undefined>;
   createEmployer(employer: InsertEmployer): Promise<Employer>;
   updateEmployer(id: number, updates: Partial<Employer>): Promise<Employer>;
+  getUnverifiedEmployers(): Promise<Employer[]>;
+  verifyEmployer(id: number): Promise<Employer>;
+  softDeleteEmployer(id: number): Promise<Employer>;
 
   // Job post operations
   getJobPost(id: number): Promise<JobPost | undefined>;
@@ -36,6 +42,7 @@ export interface IStorage {
   updateJobPost(id: number, updates: Partial<JobPost>): Promise<JobPost>;
   getJobPostsByEmployer(employerId: number): Promise<JobPost[]>;
   getAllJobPosts(): Promise<JobPost[]>;
+  softDeleteJobPost(id: number): Promise<JobPost>;
   getEmployerStats(employerId: number): Promise<any>;
   markJobAsFulfilled(jobId: number): Promise<JobPost>;
   activateJob(jobId: number): Promise<JobPost>;
@@ -98,12 +105,18 @@ export class DatabaseStorage implements IStorage {
 
   // Candidate operations
   async getCandidate(id: number): Promise<Candidate | undefined> {
-    const [candidate] = await db.select().from(candidates).where(eq(candidates.id, id));
+    const [candidate] = await db
+      .select()
+      .from(candidates)
+      .where(and(eq(candidates.id, id), eq(candidates.deleted, false)));
     return candidate || undefined;
   }
 
   async getCandidateByUserId(userId: number): Promise<Candidate | undefined> {
-    const [candidate] = await db.select().from(candidates).where(eq(candidates.userId, userId));
+    const [candidate] = await db
+      .select()
+      .from(candidates)
+      .where(and(eq(candidates.userId, userId), eq(candidates.deleted, false)));
     return candidate || undefined;
   }
 
@@ -129,7 +142,37 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllCandidates(): Promise<Candidate[]> {
-    return await db.select().from(candidates);
+    return await db
+      .select()
+      .from(candidates)
+      .where(eq(candidates.deleted, false));
+  }
+
+  async getUnverifiedCandidates(): Promise<Candidate[]> {
+    return await db
+      .select()
+      .from(candidates)
+      .where(and(eq(candidates.deleted, false), eq(candidates.verified, false)));
+  }
+
+  async verifyCandidate(id: number): Promise<Candidate> {
+    const [candidate] = await db
+      .update(candidates)
+      .set({ verified: true, updatedAt: new Date() })
+      .where(eq(candidates.id, id))
+      .returning();
+    if (!candidate) throw new Error("Candidate not found");
+    return candidate;
+  }
+
+  async softDeleteCandidate(id: number): Promise<Candidate> {
+    const [candidate] = await db
+      .update(candidates)
+      .set({ deleted: true, updatedAt: new Date() })
+      .where(eq(candidates.id, id))
+      .returning();
+    if (!candidate) throw new Error("Candidate not found");
+    return candidate;
   }
 
   async getCandidateStats(candidateId: number): Promise<any> {
@@ -310,12 +353,18 @@ export class DatabaseStorage implements IStorage {
 
   // Employer operations
   async getEmployer(id: number): Promise<Employer | undefined> {
-    const [employer] = await db.select().from(employers).where(eq(employers.id, id));
+    const [employer] = await db
+      .select()
+      .from(employers)
+      .where(and(eq(employers.id, id), eq(employers.deleted, false)));
     return employer || undefined;
   }
 
   async getEmployerByUserId(userId: number): Promise<Employer | undefined> {
-    const [employer] = await db.select().from(employers).where(eq(employers.userId, userId));
+    const [employer] = await db
+      .select()
+      .from(employers)
+      .where(and(eq(employers.userId, userId), eq(employers.deleted, false)));
     return employer || undefined;
   }
 
@@ -340,9 +389,39 @@ export class DatabaseStorage implements IStorage {
     return employer;
   }
 
+  async getUnverifiedEmployers(): Promise<Employer[]> {
+    return await db
+      .select()
+      .from(employers)
+      .where(and(eq(employers.deleted, false), eq(employers.verified, false)));
+  }
+
+  async verifyEmployer(id: number): Promise<Employer> {
+    const [employer] = await db
+      .update(employers)
+      .set({ verified: true, updatedAt: new Date() })
+      .where(eq(employers.id, id))
+      .returning();
+    if (!employer) throw new Error("Employer not found");
+    return employer;
+  }
+
+  async softDeleteEmployer(id: number): Promise<Employer> {
+    const [employer] = await db
+      .update(employers)
+      .set({ deleted: true, updatedAt: new Date() })
+      .where(eq(employers.id, id))
+      .returning();
+    if (!employer) throw new Error("Employer not found");
+    return employer;
+  }
+
   // Job post operations
   async getJobPost(id: number): Promise<JobPost | undefined> {
-    const [jobPost] = await db.select().from(jobPosts).where(eq(jobPosts.id, id));
+    const [jobPost] = await db
+      .select()
+      .from(jobPosts)
+      .where(and(eq(jobPosts.id, id), eq(jobPosts.deleted, false)));
     return jobPost || undefined;
   }
 
@@ -369,7 +448,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getJobPostsByEmployer(employerId: number): Promise<JobPost[]> {
-    return await db.select().from(jobPosts).where(eq(jobPosts.employerId, employerId));
+    return await db
+      .select()
+      .from(jobPosts)
+      .where(and(eq(jobPosts.employerId, employerId), eq(jobPosts.deleted, false)));
   }
 
   async getAllJobPosts(): Promise<JobPost[]> {
@@ -418,6 +500,15 @@ export class DatabaseStorage implements IStorage {
     return updatedJob;
   }
 
+  async softDeleteJobPost(jobId: number): Promise<JobPost> {
+    const [updatedJob] = await db
+      .update(jobPosts)
+      .set({ deleted: true, updatedAt: new Date() })
+      .where(eq(jobPosts.id, jobId))
+      .returning();
+    return updatedJob;
+  }
+
   async getFulfilledJobsByEmployer(employerId: number): Promise<JobPost[]> {
     return await db
       .select()
@@ -440,6 +531,15 @@ export class DatabaseStorage implements IStorage {
 
   // Application operations
   async createApplication(insertApplication: InsertApplication): Promise<Application> {
+    // ensure candidate is verified and not deleted
+    const [candidate] = await db
+      .select()
+      .from(candidates)
+      .where(eq(candidates.id, insertApplication.candidateId));
+    if (!candidate || candidate.deleted || !candidate.verified) {
+      throw new Error("Candidate not eligible to apply");
+    }
+
     const [application] = await db
       .insert(applications)
       .values(insertApplication)
@@ -458,7 +558,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getApplicationsByCandidate(candidateId: number): Promise<Application[]> {
-    return await db.select().from(applications).where(eq(applications.candidateId, candidateId));
+    return await db
+      .select()
+      .from(applications)
+      .where(eq(applications.candidateId, candidateId));
   }
 
   async getApplicationsByJob(jobPostId: number): Promise<any[]> {

@@ -2,12 +2,51 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, Briefcase, TrendingUp, Download, Bot } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { MatchingEngine } from "./MatchingEngine";
+import { apiRequest, throwIfResNotOk } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export const AdminDashboard: React.FC = () => {
   const { data: stats } = useQuery({
     queryKey: ["/api/admin/stats"],
+  });
+
+  const { data: unverifiedEmployers } = useQuery({
+    queryKey: ["/api/admin/unverified-employers"],
+  });
+
+  const { data: unverifiedCandidates } = useQuery({
+    queryKey: ["/api/admin/unverified-candidates"],
+  });
+
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const verifyEmployerMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest(`/api/admin/employers/${id}/verify`, "PATCH");
+      await throwIfResNotOk(res);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/unverified-employers"] });
+      toast({ title: "Employer verified" });
+    },
+    onError: () => toast({ title: "Failed", variant: "destructive" }),
+  });
+
+  const verifyCandidateMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest(`/api/admin/candidates/${id}/verify`, "PATCH");
+      await throwIfResNotOk(res);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/unverified-candidates"] });
+      toast({ title: "Candidate verified" });
+    },
+    onError: () => toast({ title: "Failed", variant: "destructive" }),
   });
 
   const handleExportData = () => {
@@ -34,6 +73,42 @@ export const AdminDashboard: React.FC = () => {
             Run Matching
           </Button>
         </div>
+      </div>
+
+      {/* Verification queues */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Unverified Employers</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(unverifiedEmployers || []).map((emp: any) => (
+              <div key={emp.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                <span>{emp.organizationName}</span>
+                <Button size="sm" onClick={() => verifyEmployerMutation.mutate(emp.id)} disabled={verifyEmployerMutation.isPending}>
+                  Verify
+                </Button>
+              </div>
+            ))}
+            {(unverifiedEmployers || []).length === 0 && <p className="text-sm text-muted-foreground">None</p>}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Unverified Candidates</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(unverifiedCandidates || []).map((cand: any) => (
+              <div key={cand.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                <span>{cand.userId}</span>
+                <Button size="sm" onClick={() => verifyCandidateMutation.mutate(cand.id)} disabled={verifyCandidateMutation.isPending}>
+                  Verify
+                </Button>
+              </div>
+            ))}
+            {(unverifiedCandidates || []).length === 0 && <p className="text-sm text-muted-foreground">None</p>}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Statistics Cards */}

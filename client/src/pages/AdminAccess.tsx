@@ -22,7 +22,7 @@ export const AdminAccess: React.FC = () => {
                 </Button>
               </Link>
               <h1 className="text-2xl font-bold text-primary">
-                JobConnect Admin
+                LokalTalent Admin
               </h1>
             </div>
           </div>

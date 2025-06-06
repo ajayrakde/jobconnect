@@ -32,7 +32,7 @@ export const Landing: React.FC = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex-shrink-0">
               <h1 className="text-2xl font-bold text-primary">
-                JobConnect
+                LokalTalent
               </h1>
             </div>
             <div className="flex items-center space-x-4">
@@ -112,7 +112,7 @@ export const Landing: React.FC = () => {
         {/* Features Section */}
         <div className="text-center">
           <h2 className="text-3xl font-bold text-foreground mb-8">
-            Why Choose JobConnect?
+            Why Choose LokalTalent?
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">

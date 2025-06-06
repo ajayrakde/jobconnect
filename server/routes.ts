@@ -261,8 +261,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const employer = await storage.getEmployerByUserId(user.id);
-      if (!employer) {
+      if (!employer || employer.deleted) {
         return res.status(404).json({ message: "Employer profile not found" });
+      }
+
+      if (!employer.verified) {
+        return res.status(403).json({ message: "Employer not verified" });
       }
 
       const stats = await storage.getEmployerStats(employer.id);
@@ -281,8 +285,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const employer = await storage.getEmployerByUserId(user.id);
-      if (!employer) {
+      if (!employer || employer.deleted) {
         return res.status(404).json({ message: "Employer profile not found" });
+      }
+
+      if (!employer.verified) {
+        return res.status(403).json({ message: "Employer not verified" });
       }
 
       const jobPosts = await storage.getJobPostsByEmployer(employer.id);
@@ -710,6 +718,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/unverified-employers", authenticateUser, async (req: any, res) => {
+    try {
+      const user = await storage.getUserByFirebaseUid(req.user.uid);
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const employers = await storage.getUnverifiedEmployers();
+      res.json(employers);
+    } catch (error) {
+      console.error("Unverified employers fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch employers" });
+    }
+  });
+
+  app.get("/api/admin/unverified-candidates", authenticateUser, async (req: any, res) => {
+    try {
+      const user = await storage.getUserByFirebaseUid(req.user.uid);
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const candidates = await storage.getUnverifiedCandidates();
+      res.json(candidates);
+    } catch (error) {
+      console.error("Unverified candidates fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch candidates" });
+    }
+  });
+
+  app.patch("/api/admin/employers/:id/verify", authenticateUser, async (req: any, res) => {
+    try {
+      const user = await storage.getUserByFirebaseUid(req.user.uid);
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const id = parseInt(req.params.id);
+      const employer = await storage.verifyEmployer(id);
+      res.json(employer);
+    } catch (error) {
+      console.error("Employer verify error:", error);
+      res.status(400).json({ message: "Failed to verify employer" });
+    }
+  });
+
+  app.patch("/api/admin/candidates/:id/verify", authenticateUser, async (req: any, res) => {
+    try {
+      const user = await storage.getUserByFirebaseUid(req.user.uid);
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const id = parseInt(req.params.id);
+      const candidate = await storage.verifyCandidate(id);
+      res.json(candidate);
+    } catch (error) {
+      console.error("Candidate verify error:", error);
+      res.status(400).json({ message: "Failed to verify candidate" });
+    }
+  });
+
+  app.delete("/api/admin/employers/:id", authenticateUser, async (req: any, res) => {
+    try {
+      const user = await storage.getUserByFirebaseUid(req.user.uid);
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const id = parseInt(req.params.id);
+      const employer = await storage.softDeleteEmployer(id);
+      res.json(employer);
+    } catch (error) {
+      console.error("Employer delete error:", error);
+      res.status(400).json({ message: "Failed to delete employer" });
+    }
+  });
+
+  app.delete("/api/admin/candidates/:id", authenticateUser, async (req: any, res) => {
+    try {
+      const user = await storage.getUserByFirebaseUid(req.user.uid);
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const id = parseInt(req.params.id);
+      const candidate = await storage.softDeleteCandidate(id);
+      res.json(candidate);
+    } catch (error) {
+      console.error("Candidate delete error:", error);
+      res.status(400).json({ message: "Failed to delete candidate" });
+    }
+  });
+
+  app.delete("/api/admin/jobs/:id", authenticateUser, async (req: any, res) => {
+    try {
+      const user = await storage.getUserByFirebaseUid(req.user.uid);
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const id = parseInt(req.params.id);
+      const job = await storage.softDeleteJobPost(id);
+      res.json(job);
+    } catch (error) {
+      console.error("Job delete error:", error);
+      res.status(400).json({ message: "Failed to delete job" });
+    }
+  });
+
   app.get("/api/admin/candidates", authenticateUser, async (req: any, res) => {
     try {
       const user = await storage.getUserByFirebaseUid(req.user.uid);
@@ -819,7 +937,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const buffer = await exportToExcel(data);
       
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', 'attachment; filename=jobconnect-data.xlsx');
+      res.setHeader('Content-Disposition', 'attachment; filename=lokaltalent-data.xlsx');
       res.send(buffer);
     } catch (error) {
       console.error("Excel export error:", error);
@@ -838,7 +956,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const buffer = await exportToPDF(data);
       
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'attachment; filename=jobconnect-report.pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename=lokaltalent-report.pdf');
       res.send(buffer);
     } catch (error) {
       console.error("PDF export error:", error);

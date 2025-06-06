@@ -137,7 +137,7 @@ export async function exportToPDF(data: any): Promise<Buffer> {
   // In a real application, you'd use a library like PDFKit or jsPDF
   
   const reportContent = `
-JobConnect Platform Report
+LokalTalent Platform Report
 Generated on: ${new Date().toISOString()}
 
 SUMMARY STATISTICS
