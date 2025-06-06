@@ -1,4 +1,5 @@
-# JobConnect
+
+# LokalTalent
 
 This project contains a Vite-based client and an Express API.
 

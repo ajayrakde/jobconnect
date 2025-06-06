@@ -16,7 +16,7 @@ const FAQ_RESPONSES = {
   "forgot password": "If you forgot your password, use the 'Forgot Password' link on the login page. You'll receive a reset link via email.",
   "upload documents": "You can upload documents during registration or later in your profile. Supported formats: PDF, JPG, PNG (max 5MB).",
   "job application": "To apply for jobs, complete your profile first, then browse available positions and click 'Apply Now'.",
-  "contact support": "For additional support, email us at support@jobconnect.com or call +91-XXXXXXXXXX during business hours.",
+  "contact support": "For additional support, email us at support@lokaltalent.com or call +91-XXXXXXXXXX during business hours.",
   "matching algorithm": "Our AI matching engine analyzes skills, experience, location, and salary preferences to find the best job-candidate matches.",
   "default": "I'm here to help! You can ask me about registration, job applications, document uploads, or any other platform features."
 };
@@ -26,7 +26,7 @@ export const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "Hi! I'm here to help you with any questions about JobConnect. You can ask me about registration, job applications, or platform features.",
+      text: "Hi! I'm here to help you with any questions about LokalTalent. You can ask me about registration, job applications, or platform features.",
       isBot: true,
       timestamp: new Date(),
     }
@@ -97,7 +97,7 @@ export const Chatbot: React.FC = () => {
         <Card className="w-80 h-96 shadow-xl">
           <CardHeader className="bg-primary text-white p-4 rounded-t-lg">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-lg">JobConnect Assistant</CardTitle>
+              <CardTitle className="text-lg">LokalTalent Assistant</CardTitle>
               <Button
                 variant="ghost"
                 size="icon"
