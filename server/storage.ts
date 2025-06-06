@@ -176,8 +176,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCandidateStats(candidateId: number): Promise<any> {
-    const candidateApplications = await db.select().from(applications).where(eq(applications.candidateId, candidateId));
-    const interviews = candidateApplications.filter(app => app.status === "interviewed").length;
+    const candidateApplications: Application[] = await db.select().from(applications).where(eq(applications.candidateId, candidateId));
+    const interviews = candidateApplications.filter((app: Application) => app.status === "interviewed").length;
     
     return {
       profileViews: Math.floor(Math.random() * 100) + 20,
@@ -336,9 +336,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCandidateApplications(candidateId: number): Promise<any[]> {
-    const candidateApplications = await db.select().from(applications).where(eq(applications.candidateId, candidateId));
+    const candidateApplications: Application[] = await db.select().from(applications).where(eq(applications.candidateId, candidateId));
     const applicationsWithJobs = [];
-    
+
     for (const app of candidateApplications) {
       const [job] = await db.select().from(jobPosts).where(eq(jobPosts.id, app.jobPostId));
       applicationsWithJobs.push({
@@ -459,10 +459,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEmployerStats(employerId: number): Promise<any> {
-    const employerJobs = await db.select().from(jobPosts).where(eq(jobPosts.employerId, employerId));
-    const activeJobs = employerJobs.filter(job => job.isActive && !job.fulfilled).length;
-    const fulfilledJobs = employerJobs.filter(job => job.fulfilled).length;
-    const totalApplications = employerJobs.reduce((sum, job) => sum + (job.applicationsCount || 0), 0);
+    const employerJobs: JobPost[] = await db.select().from(jobPosts).where(eq(jobPosts.employerId, employerId));
+    const activeJobs = employerJobs.filter((job: JobPost) => job.isActive && !job.fulfilled).length;
+    const fulfilledJobs = employerJobs.filter((job: JobPost) => job.fulfilled).length;
+    const totalApplications = employerJobs.reduce((sum: number, job: JobPost) => sum + (job.applicationsCount || 0), 0);
     
     return {
       activeJobs,
