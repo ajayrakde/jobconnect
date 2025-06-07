@@ -140,3 +140,7 @@ Azure automatically provisions free certificates for Container Apps if using Azu
 
 Refer to the YAML files in the `deploy` folder for examples on setting up CI/CD pipelines that also configure the production hostname.
 
+
+## Infrastructure with Terraform
+
+A Terraform project in `deploy/terraform` can provision the Azure resources required for the app. Run `terraform init` followed by `terraform apply` to create a resource group, container registry, log analytics workspace, container apps environment and the container app itself. Configure the variables (`resource_group_name`, `acr_name`, and `container_app_name`) before applying.
