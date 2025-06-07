@@ -30,3 +30,22 @@ variable "name_prefix" {
   type        = string
   default     = "lokaltalent"
 }
+
+variable "custom_domain_name" {
+  description = "Optional custom domain for the Container App"
+  type        = string
+  default     = ""
+}
+
+variable "certificate_pfx_path" {
+  description = "Path to a PFX certificate for the custom domain"
+  type        = string
+  default     = ""
+}
+
+variable "certificate_pfx_password" {
+  description = "Password for the PFX certificate"
+  type        = string
+  default     = ""
+  sensitive   = true
+}

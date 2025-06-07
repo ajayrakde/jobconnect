@@ -37,3 +37,5 @@ steps:
     azureSubscription: '<SERVICE_CONNECTION>'
     appName: '<CONTAINER_APP_NAME>'
     imageToDeploy: $(AZURE_CONTAINER_REGISTRY)/$(IMAGE_NAME):$(Build.BuildId)
+#  Additional step to bind a custom domain can be handled by Terraform or using
+#  az containerapp hostname commands.

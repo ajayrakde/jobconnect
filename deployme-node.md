@@ -138,7 +138,7 @@ After the app is running in Azure:
 
 Azure automatically provisions free certificates for Container Apps if using Azure-managed domains. For other domains you can upload a certificate from your provider.
 
-Refer to the YAML files in the `deploy` folder for examples on setting up CI/CD pipelines that also configure the production hostname.
+You can automate domain binding through Terraform by setting `custom_domain_name`, `certificate_pfx_path`, and `certificate_pfx_password` variables. The pipeline YAMLs include comments on how to run CLI commands if you prefer scripting the setup.
 
 
 ## Infrastructure with Terraform

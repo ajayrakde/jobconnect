@@ -38,6 +38,15 @@ resource "azurerm_container_app_environment" "env" {
   log_analytics_workspace_id = azurerm_log_analytics_workspace.log.id
 }
 
+# Optional certificate for custom domain
+resource "azurerm_container_app_environment_certificate" "cert" {
+  count                        = var.custom_domain_name != "" ? 1 : 0
+  name                         = "${var.name_prefix}-cert"
+  container_app_environment_id = azurerm_container_app_environment.env.id
+  certificate_blob             = filebase64(var.certificate_pfx_path)
+  certificate_password         = var.certificate_pfx_password
+}
+
 resource "azurerm_container_app" "app" {
   name                         = var.container_app_name
   container_app_environment_id = azurerm_container_app_environment.env.id
@@ -64,6 +73,19 @@ resource "azurerm_container_app" "app" {
   }
 }
 
+# Bind a custom domain to the Container App if provided
+resource "azurerm_container_app_custom_domain" "domain" {
+  count            = var.custom_domain_name != "" ? 1 : 0
+  name             = var.custom_domain_name
+  container_app_id = azurerm_container_app.app.id
+  certificate_id   = azurerm_container_app_environment_certificate.cert[0].id
+}
+
 output "container_app_url" {
   value = azurerm_container_app.app.latest_revision_fqdn
+}
+
+output "custom_domain" {
+  value       = var.custom_domain_name != "" ? azurerm_container_app_custom_domain.domain[0].name : ""
+  description = "The custom domain bound to the container app"
 }

@@ -7,6 +7,7 @@ This Terraform configuration provisions the core Azure resources required for th
 - Log Analytics workspace
 - Container Apps environment
 - Container App running the Docker image
+- Optional custom domain and SSL certificate for the Container App
 
 ## Usage
 
@@ -19,6 +20,8 @@ This Terraform configuration provisions the core Azure resources required for th
    - `resource_group_name`
    - `acr_name`
    - `container_app_name`
+   - `custom_domain_name` (optional)
+   - `certificate_pfx_path` and `certificate_pfx_password` (optional)
 4. Initialize and apply:
    ```bash
    terraform init
