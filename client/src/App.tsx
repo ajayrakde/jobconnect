@@ -173,7 +173,7 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light" storageKey="jobconnect-theme">
+      <ThemeProvider defaultTheme="light" storageKey="lokaltalent-theme">
         <TooltipProvider>
           <AuthProvider>
             <Toaster />

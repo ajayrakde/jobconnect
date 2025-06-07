@@ -1,0 +1,29 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  AZURE_CONTAINER_REGISTRY: '<ACR_LOGIN_SERVER>'
+  IMAGE_NAME: 'lokaltalent'
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '18.x'
+- script: npm ci
+- script: npm run build
+- task: Docker@2
+  inputs:
+    command: buildAndPush
+    repository: $(IMAGE_NAME)
+    containerRegistry: $(AZURE_CONTAINER_REGISTRY)
+    dockerfile: Dockerfile
+    tags: |
+      $(Build.BuildId)
+- task: AzureContainerApps@1
+  inputs:
+    azureSubscription: '<SERVICE_CONNECTION>'
+    appName: '<CONTAINER_APP_NAME>'
+    imageToDeploy: $(AZURE_CONTAINER_REGISTRY)/$(IMAGE_NAME):$(Build.BuildId)

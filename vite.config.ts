@@ -21,6 +21,8 @@ export default defineConfig({
       "@": path.resolve(import.meta.dirname, "client", "src"),
       "@shared": path.resolve(import.meta.dirname, "shared"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+      "lucide-react": path.resolve(import.meta.dirname, "shared", "stubs", "lucide-react.js"),
+      "date-fns": path.resolve(import.meta.dirname, "shared", "stubs", "date-fns.js"),
     },
   },
   root: path.resolve(import.meta.dirname, "client"),

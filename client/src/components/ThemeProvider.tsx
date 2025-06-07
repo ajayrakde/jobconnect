@@ -23,7 +23,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 export function ThemeProvider({
   children,
   defaultTheme = "system",
-  storageKey = "jobconnect-theme",
+  storageKey = "lokaltalent-theme",
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
