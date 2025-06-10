@@ -77,7 +77,7 @@ export const EmployerJobEdit: React.FC = () => {
 
   const updateJobMutation = useMutation({
     mutationFn: (data: EditJobFormData) =>
-      apiRequest("PUT", `/api/jobs/${id}`, data),
+      apiRequest(`/api/jobs/${id}`, "PUT", data),
     onSuccess: () => {
       toast({
         title: "Success",

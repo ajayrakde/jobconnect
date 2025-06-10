@@ -59,7 +59,7 @@ export const EmployerRegistration: React.FC = () => {
     mutationFn: async (employerData: EmployerFormData) => {
       try {
         console.log("Submitting employer data:", employerData);
-        const response = await apiRequest("POST", "/api/employers", employerData);
+        const response = await apiRequest("/api/employers", "POST", employerData);
         const result = await response.json();
         console.log("Registration response:", result);
         return result;

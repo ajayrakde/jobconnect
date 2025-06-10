@@ -167,7 +167,7 @@ export const CandidateRegistration: React.FC = () => {
 
     setLoading(true);
     try {
-      await apiRequest("POST", "/api/candidates", {
+      await apiRequest("/api/candidates", "POST", {
         userId: user?.uid,
         ...formData,
       });

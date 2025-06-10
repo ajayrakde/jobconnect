@@ -28,7 +28,7 @@ export const MatchingEngine: React.FC = () => {
 
   const shortlistMutation = useMutation({
     mutationFn: (data: { jobPostId: number; candidateId: number; matchScore: number }) =>
-      apiRequest("POST", "/api/admin/shortlist", data),
+      apiRequest("/api/admin/shortlist", "POST", data),
     onSuccess: () => {
       toast({
         title: "Success",

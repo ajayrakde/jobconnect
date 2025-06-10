@@ -55,7 +55,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       const user = await authService.signUpWithEmail(formData.email, formData.password);
       
       // Create user profile in backend
-      await apiRequest("POST", "/api/auth/register", {
+      await apiRequest("/api/auth/register", "POST", {
         firebaseUid: user.uid,
         email: formData.email,
         phone: formData.phone || null,
@@ -130,7 +130,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       const user = await authService.verifyOTP(confirmationResult, otp);
       
       // Create user profile in backend
-      await apiRequest("POST", "/api/auth/register", {
+      await apiRequest("/api/auth/register", "POST", {
         firebaseUid: user.uid,
         email: formData.email || "",
         phone: formData.phone,
