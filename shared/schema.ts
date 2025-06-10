@@ -29,8 +29,7 @@ export const candidates = pgTable("candidates", {
   expectedSalary: integer("expected_salary"),
   jobCodes: jsonb("job_codes"), // Array of job codes applying for
   documents: jsonb("documents"), // Firebase Storage URLs
-  profileComplete: boolean("profile_complete").default(false),
-  verified: boolean("verified").default(false),
+  profileStatus: text("profile_status").default('pending').notNull(),
   deleted: boolean("deleted").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -46,7 +45,7 @@ export const employers = pgTable("employers", {
   contactEmail: text("contact_email").notNull(),
   contactPhone: text("contact_phone").notNull(),
   documents: jsonb("documents"), // Firebase Storage URLs
-  verified: boolean("verified").default(false),
+  profileStatus: text("profile_status").default('pending').notNull(),
   deleted: boolean("deleted").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -111,7 +110,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export const insertCandidateSchema = createInsertSchema(candidates).omit({
   id: true,
-  verified: true,
+  profileStatus: true,
   deleted: true,
   createdAt: true,
   updatedAt: true,
@@ -119,6 +118,7 @@ export const insertCandidateSchema = createInsertSchema(candidates).omit({
 
 export const insertEmployerSchema = createInsertSchema(employers).omit({
   id: true,
+  profileStatus: true,
   deleted: true,
   createdAt: true,
   updatedAt: true,
