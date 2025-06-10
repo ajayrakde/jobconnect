@@ -136,7 +136,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const candidateData: InsertCandidate = insertCandidateSchema.parse({
         ...req.body,
         userId: user.id,
-        profileComplete: true,
       });
       
       const candidate = await storage.createCandidate(candidateData);
@@ -266,7 +265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Employer profile not found" });
       }
 
-      if (!employer.verified) {
+      if (employer.profileStatus !== 'verified') {
         return res.status(403).json({ message: "Employer not verified" });
       }
 
@@ -290,7 +289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Employer profile not found" });
       }
 
-      if (!employer.verified) {
+      if (employer.profileStatus !== 'verified') {
         return res.status(403).json({ message: "Employer not verified" });
       }
 
@@ -313,6 +312,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!employer) {
         return res.status(404).json({ message: "Employer profile not found" });
       }
+      if (employer.profileStatus !== 'verified') {
+        return res.status(403).json({ message: "Employer not verified" });
+      }
+      if (employer.profileStatus !== 'verified') {
+        return res.status(403).json({ message: "Employer not verified" });
+      }
 
       const recentJobs = await storage.getActiveUnfulfilledJobsByEmployer(employer.id);
       res.json(recentJobs.slice(0, 5));
@@ -333,6 +338,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!employer) {
         return res.status(404).json({ message: "Employer profile not found" });
       }
+      if (employer.profileStatus !== 'verified') {
+        return res.status(403).json({ message: "Employer not verified" });
+      }
+      if (employer.profileStatus !== 'verified') {
+        return res.status(403).json({ message: "Employer not verified" });
+      }
 
       const fulfilledJobs = await storage.getFulfilledJobsByEmployer(employer.id);
       res.json(fulfilledJobs);
@@ -352,6 +363,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const employer = await storage.getEmployerByUserId(user.id);
       if (!employer) {
         return res.status(404).json({ message: "Employer profile not found" });
+      }
+      if (employer.profileStatus !== 'verified') {
+        return res.status(403).json({ message: "Employer not verified" });
       }
 
       const jobId = parseInt(req.params.id);
@@ -559,6 +573,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!employer || job.employerId !== employer.id) {
         return res.status(403).json({ message: "Access denied" });
       }
+      if (employer.profileStatus !== 'verified') {
+        return res.status(403).json({ message: "Employer not verified" });
+      }
 
       res.json(job);
     } catch (error) {
@@ -586,6 +603,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const employer = await storage.getEmployerByUserId(user.id);
       if (!employer || job.employerId !== employer.id) {
         return res.status(403).json({ message: "Access denied" });
+      }
+      if (employer.profileStatus !== 'verified') {
+        return res.status(403).json({ message: "Employer not verified" });
       }
 
       const applications = await storage.getApplicationsByJob(jobId);

@@ -42,10 +42,10 @@ export const Dashboard: React.FC = () => {
   // Check if profile needs completion
   const needsProfileCompletion = () => {
     if (userProfile.role === "candidate") {
-      return !userProfile.candidate?.profileComplete;
+      return userProfile.candidate?.profileStatus !== "verified";
     }
     if (userProfile.role === "employer") {
-      return !userProfile.employer?.verified;
+      return userProfile.employer?.profileStatus !== "verified";
     }
     return false;
   };

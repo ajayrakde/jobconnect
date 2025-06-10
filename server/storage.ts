@@ -4,7 +4,7 @@ import {
   MatchScore, users, candidates, employers, jobPosts, applications, shortlists, matchScores
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, gte, sql } from "drizzle-orm";
+import { eq, ne, desc, and, gte, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -125,7 +125,7 @@ export class DatabaseStorage implements IStorage {
       .insert(candidates)
       .values({
         ...insertCandidate,
-        profileComplete: true,
+        profileStatus: 'pending',
       })
       .returning();
     return candidate;
@@ -152,13 +152,13 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(candidates)
-      .where(and(eq(candidates.deleted, false), eq(candidates.verified, false)));
+      .where(and(eq(candidates.deleted, false), ne(candidates.profileStatus, 'verified')));
   }
 
   async verifyCandidate(id: number): Promise<Candidate> {
     const [candidate] = await db
       .update(candidates)
-      .set({ verified: true, updatedAt: new Date() })
+      .set({ profileStatus: 'verified', updatedAt: new Date() })
       .where(eq(candidates.id, id))
       .returning();
     if (!candidate) throw new Error("Candidate not found");
@@ -373,7 +373,7 @@ export class DatabaseStorage implements IStorage {
       .insert(employers)
       .values({
         ...insertEmployer,
-        verified: false,
+        profileStatus: 'pending',
       })
       .returning();
     return employer;
@@ -393,13 +393,13 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(employers)
-      .where(and(eq(employers.deleted, false), eq(employers.verified, false)));
+      .where(and(eq(employers.deleted, false), ne(employers.profileStatus, 'verified')));
   }
 
   async verifyEmployer(id: number): Promise<Employer> {
     const [employer] = await db
       .update(employers)
-      .set({ verified: true, updatedAt: new Date() })
+      .set({ profileStatus: 'verified', updatedAt: new Date() })
       .where(eq(employers.id, id))
       .returning();
     if (!employer) throw new Error("Employer not found");
@@ -536,7 +536,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(candidates)
       .where(eq(candidates.id, insertApplication.candidateId));
-    if (!candidate || candidate.deleted || !candidate.verified) {
+    if (!candidate || candidate.deleted || candidate.profileStatus !== 'verified') {
       throw new Error("Candidate not eligible to apply");
     }
 

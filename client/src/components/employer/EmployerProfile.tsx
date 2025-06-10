@@ -34,7 +34,7 @@ interface EmployerData {
   contactEmail: string;
   contactPhone: string;
   documents: Record<string, string>;
-  verified: boolean;
+  profileStatus: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -170,7 +170,7 @@ export const EmployerProfile: React.FC = () => {
             Manage your organization details and verification status
           </p>
         </div>
-        {data.verified && (
+        {data.profileStatus === "verified" && (
           <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
             <Shield className="h-4 w-4 mr-1" />
             Verified
@@ -483,7 +483,7 @@ export const EmployerProfile: React.FC = () => {
                   <div>
                     <h4 className="font-medium text-blue-800 dark:text-blue-400">Verification Status</h4>
                     <p className="text-sm text-blue-700 dark:text-blue-300">
-                      {data.verified 
+                      {data.profileStatus === "verified"
                         ? "Your organization has been verified and can post jobs"
                         : "Your documents are under review. Verification typically takes 2-3 business days"
                       }

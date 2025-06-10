@@ -14,7 +14,7 @@ export async function exportToExcel(data: any): Promise<Buffer> {
     { header: 'Skills', key: 'skills', width: 40 },
     { header: 'Experience', key: 'experience', width: 30 },
     { header: 'Location', key: 'location', width: 20 },
-    { header: 'Profile Complete', key: 'profileComplete', width: 15 },
+    { header: 'Profile Status', key: 'profileStatus', width: 15 },
     { header: 'Created At', key: 'createdAt', width: 20 },
   ];
 
@@ -30,7 +30,7 @@ export async function exportToExcel(data: any): Promise<Buffer> {
         candidate.experience.map((exp: any) => `${exp.company} - ${exp.position}`).join('; ') : 
         'Not specified',
       location: candidate.address || 'Not specified',
-      profileComplete: candidate.profileComplete ? 'Yes' : 'No',
+      profileStatus: candidate.profileStatus,
       createdAt: candidate.createdAt?.toISOString() || 'Unknown',
     });
   });
@@ -45,7 +45,7 @@ export async function exportToExcel(data: any): Promise<Buffer> {
     { header: 'Contact Email', key: 'contactEmail', width: 30 },
     { header: 'Contact Phone', key: 'contactPhone', width: 15 },
     { header: 'Address', key: 'address', width: 40 },
-    { header: 'Verified', key: 'verified', width: 10 },
+    { header: 'Profile Status', key: 'profileStatus', width: 15 },
     { header: 'Created At', key: 'createdAt', width: 20 },
   ];
 
@@ -58,7 +58,7 @@ export async function exportToExcel(data: any): Promise<Buffer> {
       contactEmail: employer.contactEmail || 'Not specified',
       contactPhone: employer.contactPhone || 'Not specified',
       address: employer.address || 'Not specified',
-      verified: employer.verified ? 'Yes' : 'No',
+      profileStatus: employer.profileStatus,
       createdAt: employer.createdAt?.toISOString() || 'Unknown',
     });
   });
@@ -154,7 +154,7 @@ ${data.candidates.map((candidate: any, index: number) => `
 ${index + 1}. Candidate ID: ${candidate.id}
    Expected Salary: ${candidate.expectedSalary || 'Not specified'}
    Skills: ${Array.isArray(candidate.skills) ? candidate.skills.join(', ') : 'Not specified'}
-   Profile Complete: ${candidate.profileComplete ? 'Yes' : 'No'}
+   Profile Status: ${candidate.profileStatus}
    Created: ${candidate.createdAt?.toISOString() || 'Unknown'}
 `).join('')}
 
@@ -164,7 +164,7 @@ ${data.employers.map((employer: any, index: number) => `
 ${index + 1}. ${employer.organizationName || 'Unknown Organization'}
    Registration: ${employer.registrationNumber || 'Not specified'}
    Business Type: ${employer.businessType || 'Not specified'}
-   Verified: ${employer.verified ? 'Yes' : 'No'}
+   Profile Status: ${employer.profileStatus}
    Created: ${employer.createdAt?.toISOString() || 'Unknown'}
 `).join('')}
 
