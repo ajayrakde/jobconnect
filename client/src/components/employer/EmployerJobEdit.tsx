@@ -28,6 +28,8 @@ const editJobSchema = insertJobPostSchema.extend({
   skills: z.string().min(1, "Skills are required"),
   responsibilities: z.string().min(1, "Responsibilities are required"),
   vacancy: z.coerce.number().min(1, "Number of positions must be at least 1"),
+  employerId: z.any().optional(),
+  jobCode: z.any().optional(),
 });
 
 type EditJobFormData = z.infer<typeof editJobSchema>;
@@ -97,8 +99,27 @@ export const EmployerJobEdit: React.FC = () => {
   });
 
   const onSubmit = (data: EditJobFormData) => {
+    console.log("onSubmit called with data:", data);
     updateJobMutation.mutate(data);
   };
+
+  React.useEffect(() => {
+    if (form.formState.errors && Object.keys(form.formState.errors).length > 0) {
+      console.log("Form validation errors:", form.formState.errors);
+    }
+  }, [form.formState.errors]);
+
+  React.useEffect(() => {
+    if (updateJobMutation.isError) {
+      console.log("Mutation error:", updateJobMutation.error);
+    }
+    if (updateJobMutation.isSuccess) {
+      console.log("Mutation success");
+    }
+    if (updateJobMutation.isPending) {
+      console.log("Mutation pending...");
+    }
+  }, [updateJobMutation.isError, updateJobMutation.isSuccess, updateJobMutation.isPending, updateJobMutation.error]);
 
   if (isLoading) {
     return (
