@@ -85,7 +85,7 @@ export const EmployerJobEdit: React.FC = () => {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/employers/jobs"] });
       queryClient.invalidateQueries({ queryKey: [`/api/jobs/${id}`] });
-      setLocation("/jobs");
+      setLocation(`/jobs/${id}`);
     },
     onError: (error: any) => {
       toast({
