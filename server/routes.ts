@@ -95,8 +95,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const candidate = await storage.getCandidateByUserId(user.id);
-      if (!candidate) {
+      if (!candidate || candidate.deleted) {
         return res.status(404).json({ message: "Candidate profile not found" });
+      }
+      if (candidate.profileStatus !== 'verified') {
+        return res.status(403).json({ message: "Candidate not verified" });
       }
 
       res.json(candidate);
@@ -154,8 +157,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const candidate = await storage.getCandidateByUserId(user.id);
-      if (!candidate) {
+      if (!candidate || candidate.deleted) {
         return res.status(404).json({ message: "Candidate profile not found" });
+      }
+      if (candidate.profileStatus !== 'verified') {
+        return res.status(403).json({ message: "Candidate not verified" });
       }
 
       const stats = await storage.getCandidateStats(candidate.id);
@@ -174,8 +180,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const candidate = await storage.getCandidateByUserId(user.id);
-      if (!candidate) {
+      if (!candidate || candidate.deleted) {
         return res.status(404).json({ message: "Candidate profile not found" });
+      }
+      if (candidate.profileStatus !== 'verified') {
+        return res.status(403).json({ message: "Candidate not verified" });
       }
 
       const jobs = await storage.getRecommendedJobs(candidate.id);
@@ -194,8 +203,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const candidate = await storage.getCandidateByUserId(user.id);
-      if (!candidate) {
+      if (!candidate || candidate.deleted) {
         return res.status(404).json({ message: "Candidate profile not found" });
+      }
+      if (candidate.profileStatus !== 'verified') {
+        return res.status(403).json({ message: "Candidate not verified" });
       }
 
       const applications = await storage.getCandidateApplications(candidate.id);
