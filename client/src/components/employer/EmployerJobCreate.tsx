@@ -11,6 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { apiRequest } from "@/lib/queryClient";
@@ -286,13 +293,22 @@ export const EmployerJobCreate: React.FC = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="minQualification">Qualification *</Label>
-              <Textarea
-                id="minQualification"
-                {...register("minQualification")}
-                placeholder="e.g. Bachelor's degree in Computer Science or related field"
-                rows={3}
-                className="border-border"
-              />
+              <Select
+                value={watch("minQualification")}
+                onValueChange={(value) => setValue("minQualification", value)}
+              >
+                <SelectTrigger className="border-border">
+                  <SelectValue placeholder="Select minimum qualification" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="High School">High School</SelectItem>
+                  <SelectItem value="Associate Degree">Associate Degree</SelectItem>
+                  <SelectItem value="Bachelor's Degree">Bachelor's Degree</SelectItem>
+                  <SelectItem value="Master's Degree">Master's Degree</SelectItem>
+                  <SelectItem value="PhD">PhD</SelectItem>
+                  <SelectItem value="Professional Certification">Professional Certification</SelectItem>
+                </SelectContent>
+              </Select>
               {errors.minQualification && (
                 <p className="text-sm text-destructive">{errors.minQualification.message}</p>
               )}
@@ -300,12 +316,22 @@ export const EmployerJobCreate: React.FC = () => {
 
             <div className="space-y-2">
               <Label htmlFor="experienceRequired">Experience Required *</Label>
-              <Input
-                id="experienceRequired"
-                {...register("experienceRequired")}
-                placeholder="e.g. 3-5 years of professional experience"
-                className="border-border"
-              />
+              <Select
+                value={watch("experienceRequired")}
+                onValueChange={(value) => setValue("experienceRequired", value)}
+              >
+                <SelectTrigger className="border-border">
+                  <SelectValue placeholder="Select experience level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Entry Level (0-1 years)">Entry Level (0-1 years)</SelectItem>
+                  <SelectItem value="Junior (1-3 years)">Junior (1-3 years)</SelectItem>
+                  <SelectItem value="Mid-Level (3-5 years)">Mid-Level (3-5 years)</SelectItem>
+                  <SelectItem value="Senior (5-8 years)">Senior (5-8 years)</SelectItem>
+                  <SelectItem value="Lead (8+ years)">Lead (8+ years)</SelectItem>
+                  <SelectItem value="Executive (10+ years)">Executive (10+ years)</SelectItem>
+                </SelectContent>
+              </Select>
               {errors.experienceRequired && (
                 <p className="text-sm text-destructive">{errors.experienceRequired.message}</p>
               )}
