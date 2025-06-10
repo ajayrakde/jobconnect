@@ -303,7 +303,7 @@ export const EmployerJobEdit: React.FC = () => {
                 <Input
                   id="salaryRange"
                   {...form.register("salaryRange")}
-                  placeholder="e.g., $80,000 - $120,000"
+                  placeholder="e.g., ₹8,00,000 - ₹12,00,000"
                 />
               </div>
 

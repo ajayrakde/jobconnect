@@ -254,7 +254,7 @@ export const EmployerJobCreate: React.FC = () => {
                 <Input
                   id="salaryRange"
                   {...register("salaryRange")}
-                  placeholder="e.g. $80,000 - $120,000"
+                  placeholder="e.g. ₹8,00,000 - ₹12,00,000"
                   className="border-border"
                 />
                 {errors.salaryRange && (
