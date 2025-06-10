@@ -99,6 +99,15 @@ export const matchScores = pgTable("match_scores", {
   calculatedAt: timestamp("calculated_at").defaultNow(),
 });
 
+export const adminInviteCodes = pgTable("admin_invite_codes", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  used: boolean("used").notNull().default(false),
+  usedBy: integer("used_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  usedAt: timestamp("used_at"),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   firebaseUid: true,
@@ -157,3 +166,6 @@ export type InsertApplication = z.infer<typeof insertApplicationSchema>;
 export type Shortlist = typeof shortlists.$inferSelect;
 export type InsertShortlist = z.infer<typeof insertShortlistSchema>;
 export type MatchScore = typeof matchScores.$inferSelect;
+export type AdminInviteCode = typeof adminInviteCodes.$inferSelect;
+export const insertAdminInviteCodeSchema = createInsertSchema(adminInviteCodes);
+export type InsertAdminInviteCode = z.infer<typeof insertAdminInviteCodeSchema>;

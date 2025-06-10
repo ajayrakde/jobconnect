@@ -2,8 +2,6 @@
 -- Usage: Set the variables below, then run this script in your SQL client
 
 -- Set these before running:
-\set admin_email 'support@talentquarry.in'
-\set admin_name 'Admin User'
 
 -- 1. Generate a random code (UUID) and insert into admin_invite_codes
 WITH new_code AS (
@@ -14,10 +12,10 @@ WITH new_code AS (
 -- 2. Create the admin user with the generated code (replace email and name as needed)
 INSERT INTO users (firebase_uid, email, role, name, created_at, updated_at)
 VALUES (
-  NULL, -- Will be set on first login
-  :'admin_email',
+  'KG001', -- Will be set on first login
+  'support@talentquarry.in',
   'admin',
-  :'admin_name',
+  'support admin',
   NOW(),
   NOW()
 )
