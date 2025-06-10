@@ -54,6 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loading = authLoading || (user ? profileLoading : false);
 
+
   return (
     <AuthContext.Provider
       value={{

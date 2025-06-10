@@ -1,5 +1,8 @@
 // @ts-nocheck
+
 import React, { useState, useEffect } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,7 +68,10 @@ export const EmployerJobs: React.FC = () => {
   const queryClient = useQueryClient();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const searchQuery = searchTerm.length >= 3 ? debouncedSearchTerm : "";
+  
   const [filterStatus, setFilterStatus] = useState("active");
   const [sortBy, setSortBy] = useState("latest");
 
