@@ -1,6 +1,8 @@
 // @ts-nocheck
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,17 +63,27 @@ interface Job {
 export const EmployerJobs: React.FC = () => {
   const [, setLocation] = useLocation();
   const { userProfile } = useAuth();
+  const isVerified = userProfile?.employer?.profileStatus === "verified";
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const [searchTerm, setSearchTerm] = useState("");
+
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const searchQuery = searchTerm.length >= 3 ? debouncedSearchTerm : "";
+  
   const [filterStatus, setFilterStatus] = useState("active");
   const [sortBy, setSortBy] = useState("latest");
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm.length >= 3 ? searchTerm : "");
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
   const { data: jobs, isLoading } = useQuery({
-    queryKey: ["/api/employers/jobs", { search: searchQuery, filter: filterStatus, sort: sortBy }],
+    queryKey: ["/api/employers/jobs", { search: debouncedSearchTerm, filter: filterStatus, sort: sortBy }],
     enabled: !!userProfile?.employer,
   });
 
@@ -272,8 +284,11 @@ export const EmployerJobs: React.FC = () => {
             Manage your job postings and track applications
           </p>
         </div>
-        <Link href="/jobs/create?from=jobs">
-          <Button className="bg-primary hover:bg-primary-dark text-primary-foreground">
+        <Link href={isVerified ? "/jobs/create?from=jobs" : undefined}>
+          <Button
+            className="bg-primary hover:bg-primary-dark text-primary-foreground"
+            disabled={!isVerified}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Post New Job
           </Button>
@@ -403,13 +418,14 @@ export const EmployerJobs: React.FC = () => {
                         </Button>
                       </Link>
                       
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" className="border-border hover:bg-accent">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                      {isVerified && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="border-border hover:bg-accent">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
                           {status !== 'fulfilled' && (
                             <DropdownMenuItem asChild>
                               <Link href={`/jobs/${job.id}/edit`}>
@@ -450,6 +466,7 @@ export const EmployerJobs: React.FC = () => {
                           )}
                         </DropdownMenuContent>
                       </DropdownMenu>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -471,8 +488,11 @@ export const EmployerJobs: React.FC = () => {
               }
             </p>
             {(!searchTerm && filterStatus === "all") && (
-              <Link href="/jobs/create?from=jobs">
-                <Button className="bg-primary hover:bg-primary-dark text-primary-foreground">
+              <Link href={isVerified ? "/jobs/create?from=jobs" : undefined}>
+                <Button
+                  className="bg-primary hover:bg-primary-dark text-primary-foreground"
+                  disabled={!isVerified}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Post Your First Job
                 </Button>

@@ -34,6 +34,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export const EmployerDashboard: React.FC = () => {
   const { userProfile } = useAuth();
+  const isVerified = userProfile?.employer?.profileStatus === "verified";
   const [selectedCard, setSelectedCard] = useState<string>("recent");
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -162,8 +163,9 @@ export const EmployerDashboard: React.FC = () => {
       icon: Plus,
       color: "text-blue-600 dark:text-blue-400",
       bgColor: "bg-blue-100 dark:bg-blue-900/30",
-      href: "/jobs/create",
-      type: "action"
+      href: isVerified ? "/jobs/create" : undefined,
+      disabled: !isVerified,
+      type: "action",
     },
     {
       title: "Active Job Posts",
@@ -300,7 +302,7 @@ export const EmployerDashboard: React.FC = () => {
           if (card.type === "action" && card.href) {
             return (
               <Link key={index} href={card.href}>
-                <Card className="bg-card border-border hover:bg-accent/50 transition-colors cursor-pointer h-full">
+                <Card className={`bg-card border-border ${card.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-accent/50 cursor-pointer'} transition-colors h-full`}>
                   <CardContent className="p-6 h-full flex items-center">
                     <div className="flex items-center w-full">
                       <div className={`p-3 rounded-full ${card.bgColor} mr-4`}>
@@ -317,10 +319,10 @@ export const EmployerDashboard: React.FC = () => {
             );
           } else {
             return (
-              <Card 
-                key={index} 
-                className="bg-card border-border hover:bg-accent/50 transition-colors cursor-pointer h-full"
-                onClick={card.onClick}
+              <Card
+                key={index}
+                className={`bg-card border-border h-full ${card.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-accent/50 cursor-pointer'}`}
+                onClick={card.disabled ? undefined : card.onClick}
               >
                 <CardContent className="p-6 h-full flex items-center">
                   <div className="flex items-center w-full">
@@ -416,47 +418,49 @@ export const EmployerDashboard: React.FC = () => {
                         </Button>
                       </Link>
                       
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" className="border-border hover:bg-accent">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/jobs/${job.id}/edit`}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit Job
-                            </Link>
-                          </DropdownMenuItem>
-                          
-                          <DropdownMenuItem onClick={() => handleCloneJob(job)}>
-                            <Copy className="h-4 w-4 mr-2" />
-                            Clone Job
-                          </DropdownMenuItem>
-                          
-                          <DropdownMenuSeparator />
-                          
-                          {getJobStatus(job) === "active" && (
-                            <DropdownMenuItem
-                              onClick={() => handleMarkAsFulfilled(job.id)}
-                              disabled={markAsFulfilledMutation.isPending}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              {markAsFulfilledMutation.isPending
-                                ? "Marking..."
-                                : "Mark as Fulfilled"}
+                      {isVerified && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="border-border hover:bg-accent">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link href={`/jobs/${job.id}/edit`}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Job
+                              </Link>
                             </DropdownMenuItem>
-                          )}
-                          
-                          {!job.isActive && (
-                            <DropdownMenuItem>
-                              <RotateCcw className="h-4 w-4 mr-2" />
-                              Activate Job
+
+                            <DropdownMenuItem onClick={() => handleCloneJob(job)}>
+                              <Copy className="h-4 w-4 mr-2" />
+                              Clone Job
                             </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+
+                            <DropdownMenuSeparator />
+
+                            {getJobStatus(job) === "active" && (
+                              <DropdownMenuItem
+                                onClick={() => handleMarkAsFulfilled(job.id)}
+                                disabled={markAsFulfilledMutation.isPending}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                {markAsFulfilledMutation.isPending
+                                  ? "Marking..."
+                                  : "Mark as Fulfilled"}
+                              </DropdownMenuItem>
+                            )}
+
+                            {!job.isActive && (
+                              <DropdownMenuItem>
+                                <RotateCcw className="h-4 w-4 mr-2" />
+                                Activate Job
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </div>
                 ))
@@ -469,8 +473,11 @@ export const EmployerDashboard: React.FC = () => {
               <p className="text-muted-foreground mb-4">
                 {cardContent.emptyDescription}
               </p>
-              <Link href="/jobs/create?from=dashboard">
-                <Button className="bg-primary hover:bg-primary-dark text-primary-foreground">
+              <Link href={isVerified ? "/jobs/create?from=dashboard" : undefined}>
+                <Button
+                  className="bg-primary hover:bg-primary-dark text-primary-foreground"
+                  disabled={!isVerified}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Post Your First Job
                 </Button>

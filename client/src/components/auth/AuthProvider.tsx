@@ -19,11 +19,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authLoading, setAuthLoading] = useState(true);
   const queryClient = useQueryClient();
 
-  const {
-    data: userProfile,
-    refetch,
-    isLoading: profileLoading,
-  } = useQuery({
+  const { data: userProfile, refetch, isFetching: profileLoading } = useQuery({
     queryKey: ["/api/auth/profile"],
     enabled: !!user,
     retry: 1,
@@ -56,7 +52,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refetch();
   };
 
-  const loading = authLoading || (user && profileLoading);
+  const loading = authLoading || (user ? profileLoading : false);
+
 
   return (
     <AuthContext.Provider
