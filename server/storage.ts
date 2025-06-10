@@ -1,7 +1,9 @@
 import { 
   User, InsertUser, Candidate, InsertCandidate, Employer, InsertEmployer,
   JobPost, InsertJobPost, Application, InsertApplication, Shortlist, InsertShortlist,
-  MatchScore, users, candidates, employers, jobPosts, applications, shortlists, matchScores
+  MatchScore, AdminInviteCode,
+  users, candidates, employers, jobPosts, applications, shortlists,
+  matchScores, adminInviteCodes
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, ne, desc, and, gte, sql } from "drizzle-orm";
@@ -66,6 +68,10 @@ export interface IStorage {
   // Admin operations
   getAdminStats(): Promise<any>;
   getExportData(): Promise<any>;
+
+  // Admin invite operations
+  getAdminInviteByCode(code: string): Promise<AdminInviteCode | undefined>;
+  useAdminInvite(id: number, userId: number): Promise<AdminInviteCode>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -643,7 +649,7 @@ export class DatabaseStorage implements IStorage {
       db.select().from(applications),
       db.select().from(shortlists),
     ]);
-    
+
     return {
       candidates: allCandidates,
       employers: allEmployers,
@@ -651,6 +657,24 @@ export class DatabaseStorage implements IStorage {
       applications: allApplications,
       shortlists: allShortlists,
     };
+  }
+
+  async getAdminInviteByCode(code: string): Promise<AdminInviteCode | undefined> {
+    const [invite] = await db
+      .select()
+      .from(adminInviteCodes)
+      .where(eq(adminInviteCodes.code, code));
+    return invite || undefined;
+  }
+
+  async useAdminInvite(id: number, userId: number): Promise<AdminInviteCode> {
+    const [invite] = await db
+      .update(adminInviteCodes)
+      .set({ used: true, usedBy: userId, usedAt: new Date() })
+      .where(eq(adminInviteCodes.id, id))
+      .returning();
+    if (!invite) throw new Error("Invite code not found");
+    return invite;
   }
 }
 

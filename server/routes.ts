@@ -2,7 +2,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { verifyFirebaseToken } from "./utils/firebase-admin";
+import { verifyFirebaseToken, auth } from "./utils/firebase-admin";
 import { calculateMatchScore } from "./utils/matchingEngine";
 import { exportToExcel, exportToPDF } from "./utils/exportUtils";
 import { insertUserSchema, insertCandidateSchema, insertEmployerSchema, insertJobPostSchema, insertApplicationSchema, insertShortlistSchema, type InsertUser, type InsertCandidate, type InsertEmployer, type InsertJobPost } from "@shared/schema";
@@ -59,6 +59,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.status(400).json({ message: "Registration failed" });
+    }
+  });
+
+  app.post("/api/admin/check-invite", async (req, res) => {
+    try {
+      const { email, inviteCode } = req.body;
+      if (!email || !inviteCode) {
+        return res.status(400).json({ message: "Email and invite code required" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      if (!user || user.role !== "admin" || user.firebaseUid !== "KG001") {
+        return res.status(400).json({ message: "Invalid admin user" });
+      }
+
+      const invite = await storage.getAdminInviteByCode(inviteCode);
+      if (!invite || invite.used) {
+        return res.status(400).json({ message: "Invalid invite code" });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error("Check invite error:", error);
+      res.status(500).json({ message: "Failed to verify invite" });
+    }
+  });
+
+  app.post("/api/admin/first-login", async (req, res) => {
+    try {
+      const { email, inviteCode, password } = req.body;
+      if (!email || !inviteCode || !password) {
+        return res.status(400).json({ message: "Email, invite code, and password required" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      if (!user || user.role !== "admin" || user.firebaseUid !== "KG001") {
+        return res.status(400).json({ message: "Invalid admin user" });
+      }
+
+      const invite = await storage.getAdminInviteByCode(inviteCode);
+      if (!invite || invite.used) {
+        return res.status(400).json({ message: "Invalid invite code" });
+      }
+
+      const fbUser = await auth.createUser({ email, password });
+      const updatedUser = await storage.updateUser(user.id, { firebaseUid: fbUser.uid });
+      await storage.useAdminInvite(invite.id, user.id);
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("First login error:", error);
+      res.status(500).json({ message: "Failed to complete first login" });
     }
   });
 
