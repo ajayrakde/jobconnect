@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useDeferredValue } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,22 +68,13 @@ export const EmployerJobs: React.FC = () => {
   const queryClient = useQueryClient();
 
   const [searchTerm, setSearchTerm] = useState("");
-
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
-  const searchQuery = searchTerm.length >= 3 ? debouncedSearchTerm : "";
-  
   const [filterStatus, setFilterStatus] = useState("active");
   const [sortBy, setSortBy] = useState("latest");
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm.length >= 3 ? searchTerm : "");
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
-
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const searchQuery = debouncedSearchTerm.length >= 3 ? debouncedSearchTerm : "";
+  
   const { data: jobs, isLoading } = useQuery({
-    queryKey: ["/api/employers/jobs", { search: debouncedSearchTerm, filter: filterStatus, sort: sortBy }],
+    queryKey: ["/api/employers/jobs"],
     enabled: !!userProfile?.employer,
   });
 
@@ -226,23 +217,18 @@ export const EmployerJobs: React.FC = () => {
     }
   };
 
-  const sortedAndFilteredJobs = React.useMemo(() => {
+  // Filter and sort jobs based on search/filter/sort state
+  const filteredJobs = React.useMemo(() => {
     if (!jobs || !Array.isArray(jobs)) return [];
-
-    let filteredJobs = jobs.filter((job: Job) => {
+    let filtered = jobs.filter((job) => {
       const status = getJobStatus(job);
-      const matchesSearch = job.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           job.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           job.jobCode?.toLowerCase().includes(searchTerm.toLowerCase());
-      
+      const matchesSearch = job.title?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        job.location?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        job.jobCode?.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
       const matchesFilter = filterStatus === "all" || status === filterStatus;
-      
       return matchesSearch && matchesFilter;
     });
-
-    // Sort jobs
-    filteredJobs.sort((a: Job, b: Job) => {
-      // Within same status, sort by specified criteria
+    filtered.sort((a, b) => {
       if (sortBy === 'latest') {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       } else if (sortBy === 'oldest') {
@@ -252,12 +238,144 @@ export const EmployerJobs: React.FC = () => {
       } else if (sortBy === 'title') {
         return a.title.localeCompare(b.title);
       }
-      
       return 0;
     });
+    return filtered;
+  }, [jobs, debouncedSearchTerm, filterStatus, sortBy, getJobStatus]);
 
-    return filteredJobs;
-  }, [jobs, searchTerm, filterStatus, sortBy, getJobStatus]);
+  // Memoized Job List (dumb component, only renders jobs)
+  const EmployerJobList = React.memo(function EmployerJobList({
+    jobs,
+    isVerified,
+    getJobStatus,
+    getStatusColor,
+    getStatusIcon,
+    handleCloneJob,
+    markAsFulfilledMutation,
+    activateJobMutation
+  }) {
+    if (!jobs.length) return null;
+    return (
+      <div className="space-y-4">
+        {jobs.map((job) => {
+          const status = getJobStatus(job);
+          const daysSinceCreated = Math.floor((new Date().getTime() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+          const getCardClassName = (status) => {
+            let baseClasses = "border-border transition-colors";
+            if (status === 'fulfilled') {
+              baseClasses += " bg-green-50 dark:bg-green-950/20 hover:bg-green-100 dark:hover:bg-green-950/30";
+            } else if (status === 'dormant') {
+              baseClasses += " bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30";
+            } else {
+              baseClasses += " bg-card hover:bg-accent/50 dark:hover:bg-accent/20";
+            }
+            return baseClasses;
+          };
+          return (
+            <Card key={job.id} className={getCardClassName(status)}>
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-xl font-semibold text-foreground">{job.title}</h3>
+                      <Badge className={getStatusColor(status)}>
+                        {getStatusIcon(status)}
+                        <span className="ml-1 capitalize">{status}</span>
+                      </Badge>
+                      {status === 'dormant' && (
+                        <Badge variant="outline" className="border-orange-500 text-orange-500">
+                          {daysSinceCreated}+ days old
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-6 text-sm text-muted-foreground mb-3">
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        {job.location}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Users className="h-4 w-4" />
+                        {job.applicationsCount || 0} applications
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        Posted {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Briefcase className="h-4 w-4" />
+                        {job.jobCode}
+                      </div>
+                    </div>
+                    <p className="text-muted-foreground text-sm line-clamp-2">
+                      {job.description}
+                    </p>
+                    <div className="mt-3">
+                      <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                        {job.salaryRange}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 ml-4">
+                    <Link href={`/jobs/${job.id}`}>
+                      <Button variant="outline" size="sm" className="border-border hover:bg-accent">
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    </Link>
+                    {isVerified && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className="border-border hover:bg-accent">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {status !== 'fulfilled' && (
+                            <DropdownMenuItem asChild>
+                              <Link href={`/jobs/${job.id}/edit`}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Job
+                              </Link>
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => handleCloneJob(job)}>
+                            <Copy className="h-4 w-4 mr-2" />
+                            Clone Job
+                          </DropdownMenuItem>
+                          {status !== 'fulfilled' && <DropdownMenuSeparator />}
+                          {status === 'active' && (
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                try {
+                                  markAsFulfilledMutation.mutate(job.id);
+                                } catch (error) {
+                                  console.error('Fulfillment error:', error);
+                                }
+                            }}
+                            disabled={markAsFulfilledMutation.isPending}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            {markAsFulfilledMutation.isPending ? "Marking..." : "Mark as Fulfilled"}
+                          </DropdownMenuItem>
+                          )}
+                          {status === 'dormant' && (
+                            <DropdownMenuItem onClick={() => activateJobMutation.mutate(job.id)}>
+                              <RotateCcw className="h-4 w-4 mr-2" />
+                              Activate Job
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    );
+  });
 
   if (isLoading) {
     return (
@@ -294,7 +412,6 @@ export const EmployerJobs: React.FC = () => {
           </Button>
         </Link>
       </div>
-
       {/* Filters and Search */}
       <Card className="bg-card border-border">
         <CardContent className="p-6">
@@ -307,6 +424,7 @@ export const EmployerJobs: React.FC = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 bg-background border-border"
+                  onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }}
                 />
               </div>
             </div>
@@ -323,7 +441,6 @@ export const EmployerJobs: React.FC = () => {
                   <SelectItem value="fulfilled">Fulfilled</SelectItem>
                 </SelectContent>
               </Select>
-              
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-48 bg-background border-border">
                   <SortAsc className="h-4 w-4 mr-2" />
@@ -340,140 +457,18 @@ export const EmployerJobs: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-
       {/* Jobs List */}
-      {sortedAndFilteredJobs.length > 0 ? (
-        <div className="space-y-4">
-          {sortedAndFilteredJobs.map((job: Job) => {
-            const status = getJobStatus(job);
-            const daysSinceCreated = Math.floor((new Date().getTime() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60 * 24));
-            
-            const getCardClassName = (status: string) => {
-              let baseClasses = "border-border transition-colors";
-              
-              if (status === 'fulfilled') {
-                baseClasses += " bg-green-50 dark:bg-green-950/20 hover:bg-green-100 dark:hover:bg-green-950/30";
-              } else if (status === 'dormant') {
-                baseClasses += " bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30";
-              } else {
-                baseClasses += " bg-card hover:bg-accent/50 dark:hover:bg-accent/20";
-              }
-              
-              return baseClasses;
-            };
-            
-            return (
-              <Card key={job.id} className={getCardClassName(status)}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-semibold text-foreground">{job.title}</h3>
-                        <Badge className={getStatusColor(status)}>
-                          {getStatusIcon(status)}
-                          <span className="ml-1 capitalize">{status}</span>
-                        </Badge>
-                        {status === 'dormant' && (
-                          <Badge variant="outline" className="border-orange-500 text-orange-500">
-                            {daysSinceCreated}+ days old
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center gap-6 text-sm text-muted-foreground mb-3">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-4 w-4" />
-                          {job.location}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          {job.applicationsCount || 0} applications
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          Posted {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Briefcase className="h-4 w-4" />
-                          {job.jobCode}
-                        </div>
-                      </div>
-                      
-                      <p className="text-muted-foreground text-sm line-clamp-2">
-                        {job.description}
-                      </p>
-                      
-                      <div className="mt-3">
-                        <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                          {job.salaryRange}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 ml-4">
-                      <Link href={`/jobs/${job.id}`}>
-                        <Button variant="outline" size="sm" className="border-border hover:bg-accent">
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
-                      </Link>
-                      
-                      {isVerified && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="border-border hover:bg-accent">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                          {status !== 'fulfilled' && (
-                            <DropdownMenuItem asChild>
-                              <Link href={`/jobs/${job.id}/edit`}>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit Job
-                              </Link>
-                            </DropdownMenuItem>
-                          )}
-                          
-                          <DropdownMenuItem onClick={() => handleCloneJob(job)}>
-                            <Copy className="h-4 w-4 mr-2" />
-                            Clone Job
-                          </DropdownMenuItem>
-                          
-                          {status !== 'fulfilled' && <DropdownMenuSeparator />}
-                          
-                          {status === 'active' && (
-                            <DropdownMenuItem 
-                              onClick={() => {
-                                try {
-                                  markAsFulfilledMutation.mutate(job.id);
-                                } catch (error) {
-                                  console.error('Fulfillment error:', error);
-                                }
-                              }}
-                              disabled={markAsFulfilledMutation.isPending}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              {markAsFulfilledMutation.isPending ? "Marking..." : "Mark as Fulfilled"}
-                            </DropdownMenuItem>
-                          )}
-                          
-                          {status === 'dormant' && (
-                            <DropdownMenuItem onClick={() => activateJobMutation.mutate(job.id)}>
-                              <RotateCcw className="h-4 w-4 mr-2" />
-                              Activate Job
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+      {filteredJobs.length > 0 ? (
+        <EmployerJobList
+          jobs={filteredJobs}
+          isVerified={isVerified}
+          getJobStatus={getJobStatus}
+          getStatusColor={getStatusColor}
+          getStatusIcon={getStatusIcon}
+          handleCloneJob={handleCloneJob}
+          markAsFulfilledMutation={markAsFulfilledMutation}
+          activateJobMutation={activateJobMutation}
+        />
       ) : (
         <Card className="bg-card border-border">
           <CardContent className="p-12 text-center">
@@ -501,19 +496,18 @@ export const EmployerJobs: React.FC = () => {
           </CardContent>
         </Card>
       )}
-
       {/* Summary Stats */}
-      {sortedAndFilteredJobs.length > 0 && (
+      {jobs && jobs.length > 0 && (
         <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex justify-between items-center text-sm text-muted-foreground">
               <span>
-                Showing {sortedAndFilteredJobs.length} of {jobs?.length || 0} job posts
+                Showing {jobs.length} job posts
               </span>
               <div className="flex gap-4">
-                <span>Active: {jobs?.filter((j: Job) => getJobStatus(j) === 'active').length || 0}</span>
-                <span>Dormant: {jobs?.filter((j: Job) => getJobStatus(j) === 'dormant').length || 0}</span>
-                <span>Fulfilled: {jobs?.filter((j: Job) => getJobStatus(j) === 'fulfilled').length || 0}</span>
+                <span>Active: {jobs.filter((j: Job) => getJobStatus(j) === 'active').length || 0}</span>
+                <span>Dormant: {jobs.filter((j: Job) => getJobStatus(j) === 'dormant').length || 0}</span>
+                <span>Fulfilled: {jobs.filter((j: Job) => getJobStatus(j) === 'fulfilled').length || 0}</span>
               </div>
             </div>
           </CardContent>
