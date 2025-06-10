@@ -49,8 +49,8 @@ export const CandidateProfileEdit: React.FC = () => {
 
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: (data: Partial<CandidateData>) => 
-      apiRequest("PATCH", `/api/candidates/${(candidateData as any)?.id}`, data),
+    mutationFn: (data: Partial<CandidateData>) =>
+      apiRequest(`/api/candidates/${(candidateData as any)?.id}`, "PATCH", data),
     onSuccess: () => {
       toast({
         title: "Profile updated successfully",

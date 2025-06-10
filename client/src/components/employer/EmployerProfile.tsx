@@ -56,7 +56,7 @@ export const EmployerProfile: React.FC = () => {
   const updateMutation = useMutation({
     mutationFn: async (updates: Partial<EmployerData>) => {
       if (!data?.id) throw new Error("No employer data available");
-      const response = await apiRequest("PATCH", `/api/employers/${data.id}`, updates);
+      const response = await apiRequest(`/api/employers/${data.id}`, "PATCH", updates);
       return response.json();
     },
     onSuccess: () => {
