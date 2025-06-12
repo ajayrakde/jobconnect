@@ -21,7 +21,7 @@ import { EmployerJobEdit } from "./components/employer/EmployerJobEdit";
 import { JobDetails } from "./components/employer/JobDetails";
 import { EmployerProfile } from "./components/employer/EmployerProfile";
 import { AdminDashboard } from "./components/admin/AdminDashboard";
-import { AdminJobPosts } from "./components/admin/AdminJobPosts";
+import { AdminSearchPanel } from "./components/admin/AdminSearchPanel";
 import { AdminVerifications } from "./components/admin/AdminVerifications";
 import { AdminTools } from "./components/admin/AdminTools";
 import NotFound from "./pages/not-found";
@@ -107,7 +107,7 @@ function Router() {
           <ProtectedRoute>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <AdminJobPosts />
+                <AdminSearchPanel />
               </div>
             </div>
           </ProtectedRoute>
