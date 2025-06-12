@@ -1,12 +1,39 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LoginModal } from "@/components/LoginModal";
+import { LoginModal } from "@/components/auth/LoginModal";
 import { Shield, Lock, ArrowLeft } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { getAuth } from "firebase/auth";
+import { apiRequest } from "@/lib/queryClient";
 
 export const Admin: React.FC = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  // Called after successful Firebase login in LoginModal
+  const handleAdminLogin = async () => {
+    setLoading(true);
+    try {
+      const auth = getAuth();
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new Error("No Firebase user");
+      const firebaseToken = await firebaseUser.getIdToken();
+      const response = await apiRequest("/api/admin/login", "POST", { firebaseToken });
+      if (!response.ok) throw new Error("Not an admin or invalid credentials");
+      const data = await response.json();
+      toast({ title: "Welcome, Admin!", description: data.user.name || data.user.email });
+      setShowLoginModal(false);
+      setLocation("/admin/dashboard");
+    } catch (error: any) {
+      toast({ title: "Admin Login Failed", description: error.message || "Access denied", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -78,8 +105,9 @@ export const Admin: React.FC = () => {
             <Button
               onClick={() => setShowLoginModal(true)}
               className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold"
+              disabled={loading}
             >
-              Admin Login
+              {loading ? "Logging in..." : "Admin Login"}
             </Button>
 
             <p className="text-xs text-gray-500 text-center">
@@ -92,6 +120,8 @@ export const Admin: React.FC = () => {
       <LoginModal
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
+        onLoginSuccess={handleAdminLogin}
+        roleHint="admin"
       />
     </div>
   );
