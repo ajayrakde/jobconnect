@@ -19,6 +19,13 @@ import { EmployerJobCreate } from "@/components/employer/EmployerJobCreate";
 import { EmployerJobEdit } from "@/components/employer/EmployerJobEdit";
 import { JobDetails } from "@/components/employer/JobDetails";
 import { EmployerProfile } from "@/components/employer/EmployerProfile";
+import { AdminCandidates } from "@/components/admin/AdminCandidates";
+import { AdminEmployers } from "@/components/admin/AdminEmployers";
+import { AdminJobPosts } from "@/components/admin/AdminJobPosts";
+import { AdminVerifications } from "@/components/admin/AdminVerifications";
+import { AdminCompatibilityEngine } from "@/components/admin/AdminCompatibilityEngine";
+import { AdminReportsAnalytics } from "@/components/admin/AdminReportsAnalytics";
+import { AdminTools } from "@/components/admin/AdminTools";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -107,6 +114,69 @@ function Router() {
         <Route path="/admin/dashboard">
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/candidates">
+          <ProtectedRoute>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <AdminCandidates />
+              </div>
+            </div>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/employers">
+          <ProtectedRoute>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <AdminEmployers />
+              </div>
+            </div>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/jobs">
+          <ProtectedRoute>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <AdminJobPosts />
+              </div>
+            </div>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/verifications">
+          <ProtectedRoute>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <AdminVerifications />
+              </div>
+            </div>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/compatibility">
+          <ProtectedRoute>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <AdminCompatibilityEngine />
+              </div>
+            </div>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/reports">
+          <ProtectedRoute>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <AdminReportsAnalytics />
+              </div>
+            </div>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/tools">
+          <ProtectedRoute>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <AdminTools />
+              </div>
+            </div>
           </ProtectedRoute>
         </Route>
 
