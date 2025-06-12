@@ -16,22 +16,30 @@ export const Admin: React.FC = () => {
   const { toast } = useToast();
   const { user, userProfile, loading: authLoading } = useAuth();
 
+  // Early redirect for admin users
   useEffect(() => {
-    if (!authLoading && user && userProfile?.role === "admin") {
-      setLocation("/admin/dashboard");
-    }
-  }, [authLoading, user, userProfile, setLocation]);
+    const redirectIfAdmin = async () => {
+      if (user && !authLoading) {
+        try {
+          // Force a profile refresh to ensure we have the latest role
+          if (userProfile?.role === "admin") {
+            setLocation("/admin/dashboard");
+          }
+        } catch (error) {
+          console.error("Profile refresh failed:", error);
+        }
+      }
+    };
+    redirectIfAdmin();
+  }, [user, authLoading, userProfile, setLocation]);
 
-  if (authLoading) {
+  // Show loading state only during initial auth check
+  if (authLoading || (user && userProfile?.role === "admin")) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
-  }
-
-  if (user && userProfile?.role === "admin") {
-    return null;
   }
 
   // Called after successful Firebase login in LoginModal
