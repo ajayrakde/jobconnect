@@ -1,34 +1,29 @@
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider, useAuth } from "@/components/auth/AuthProvider";
-import { AdminProtectedRoute } from "@/components/auth/AdminProtectedRoute";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import { Navbar } from "@/components/common/Navbar";
-import { Chatbot } from "@/components/common/Chatbot";
-import { Landing } from "@/pages/Landing";
-import { Dashboard } from "@/pages/Dashboard";
-import { Admin } from "@/pages/Admin";
-import { CandidateApplications } from "@/components/candidate/CandidateApplications";
-import { CandidateProfileEdit } from "@/components/candidate/CandidateProfileEdit";
-import { EmployerRegistration } from "@/components/employer/EmployerRegistration";
-import { EmployerDashboard } from "@/components/employer/EmployerDashboard";
-import { EmployerJobs } from "@/components/employer/EmployerJobs";
-import { EmployerJobCreate } from "@/components/employer/EmployerJobCreate";
-import { EmployerJobEdit } from "@/components/employer/EmployerJobEdit";
-import { JobDetails } from "@/components/employer/JobDetails";
-import { EmployerProfile } from "@/components/employer/EmployerProfile";
-import { AdminCandidates } from "@/components/admin/AdminCandidates";
-import { AdminEmployers } from "@/components/admin/AdminEmployers";
-import { AdminJobPosts } from "@/components/admin/AdminJobPosts";
-import { AdminVerifications } from "@/components/admin/AdminVerifications";
-import { AdminCompatibilityEngine } from "@/components/admin/AdminCompatibilityEngine";
-import { AdminReportsAnalytics } from "@/components/admin/AdminReportsAnalytics";
-import { AdminTools } from "@/components/admin/AdminTools";
-import { AdminDashboard } from "@/components/admin/AdminDashboard";
-import NotFound from "@/pages/not-found";
+import { Toaster } from "./components/ui/toaster";
+import { TooltipProvider } from "./components/ui/tooltip";
+import { AuthProvider, useAuth } from "./components/auth/AuthProvider";
+import { ThemeProvider } from "./components/ThemeProvider";
+import { Navbar } from "./components/common/Navbar";
+import { Chatbot } from "./components/common/Chatbot";
+import { Landing } from "./pages/Landing";
+import { Dashboard } from "./pages/Dashboard";
+import { Admin } from "./pages/Admin";
+import { CandidateApplications } from "./components/candidate/CandidateApplications";
+import { CandidateProfileEdit } from "./components/candidate/CandidateProfileEdit";
+import { EmployerRegistration } from "./components/employer/EmployerRegistration";
+import { EmployerDashboard } from "./components/employer/EmployerDashboard";
+import { EmployerJobs } from "./components/employer/EmployerJobs";
+import { EmployerJobCreate } from "./components/employer/EmployerJobCreate";
+import { EmployerJobEdit } from "./components/employer/EmployerJobEdit";
+import { JobDetails } from "./components/employer/JobDetails";
+import { EmployerProfile } from "./components/employer/EmployerProfile";
+import { AdminDashboard } from "./components/admin/AdminDashboard";
+import { AdminJobPosts } from "./components/admin/AdminJobPosts";
+import { AdminVerifications } from "./components/admin/AdminVerifications";
+import { AdminTools } from "./components/admin/AdminTools";
+import NotFound from "./pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -78,22 +73,22 @@ function Router() {
           </ProtectedRoute>
         </Route>
         <Route path="/admin/verifications">
-          <AdminProtectedRoute>
+          <ProtectedRoute>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <AdminVerifications />
               </div>
             </div>
-          </AdminProtectedRoute>
+          </ProtectedRoute>
         </Route>
         <Route path="/admin/tools">
-          <AdminProtectedRoute>
+          <ProtectedRoute>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <AdminTools />
               </div>
             </div>
-          </AdminProtectedRoute>
+          </ProtectedRoute>
         </Route>
 
         {/* Candidate Routes */}
