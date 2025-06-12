@@ -40,7 +40,7 @@ export const Navbar: React.FC = () => {
         ];
       case "admin":
         return [
-          { label: "Dashboard", href: "/admin/dashboard" }
+          { label: "Dashboard", href: "/admin/dashboard" },
           { label: "Candidates", href: "/admin/candidates" },
           { label: "Employers", href: "/admin/employers" },
           { label: "Job Posts", href: "/admin/jobs" },
