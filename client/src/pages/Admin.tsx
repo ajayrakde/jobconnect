@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { Shield, Lock, ArrowLeft } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { getAuth } from "firebase/auth";
 import { apiRequest } from "@/lib/queryClient";
@@ -13,6 +14,25 @@ export const Admin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { user, userProfile, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && user && userProfile?.role === "admin") {
+      setLocation("/admin/dashboard");
+    }
+  }, [authLoading, user, userProfile, setLocation]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (user && userProfile?.role === "admin") {
+    return null;
+  }
 
   // Called after successful Firebase login in LoginModal
   const handleAdminLogin = async () => {
