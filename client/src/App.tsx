@@ -1,4 +1,5 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
+import { useEffect } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "./components/ui/toaster";
@@ -44,7 +45,24 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function Router() {
-  const { user } = useAuth();
+  const { user, userProfile, loading } = useAuth();
+  const [location, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!loading && user && userProfile) {
+      if (location === "/") {
+        if (userProfile.role === "admin") {
+          setLocation("/admin/dashboard");
+        } else if (userProfile.role === "employer") {
+          setLocation("/employer/dashboard");
+        } else {
+          setLocation("/dashboard");
+        }
+      } else if (location === "/admin" && userProfile.role === "admin") {
+        setLocation("/admin/dashboard");
+      }
+    }
+  }, [loading, user, userProfile, location, setLocation]);
 
   return (
     <div className="min-h-screen bg-slate-50">
