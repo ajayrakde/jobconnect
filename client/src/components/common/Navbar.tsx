@@ -41,9 +41,9 @@ export const Navbar: React.FC = () => {
       case "admin":
         return [
           { label: "Dashboard", href: "/admin/dashboard" },
-          { label: "Jobs", href: "/admin/jobs" },
-          { label: "Candidates", href: "/admin/candidates" },
-          { label: "Analytics", href: "/admin/analytics" },
+          { label: "Search", href: "/admin/search" },
+          { label: "Verifications", href: "/admin/verifications" },
+          { label: "Admin Tools", href: "/admin/tools" },
         ];
       default:
         return [];

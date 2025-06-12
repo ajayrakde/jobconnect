@@ -1003,6 +1003,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin login endpoint (role validation for admin)
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { firebaseToken } = req.body;
+      if (!firebaseToken) {
+        return res.status(400).json({ message: "Missing Firebase token" });
+      }
+      // Verify Firebase token
+      const decodedToken = await verifyFirebaseToken(firebaseToken);
+      const user = await storage.getUserByFirebaseUid(decodedToken.uid);
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Access denied: not an admin" });
+      }
+      // Optionally, return admin profile or session info
+      res.json({ success: true, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
+    } catch (error) {
+      console.error("Admin login error:", error);
+      res.status(401).json({ message: "Invalid credentials or not an admin" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
