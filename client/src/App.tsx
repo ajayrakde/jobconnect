@@ -27,6 +27,7 @@ import { AdminCompatibilityEngine } from "@/components/admin/AdminCompatibilityE
 import { AdminReportsAnalytics } from "@/components/admin/AdminReportsAnalytics";
 import { AdminTools } from "@/components/admin/AdminTools";
 import NotFound from "@/pages/not-found";
+import AdminDashboard from "./pages/admin/dashboard";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -54,7 +55,7 @@ function Router() {
       {user && <Navbar />}
       <Switch>
         <Route path="/" component={user ? Dashboard : Landing} />
-        <Route path="/admin/dashboard" component={Admin} />
+        <Route path="/admin" component={Admin} />
         <Route path="/candidate">
           <ProtectedRoute>
             <Dashboard />
@@ -111,30 +112,21 @@ function Router() {
             </div>
           </ProtectedRoute>
         </Route>
-        <Route path="/admin/dashboard">
+        <Route path="/admin">
           <ProtectedRoute>
             <Dashboard />
           </ProtectedRoute>
         </Route>
-        <Route path="/admin/candidates">
+        <Route path="/admin/dashboard">
           <ProtectedRoute>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <AdminCandidates />
+                <AdminDashboard />
               </div>
             </div>
           </ProtectedRoute>
         </Route>
-        <Route path="/admin/employers">
-          <ProtectedRoute>
-            <div className="min-h-screen bg-background">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <AdminEmployers />
-              </div>
-            </div>
-          </ProtectedRoute>
-        </Route>
-        <Route path="/admin/jobs">
+        <Route path="/admin/search">
           <ProtectedRoute>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -148,24 +140,6 @@ function Router() {
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <AdminVerifications />
-              </div>
-            </div>
-          </ProtectedRoute>
-        </Route>
-        <Route path="/admin/compatibility">
-          <ProtectedRoute>
-            <div className="min-h-screen bg-background">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <AdminCompatibilityEngine />
-              </div>
-            </div>
-          </ProtectedRoute>
-        </Route>
-        <Route path="/admin/reports">
-          <ProtectedRoute>
-            <div className="min-h-screen bg-background">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <AdminReportsAnalytics />
               </div>
             </div>
           </ProtectedRoute>
