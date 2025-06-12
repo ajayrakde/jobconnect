@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/components/auth/AuthProvider";
+import { AdminProtectedRoute } from "@/components/auth/AdminProtectedRoute";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Navbar } from "@/components/common/Navbar";
 import { Chatbot } from "@/components/common/Chatbot";
@@ -55,7 +56,47 @@ function Router() {
       {user && <Navbar />}
       <Switch>
         <Route path="/" component={user ? Dashboard : Landing} />
+
+        {/* Admin Routes */}
         <Route path="/admin" component={Admin} />
+        <Route path="/admin/dashboard">
+          <ProtectedRoute>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <AdminDashboard />
+              </div>
+            </div>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/search">
+          <ProtectedRoute>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <AdminJobPosts />
+              </div>
+            </div>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/verifications">
+          <AdminProtectedRoute>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <AdminVerifications />
+              </div>
+            </div>
+          </AdminProtectedRoute>
+        </Route>
+        <Route path="/admin/tools">
+          <AdminProtectedRoute>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <AdminTools />
+              </div>
+            </div>
+          </AdminProtectedRoute>
+        </Route>
+
+        {/* Candidate Routes */}
         <Route path="/candidate">
           <ProtectedRoute>
             <Dashboard />
@@ -94,6 +135,8 @@ function Router() {
             <Dashboard />
           </ProtectedRoute>
         </Route>
+
+        {/* Employer Routes */}
         <Route path="/employer/">
           <ProtectedRoute>
             <div className="min-h-screen bg-background">
@@ -108,47 +151,6 @@ function Router() {
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <EmployerDashboard />
-              </div>
-            </div>
-          </ProtectedRoute>
-        </Route>
-        <Route path="/admin">
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/admin/dashboard">
-          <ProtectedRoute>
-            <div className="min-h-screen bg-background">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <AdminDashboard />
-              </div>
-            </div>
-          </ProtectedRoute>
-        </Route>
-        <Route path="/admin/search">
-          <ProtectedRoute>
-            <div className="min-h-screen bg-background">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <AdminJobPosts />
-              </div>
-            </div>
-          </ProtectedRoute>
-        </Route>
-        <Route path="/admin/verifications">
-          <ProtectedRoute>
-            <div className="min-h-screen bg-background">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <AdminVerifications />
-              </div>
-            </div>
-          </ProtectedRoute>
-        </Route>
-        <Route path="/admin/tools">
-          <ProtectedRoute>
-            <div className="min-h-screen bg-background">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <AdminTools />
               </div>
             </div>
           </ProtectedRoute>
