@@ -50,7 +50,9 @@ function Router() {
 
   useEffect(() => {
     if (!loading && user && userProfile) {
-      if (location === "/") {
+      // Check if we're on a public route that should redirect
+      const publicRoutes = ["/", "/admin"];
+      if (publicRoutes.includes(location)) {
         if (userProfile.role === "admin") {
           setLocation("/admin/dashboard");
         } else if (userProfile.role === "employer") {
@@ -58,8 +60,11 @@ function Router() {
         } else {
           setLocation("/dashboard");
         }
-      } else if (location === "/admin" && userProfile.role === "admin") {
-        setLocation("/admin/dashboard");
+      }
+      
+      // Prevent non-admin users from accessing admin routes
+      if (location.startsWith("/admin/") && userProfile.role !== "admin") {
+        setLocation("/");
       }
     }
   }, [loading, user, userProfile, location, setLocation]);
