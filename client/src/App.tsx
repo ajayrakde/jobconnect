@@ -9,7 +9,7 @@ import { Navbar } from "@/components/common/Navbar";
 import { Chatbot } from "@/components/common/Chatbot";
 import { Landing } from "@/pages/Landing";
 import { Dashboard } from "@/pages/Dashboard";
-import { AdminAccess } from "@/pages/AdminAccess";
+import { Admin } from "@/pages/Admin";
 import { CandidateApplications } from "@/components/candidate/CandidateApplications";
 import { CandidateProfileEdit } from "@/components/candidate/CandidateProfileEdit";
 import { EmployerRegistration } from "@/components/employer/EmployerRegistration";
@@ -54,7 +54,7 @@ function Router() {
       {user && <Navbar />}
       <Switch>
         <Route path="/" component={user ? Dashboard : Landing} />
-        <Route path="/admin-access" component={AdminAccess} />
+        <Route path="/admin-access" component={Admin} />
         <Route path="/candidate">
           <ProtectedRoute>
             <Dashboard />
