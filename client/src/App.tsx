@@ -48,35 +48,52 @@ function Router() {
   const { user, userProfile, loading } = useAuth();
   const [location, setLocation] = useLocation();
 
-  useEffect(() => {
-    if (!loading && user && userProfile) {
-      // Check if we're on a public route that should redirect
-      const publicRoutes = ["/", "/admin"];
-      if (publicRoutes.includes(location)) {
-        if (userProfile.role === "admin") {
-          setLocation("/admin/dashboard");
-        } else if (userProfile.role === "employer") {
-          setLocation("/employer/dashboard");
-        } else {
-          setLocation("/dashboard");
-        }
-      }
-      
-      // Prevent non-admin users from accessing admin routes
-      if (location.startsWith("/admin/") && userProfile.role !== "admin") {
-        setLocation("/");
+  // Show loading spinner while checking auth state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Handle authenticated users immediately
+  if (user && userProfile) {
+    // Redirect from public routes
+    const publicRoutes = ["/", "/admin"];
+    if (publicRoutes.includes(location)) {
+      if (userProfile.role === "admin") {
+        setLocation("/admin/dashboard");
+        return null; // Prevent flash
+      } else if (userProfile.role === "employer") {
+        setLocation("/employer/dashboard");
+        return null; // Prevent flash
+      } else {
+        setLocation("/dashboard");
+        return null; // Prevent flash
       }
     }
-  }, [loading, user, userProfile, location, setLocation]);
+
+    // Prevent non-admin access to admin routes
+    if (location.startsWith("/admin/") && userProfile.role !== "admin") {
+      setLocation("/");
+      return null; // Prevent flash
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
       {user && <Navbar />}
       <Switch>
-        <Route path="/" component={user ? Dashboard : Landing} />
+        <Route path="/">
+          {user && userProfile?.role === "admin" ? <AdminDashboard /> : 
+           user ? <Dashboard /> : <Landing />}
+        </Route>
 
         {/* Admin Routes */}
-        <Route path="/admin" component={Admin} />
+        <Route path="/admin">
+          {user && userProfile?.role === "admin" ? <AdminDashboard /> : <Admin />}
+        </Route>
         <Route path="/admin/dashboard">
           <ProtectedRoute>
             <div className="min-h-screen bg-background">
