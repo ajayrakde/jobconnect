@@ -27,8 +27,8 @@ import { AdminVerifications } from "@/components/admin/AdminVerifications";
 import { AdminCompatibilityEngine } from "@/components/admin/AdminCompatibilityEngine";
 import { AdminReportsAnalytics } from "@/components/admin/AdminReportsAnalytics";
 import { AdminTools } from "@/components/admin/AdminTools";
+import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import NotFound from "@/pages/not-found";
-import AdminDashboard from "./pages/admin/dashboard";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
