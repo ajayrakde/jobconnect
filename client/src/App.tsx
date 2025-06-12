@@ -54,7 +54,7 @@ function Router() {
       {user && <Navbar />}
       <Switch>
         <Route path="/" component={user ? Dashboard : Landing} />
-        <Route path="/admin-access" component={Admin} />
+        <Route path="/admin/dashboard" component={Admin} />
         <Route path="/candidate">
           <ProtectedRoute>
             <Dashboard />
