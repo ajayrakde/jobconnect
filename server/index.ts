@@ -8,6 +8,8 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false }));
 app.disable("x-powered-by");
+app.set('trust proxy', 1);
+
 app.use(
   helmet({
     contentSecurityPolicy: false,
