@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from "react";
 import { useParams, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
