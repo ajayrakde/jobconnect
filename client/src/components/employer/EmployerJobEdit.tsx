@@ -19,6 +19,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertJobPostSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
+import { debugLog } from "@/lib/logger";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
@@ -99,25 +100,25 @@ export const EmployerJobEdit: React.FC = () => {
   });
 
   const onSubmit = (data: EditJobFormData) => {
-    console.log("onSubmit called with data:", data);
+    debugLog("onSubmit called with data:", data);
     updateJobMutation.mutate(data);
   };
 
   React.useEffect(() => {
     if (form.formState.errors && Object.keys(form.formState.errors).length > 0) {
-      console.log("Form validation errors:", form.formState.errors);
+      debugLog("Form validation errors:", form.formState.errors);
     }
   }, [form.formState.errors]);
 
   React.useEffect(() => {
     if (updateJobMutation.isError) {
-      console.log("Mutation error:", updateJobMutation.error);
+      debugLog("Mutation error:", updateJobMutation.error);
     }
     if (updateJobMutation.isSuccess) {
-      console.log("Mutation success");
+      debugLog("Mutation success");
     }
     if (updateJobMutation.isPending) {
-      console.log("Mutation pending...");
+      debugLog("Mutation pending...");
     }
   }, [updateJobMutation.isError, updateJobMutation.isSuccess, updateJobMutation.isPending, updateJobMutation.error]);
 
