@@ -1,6 +1,6 @@
 # LokalTalent
 
-This project is a full stack job marketplace built with React and Express. Docker images are built from the included `Dockerfile` and can be deployed to Azure.
+LokalTalent is a full stack job marketplace with a Vite-based React client and Express API. Docker images built from the included Dockerfile can be deployed to Azure.
 
 ## Quick Start
 
@@ -102,10 +102,6 @@ A Terraform configuration is provided under `deploy/terraform` to provision thes
 4. Build and push your image using the pipelines under `deploy/azure-app` or `deploy/github-app`.
 
 To configure a custom domain, set `custom_domain_name` and certificate variables in `terraform.tfvars` before applying.
-
-# LokalTalent
-
-This project contains a Vite-based client and an Express API.
 
 ## Build
 
