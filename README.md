@@ -109,7 +109,23 @@ To configure a custom domain, set `custom_domain_name` and certificate variables
 npm run build
 ```
 
+
 The command bundles the server and produces `dist/index.js` which can be deployed.
+
+
+## Schema Workflow
+
+The canonical database schema lives in `shared/schema.ts`. `drizzle-kit` reads
+from this file when generating migrations. Any changes to the database should be
+made here.
+
+1. Update `shared/schema.ts` with your table or column changes.
+2. Run `npx drizzle-kit generate` to create a new migration under `migrations/`.
+3. Apply the migration to your database.
+4. Commit the updated migration along with the schema file.
+
+The TypeScript files inside `drizzle/schema/` are kept only for reference and are
+not used by the migration tooling.
 
 ## Error Handling
 
@@ -146,7 +162,6 @@ import { errorHandler } from './middleware/errorHandler';
 // ... register routes
 app.use(errorHandler);
 ```
-
 
 ## Deploying to Azure Functions
 
