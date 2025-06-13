@@ -6,9 +6,25 @@ import { verifyFirebaseToken } from "./utils/firebase-admin";
 import { calculateMatchScore } from "./utils/matchingEngine";
 import { exportToExcel, exportToPDF } from "./utils/exportUtils";
 import { insertUserSchema, insertCandidateSchema, insertEmployerSchema, insertJobPostSchema, insertApplicationSchema, insertShortlistSchema, type InsertUser, type InsertCandidate, type InsertEmployer, type InsertJobPost } from "@shared/schema";
+import { searchHandler } from "./routes/admin/search";
+import { searchLimiter } from "./utils/rateLimiter";
+import express from "express";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Middleware to verify Firebase token and extract user info
+  // Middleware for parsing JSON and handling CORS
+  app.use(express.json());
+  app.use((req, res, next) => {
+    res.setHeader('Content-Type', 'application/json');
+    next();
+  });
+
+  // Error handling middleware
+  app.use((err: any, req: any, res: any, next: any) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Internal Server Error' });
+  });
+
+  // Authentication middleware
   const authenticateUser = async (req: any, res: any, next: any) => {
     try {
       const token = req.headers.authorization?.replace("Bearer ", "");
@@ -523,41 +539,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Employer-specific job creation endpoint
-  app.post("/api/employers/jobs", authenticateUser, async (req: any, res) => {
+  app.post("/api/employers/jobs", authenticateUser, async (req: Request, res: Response) => {
     try {
       const user = await storage.getUserByFirebaseUid(req.user.uid);
+      
+      // Check if user exists and is an employer
       if (!user || user.role !== "employer") {
-        return res.status(403).json({ message: "Access denied" });
+        return res.status(403).json({ 
+          error: "Unauthorized",
+          message: "Only verified employers can create job posts" 
+        });
       }
 
+      // Check if employer is verified
       const employer = await storage.getEmployerByUserId(user.id);
-      if (!employer) {
-        return res.status(404).json({ message: "Employer profile not found" });
+      if (!employer || employer.profileStatus !== "verified") {
+        return res.status(403).json({
+          error: "Unauthorized",
+          message: "Your employer profile must be verified to create job posts"
+        });
       }
 
-      // Generate job code
-      const jobCode = `JOB-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
-
-      const jobData: InsertJobPost = insertJobPostSchema.parse({
+      // Prepare job data with employer ID
+      const jobData = {
         ...req.body,
         employerId: employer.id,
-        jobCode,
-      });
+        status: 'active',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
       
+      // Validate and create job post
       const jobPost = await storage.createJobPost(jobData);
-      res.json(jobPost);
+      
+      // Return success response
+      res.status(201).json({
+        success: true,
+        data: jobPost
+      });
+
     } catch (error: any) {
       console.error("Job creation error:", error);
       
       // Handle validation errors
       if (error.name === 'ZodError') {
         return res.status(400).json({ 
+          success: false,
+          error: "Validation Error",
           message: "Invalid data provided",
           details: error.errors 
         });
       }
       
-      res.status(500).json({ message: "Failed to create job post" });
+      // Handle other errors
+      res.status(500).json({ 
+        success: false,
+        error: "Internal Server Error",
+        message: "Failed to create job post"
+      });
     }
   });
 

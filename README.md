@@ -2,6 +2,82 @@
 
 This project is a full stack job marketplace built with React and Express. Docker images are built from the included `Dockerfile` and can be deployed to Azure.
 
+## Quick Start
+
+1. **Clone and Setup**
+   ```bash
+   git clone <repository-url>
+   cd lokaltalent
+   ```
+
+2. **Environment Configuration**
+   ```bash
+   # Copy the environment template
+   cp .env.example .env
+   
+   # Edit with your settings
+   nano .env
+   ```
+
+3. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+4. **Start Development**
+   ```bash
+   npm run dev
+   ```
+
+## Environment Configuration
+
+The application uses a `.env` file for configuration. A template file `.env.example` is provided as a reference:
+
+### Required Variables
+
+```env
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/lokaltalent"
+
+# Authentication
+FIREBASE_PROJECT_ID="your-project-id"
+FIREBASE_CLIENT_EMAIL="your-client-email"
+FIREBASE_PRIVATE_KEY="your-private-key"
+```
+
+### Optional Features
+
+#### Caching (Optional)
+```env
+# Master switch for caching
+CACHE_ENABLED=false
+
+# Individual feature toggles
+CACHE_CANDIDATES_ENABLED=false
+CACHE_EMPLOYERS_ENABLED=false
+CACHE_JOBS_ENABLED=false
+
+# Performance thresholds
+CACHE_MIN_RECORDS=1000  # Start caching when records exceed this number
+```
+
+#### Redis (Required if caching is enabled)
+```env
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=your_password
+```
+
+### Why .env.example?
+
+We maintain an `.env.example` file for several reasons:
+1. **Security**: Real credentials in `.env` should never be committed to git
+2. **Documentation**: Shows what environment variables are needed
+3. **Onboarding**: New developers can quickly set up their environment
+4. **Version Control**: Track required configuration changes
+
+Always update `.env.example` when adding new environment variables!
+
 ## Azure Resources
 
 The app runs best on **Azure Container Apps** or **Azure Web App for Containers**. The required resources are:

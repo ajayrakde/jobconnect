@@ -1,10 +1,23 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { authService } from "./auth";
 
+// API configuration using Vite's import.meta.env
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://super-succotash-5pv746gvx537r9w-5000.app.github.dev';
+
 export async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    try {
+      // Try to parse as JSON first
+      const data = await res.clone().json();
+      throw new Error(data.message || data.error || res.statusText);
+    } catch (e) {
+      // If JSON parsing fails, try to get text
+      const text = await res.text();
+      if (text.includes('<!DOCTYPE')) {
+        throw new Error('Server error occurred. Please try again.');
+      }
+      throw new Error(text || res.statusText);
+    }
   }
 }
 
@@ -13,35 +26,30 @@ export async function apiRequest(
   method: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+  };
   
-  if (data) {
-    headers["Content-Type"] = "application/json";
-  }
-
   // Add Firebase auth token
   try {
     const token = await authService.getCurrentUserToken();
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
-      console.log("Auth token retrieved successfully");
-    } else {
-      console.warn("No auth token available");
     }
   } catch (error) {
-    console.error("Failed to get auth token:", error);
-    throw error;
+    console.error('Failed to get auth token:', error);
   }
 
-  const res = await fetch(url, {
+  const response = await fetch(url, {
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    credentials: 'include', // Include cookies if any
   });
 
-  await throwIfResNotOk(res);
-  return res;
+  await throwIfResNotOk(response);
+  return response;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
