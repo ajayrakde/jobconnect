@@ -2,7 +2,8 @@ import { Router, Request, Response } from 'express';
 import { storage } from '../storage';
 import { insertEmployerSchema, insertJobPostSchema, type InsertEmployer, type InsertJobPost } from '@shared/schema';
 import { authenticateUser } from '../middleware/authenticate';
-import { requireRole, ensureProfileVerified } from '../middleware/authorization';
+import { requireRole } from '../middleware/authorization';
+import { requireVerifiedRole } from '../middleware/verifiedRole';
 
 export const employersRouter = Router();
 
@@ -35,9 +36,7 @@ employersRouter.post(
 
 employersRouter.get(
   '/stats',
-  authenticateUser,
-  requireRole('employer'),
-  ensureProfileVerified('employer'),
+  ...requireVerifiedRole('employer'),
   async (req: any, res) => {
     try {
       const employer = req.employer;
@@ -52,9 +51,7 @@ employersRouter.get(
 
 employersRouter.get(
   '/jobs',
-  authenticateUser,
-  requireRole('employer'),
-  ensureProfileVerified('employer'),
+  ...requireVerifiedRole('employer'),
   async (req: any, res) => {
     try {
       const employer = req.employer;
@@ -69,9 +66,7 @@ employersRouter.get(
 
 employersRouter.get(
   '/recent-jobs',
-  authenticateUser,
-  requireRole('employer'),
-  ensureProfileVerified('employer'),
+  ...requireVerifiedRole('employer'),
   async (req: any, res) => {
     try {
       const employer = req.employer;
@@ -86,9 +81,7 @@ employersRouter.get(
 
 employersRouter.get(
   '/fulfilled-jobs',
-  authenticateUser,
-  requireRole('employer'),
-  ensureProfileVerified('employer'),
+  ...requireVerifiedRole('employer'),
   async (req: any, res) => {
     try {
       const employer = req.employer;
@@ -104,9 +97,7 @@ employersRouter.get(
 // Job post creation via employers
 employersRouter.post(
   '/jobs',
-  authenticateUser,
-  requireRole('employer'),
-  ensureProfileVerified('employer'),
+  ...requireVerifiedRole('employer'),
   async (req: Request, res: Response) => {
     try {
       const employer = req.employer;

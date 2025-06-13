@@ -2,15 +2,14 @@ import { Router } from 'express';
 import { storage } from '../storage';
 import { insertJobPostSchema, type InsertJobPost } from '@shared/schema';
 import { authenticateUser } from '../middleware/authenticate';
-import { requireRole, ensureProfileVerified } from '../middleware/authorization';
+import { requireRole } from '../middleware/authorization';
+import { requireVerifiedRole } from '../middleware/verifiedRole';
 
 export const jobsRouter = Router();
 
 jobsRouter.patch(
   '/:id/fulfill',
-  authenticateUser,
-  requireRole('employer'),
-  ensureProfileVerified('employer'),
+  ...requireVerifiedRole('employer'),
   async (req: any, res) => {
     try {
       const employer = req.employer;
@@ -30,9 +29,7 @@ jobsRouter.patch(
 
 jobsRouter.patch(
   '/:id/activate',
-  authenticateUser,
-  requireRole('employer'),
-  ensureProfileVerified('employer'),
+  ...requireVerifiedRole('employer'),
   async (req: any, res) => {
     try {
       const employer = req.employer;
@@ -55,9 +52,7 @@ jobsRouter.patch(
 
 jobsRouter.patch(
   '/:id/deactivate',
-  authenticateUser,
-  requireRole('employer'),
-  ensureProfileVerified('employer'),
+  ...requireVerifiedRole('employer'),
   async (req: any, res) => {
     try {
       const employer = req.employer;
@@ -80,9 +75,7 @@ jobsRouter.patch(
 
 jobsRouter.get(
   '/:id',
-  authenticateUser,
-  requireRole('employer'),
-  ensureProfileVerified('employer'),
+  ...requireVerifiedRole('employer'),
   async (req: any, res) => {
     try {
       const employer = req.employer;
@@ -101,9 +94,7 @@ jobsRouter.get(
 
 jobsRouter.get(
   '/:id/applications',
-  authenticateUser,
-  requireRole('employer'),
-  ensureProfileVerified('employer'),
+  ...requireVerifiedRole('employer'),
   async (req: any, res) => {
     try {
       const employer = req.employer;
@@ -123,9 +114,7 @@ jobsRouter.get(
 
 jobsRouter.put(
   '/:id',
-  authenticateUser,
-  requireRole('employer'),
-  ensureProfileVerified('employer'),
+  ...requireVerifiedRole('employer'),
   async (req: any, res) => {
     try {
       const employer = req.employer;
@@ -155,9 +144,7 @@ jobsRouter.put(
 
 jobsRouter.post(
   '/:id/clone',
-  authenticateUser,
-  requireRole('employer'),
-  ensureProfileVerified('employer'),
+  ...requireVerifiedRole('employer'),
   async (req: any, res) => {
     try {
       const employer = req.employer;

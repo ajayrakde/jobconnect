@@ -1,16 +1,15 @@
 import { Router } from 'express';
 import { storage } from '../storage';
 import { insertCandidateSchema, type InsertCandidate } from '@shared/schema';
+import { requireVerifiedRole } from '../middleware/verifiedRole';
 import { authenticateUser } from '../middleware/authenticate';
-import { requireRole, ensureProfileVerified } from '../middleware/authorization';
+import { requireRole } from '../middleware/authorization';
 
 export const candidatesRouter = Router();
 
 candidatesRouter.get(
   '/profile',
-  authenticateUser,
-  requireRole('candidate'),
-  ensureProfileVerified('candidate'),
+  ...requireVerifiedRole('candidate'),
   async (req: any, res) => {
     try {
       const candidate = req.candidate;
@@ -64,9 +63,7 @@ candidatesRouter.post(
 
 candidatesRouter.get(
   '/stats',
-  authenticateUser,
-  requireRole('candidate'),
-  ensureProfileVerified('candidate'),
+  ...requireVerifiedRole('candidate'),
   async (req: any, res) => {
     try {
       const candidate = req.candidate;
@@ -81,9 +78,7 @@ candidatesRouter.get(
 
 candidatesRouter.get(
   '/recommended-jobs',
-  authenticateUser,
-  requireRole('candidate'),
-  ensureProfileVerified('candidate'),
+  ...requireVerifiedRole('candidate'),
   async (req: any, res) => {
     try {
       const candidate = req.candidate;
@@ -98,9 +93,7 @@ candidatesRouter.get(
 
 candidatesRouter.get(
   '/applications',
-  authenticateUser,
-  requireRole('candidate'),
-  ensureProfileVerified('candidate'),
+  ...requireVerifiedRole('candidate'),
   async (req: any, res) => {
     try {
       const candidate = req.candidate;
