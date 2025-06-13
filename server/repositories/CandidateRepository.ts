@@ -221,19 +221,24 @@ export class CandidateRepository {
   }
 
   static async getCandidateApplications(candidateId: number): Promise<any[]> {
-    const candidateApplications: Application[] = await db.select().from(applications).where(eq(applications.candidateId, candidateId));
-    const applicationsWithJobs = [] as any[];
-
-    for (const app of candidateApplications) {
-      const [job] = await db.select().from(jobPosts).where(eq(jobPosts.id, app.jobPostId));
-      applicationsWithJobs.push({
-        ...app,
-        jobTitle: job?.title || 'Unknown Job',
-        company: 'Sample Company',
-        appliedDate: app.appliedAt?.toDateString() || 'Recently',
-      });
-    }
-    return applicationsWithJobs;
+    return await db
+      .select({
+        id: applications.id,
+        jobPostId: applications.jobPostId,
+        status: applications.status,
+        appliedAt: applications.appliedAt,
+        jobTitle: jobPosts.title,
+        jobCode: jobPosts.jobCode,
+        location: jobPosts.location,
+        salaryRange: jobPosts.salaryRange,
+        employerId: employers.id,
+        company: employers.organizationName,
+      })
+      .from(applications)
+      .innerJoin(jobPosts, eq(applications.jobPostId, jobPosts.id))
+      .innerJoin(employers, eq(jobPosts.employerId, employers.id))
+      .where(eq(applications.candidateId, candidateId))
+      .orderBy(desc(applications.appliedAt));
   }
 }
 
