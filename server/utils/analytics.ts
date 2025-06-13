@@ -1,6 +1,7 @@
 import { db } from '../db';
 import { searchAnalytics } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
+import { getCachedData, setCachedData } from './cache';
 
 interface SearchAnalyticsData {
   userId: string;

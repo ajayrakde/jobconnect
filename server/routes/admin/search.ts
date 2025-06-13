@@ -9,6 +9,8 @@ import {
   employerProfiles
 } from "../../../shared/schema";
 import { createVerifyMiddleware } from "../../utils/auth";
+import { getCachedData, setCachedData, generateCacheKey } from "../../utils/cache";
+import { trackSearchQuery } from "../../utils/analytics";
 
 // Types for query parameters
 interface SearchParams {
