@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Filter, Search, SortAsc, MoreVertical, Eye, Edit, Trash2, CheckCircle, User, Building2, FileText, FlaskConical, Users, Briefcase, MapPin, Calendar } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { debugLog } from "@/lib/logger";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLocation } from "wouter";
 
@@ -74,13 +75,13 @@ const useAdminSearch = (type: string, query: string, filters: SearchFilters, sor
         });
         
         const url = `${API_BASE_URL}${ENDPOINTS.ADMIN.SEARCH}?${params}`;
-        console.log('Fetching from:', url); // Debug log
+        debugLog('Fetching from:', url);
         
         const response = await apiRequest(url, 'GET');
         const data = await response.json();
         
         // Log the response for debugging
-        console.log('Search response:', data);
+        debugLog('Search response:', data);
         
         if (!response.ok) {
           throw new Error(data.message || data.error || 'Search failed');

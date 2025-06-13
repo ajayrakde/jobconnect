@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { MatchingEngine } from "./MatchingEngine";
 import { apiRequest, throwIfResNotOk } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { debugLog } from "@/lib/logger";
 
 export const AdminDashboard: React.FC = () => {
   const { data: stats } = useQuery({
@@ -51,12 +52,12 @@ export const AdminDashboard: React.FC = () => {
 
   const handleExportData = () => {
     // Implement export functionality
-    console.log("Exporting data...");
+    debugLog("Exporting data...");
   };
 
   const handleRunMatching = () => {
     // Implement AI matching
-    console.log("Running AI matching...");
+    debugLog("Running AI matching...");
   };
 
   return (
