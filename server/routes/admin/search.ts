@@ -1,4 +1,5 @@
 import { eq, ilike, and, desc, asc, or } from "drizzle-orm";
+import { Router } from 'express';
 import { db } from "../../db";
 import { 
   candidates, 
@@ -303,3 +304,7 @@ function parseExperience(exp: string): number {
   if (exp === '10+ years') return 10;
   return 0;
 }
+
+export const adminSearchRouter = Router();
+
+adminSearchRouter.get('/', ...searchHandler);
