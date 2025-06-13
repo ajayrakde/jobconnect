@@ -1,5 +1,6 @@
 import { eq, ilike, and, desc, asc, or } from "drizzle-orm";
 import { Router } from 'express';
+import { asyncHandler } from '../../utils/asyncHandler';
 import { db } from "../../db";
 import { 
   candidates, 
@@ -38,12 +39,13 @@ interface ExtendedSearchParams extends SearchParams {
   useCursor?: boolean;
 }
 
-export const searchHandler = [...searchMiddleware, async (req, res) => {
-  try {
+export const searchHandler = [
+  ...searchMiddleware,
+  asyncHandler(async (req, res) => {
     const params = req.query as ExtendedSearchParams;
-    const { 
-      type, 
-      q = '', 
+    const {
+      type,
+      q = '',
       sort = 'latest',
       page = 1,
       pageSize = 20,
@@ -100,11 +102,8 @@ export const searchHandler = [...searchMiddleware, async (req, res) => {
     });
 
     res.json({ results });
-  } catch (error) {
-    console.error('Search error:', error);
-    res.status(500).json({ error: 'Search failed' });
-  }
-}];
+  })
+];
 
 async function searchCandidates(params: SearchParams, q: string, sort: string) {
   const { page = 1, pageSize = 20, cursor } = params;
