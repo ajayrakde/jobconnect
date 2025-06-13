@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { storage } from '../storage';
 import { insertCandidateSchema, type InsertCandidate } from '@shared/schema';
 import { requireVerifiedRole } from '../middleware/verifiedRole';
 import { authenticateUser } from '../middleware/authenticate';
 import { requireRole } from '../middleware/authorization';
 import { asyncHandler } from '../utils/asyncHandler';
+import { validateBody } from '../middleware/validation';
+import { CandidateRepository } from '../repositories';
 
 export const candidatesRouter = Router();
 
@@ -23,11 +24,11 @@ candidatesRouter.patch(
   requireRole('candidate'),
   asyncHandler(async (req: any, res) => {
     const user = req.dbUser;
-    const candidate = await storage.getCandidateByUserId(user.id);
+    const candidate = await CandidateRepository.findByUserId(user.id);
     if (!candidate || candidate.id !== parseInt(req.params.id)) {
       return res.status(403).json({ message: 'Access denied' });
     }
-    const updatedCandidate = await storage.updateCandidate(candidate.id, req.body);
+    const updatedCandidate = await CandidateRepository.update(candidate.id, req.body);
     res.json(updatedCandidate);
   })
 );

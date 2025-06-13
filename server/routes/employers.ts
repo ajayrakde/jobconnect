@@ -1,10 +1,11 @@
-import { Router, Request, Response } from 'express';
-import { storage } from '../storage';
-import { insertEmployerSchema, insertJobPostSchema, type InsertEmployer, type InsertJobPost } from '@shared/schema';
+import { Router } from 'express';
+import { insertEmployerSchema, type InsertEmployer } from '../../shared/schema';
 import { authenticateUser } from '../middleware/authenticate';
 import { requireRole } from '../middleware/authorization';
 import { requireVerifiedRole } from '../middleware/verifiedRole';
 import { asyncHandler } from '../utils/asyncHandler';
+import { validateBody } from '../middleware/validation';
+import { EmployerRepository, JobPostRepository } from '../repositories';
 
 export const employersRouter = Router();
 
@@ -12,15 +13,25 @@ employersRouter.post(
   '/',
   authenticateUser,
   requireRole('employer'),
+  validateBody(insertEmployerSchema),
   asyncHandler(async (req: any, res) => {
     const user = req.dbUser;
-    const existingEmployer = await storage.getEmployerByUserId(user.id);
+    const existingEmployer = await EmployerRepository.findByUserId(user.id);
+    
     if (existingEmployer) {
-      return res.status(409).json({ message: 'Employer profile already exists', code: 'EMPLOYER_EXISTS' });
+      return res.status(409).json({ 
+        message: 'Employer profile already exists',
+        code: 'EMPLOYER_EXISTS' 
+      });
     }
-    const employerData: InsertEmployer = insertEmployerSchema.parse({ ...req.body, userId: user.id });
-    const employer = await storage.createEmployer(employerData);
-    res.json(employer);
+
+    const employerData: InsertEmployer = { 
+      ...req.body,
+      userId: user.id 
+    };
+    
+    const employer = await EmployerRepository.create(employerData);
+    res.status(201).json(employer);
   })
 );
 

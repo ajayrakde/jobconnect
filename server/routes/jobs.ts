@@ -1,24 +1,47 @@
 import { Router } from 'express';
-import { storage } from '../storage';
 import { insertJobPostSchema, type InsertJobPost } from '@shared/schema';
 import { authenticateUser } from '../middleware/authenticate';
 import { requireRole } from '../middleware/authorization';
 import { requireVerifiedRole } from '../middleware/verifiedRole';
 import { asyncHandler } from '../utils/asyncHandler';
+import { validateBody } from '../middleware/validation';
+import { JobPostRepository } from '../repositories';
 
 export const jobsRouter = Router();
 
+/**
+ * @swagger
+ * /api/jobs/{id}/fulfill:
+ *   patch:
+ *     summary: Mark a job post as fulfilled
+ *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Job marked as fulfilled successfully
+ *       404:
+ *         description: Job not found
+ */
 jobsRouter.patch(
   '/:id/fulfill',
   ...requireVerifiedRole('employer'),
   asyncHandler(async (req: any, res) => {
     const employer = req.employer;
     const jobId = parseInt(req.params.id);
-    const job = await storage.getJobPost(jobId);
+    const job = await JobPostRepository.findById(jobId);
+    
     if (!job || job.employerId !== employer.id) {
       return res.status(404).json({ message: 'Job not found' });
     }
-    const fulfilledJob = await storage.markJobAsFulfilled(jobId);
+    
+    const fulfilledJob = await JobPostRepository.update(jobId, { fulfilled: true });
     res.json(fulfilledJob);
   })
 );

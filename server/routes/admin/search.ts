@@ -10,7 +10,7 @@ import {
   candidateProfiles,
   employerProfiles
 } from "../../../shared/schema";
-import { createVerifyMiddleware } from "../../utils/auth";
+import { createVerifyMiddleware } from "../../auth";
 import { getCachedData, setCachedData, generateCacheKey } from "../../utils/cache";
 import { trackSearchQuery } from "../../utils/analytics";
 
