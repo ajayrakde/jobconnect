@@ -111,6 +111,43 @@ npm run build
 
 The command bundles the server and produces `dist/index.js` which can be deployed.
 
+## Error Handling
+
+Express route handlers in this project use an `asyncHandler` helper to catch
+errors from asynchronous code. Wrapping each route with this helper forwards any
+exceptions to the global `errorHandler` middleware.
+
+```typescript
+// server/routes/users.ts
+import { Router } from 'express';
+import { asyncHandler } from '../middleware/asyncHandler';
+
+const router = Router();
+
+router.get('/users/:id', asyncHandler(async (req, res) => {
+  const user = await storage.getUserById(req.params.id);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+  res.json(user);
+}));
+
+export default router;
+```
+
+At the application level, the `errorHandler` middleware centralizes error
+responses and logging:
+
+```typescript
+// server/index.ts
+import { errorHandler } from './middleware/errorHandler';
+
+// ... register routes
+app.use(errorHandler);
+```
+
+
 ## Deploying to Azure Functions
 
 1. Install the Azure Functions Core Tools.
