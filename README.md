@@ -17,6 +17,8 @@ This project is a full stack job marketplace built with React and Express. Docke
    
    # Edit with your settings
    nano .env
+
+   # Do NOT commit this file. `.env` is gitignored for security.
    ```
 
 3. **Install Dependencies**
@@ -32,6 +34,8 @@ This project is a full stack job marketplace built with React and Express. Docke
 ## Environment Configuration
 
 The application uses a `.env` file for configuration. A template file `.env.example` is provided as a reference:
+
+**Important:** Keep your `.env` private and out of version control.
 
 ### Required Variables
 
