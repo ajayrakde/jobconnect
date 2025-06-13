@@ -9,6 +9,7 @@ import {
   employerProfiles
 } from "../../../shared/schema";
 import { createVerifyMiddleware } from "../../utils/auth";
+import { asyncHandler } from "../../middleware/asyncHandler";
 
 // Types for query parameters
 interface SearchParams {
@@ -35,8 +36,7 @@ interface ExtendedSearchParams extends SearchParams {
   useCursor?: boolean;
 }
 
-export const searchHandler = [...searchMiddleware, async (req, res) => {
-  try {
+export const searchHandler = [...searchMiddleware, asyncHandler(async (req, res) => {
     const params = req.query as ExtendedSearchParams;
     const { 
       type, 
@@ -97,11 +97,7 @@ export const searchHandler = [...searchMiddleware, async (req, res) => {
     });
 
     res.json({ results });
-  } catch (error) {
-    console.error('Search error:', error);
-    res.status(500).json({ error: 'Search failed' });
-  }
-}];
+})];
 
 async function searchCandidates(params: SearchParams, q: string, sort: string) {
   const { page = 1, pageSize = 20, cursor } = params;

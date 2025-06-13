@@ -6,6 +6,7 @@ import { candidatesRouter } from './candidates';
 import { employersRouter } from './employers';
 import { jobsRouter } from './jobs';
 import { adminRouter } from './admin';
+import { errorHandler } from '../middleware/errorHandler';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use(express.json());
@@ -20,10 +21,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/jobs', jobsRouter);
   app.use('/api/admin', adminRouter);
 
-  app.use((err: any, _req: any, res: any, _next: any) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Internal Server Error' });
-  });
+  app.use(errorHandler);
 
   const httpServer = createServer(app);
   return httpServer;
