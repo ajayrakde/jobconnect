@@ -20,11 +20,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/jobs', jobsRouter);
   app.use('/api/admin', adminRouter);
 
-  app.use((err: any, _req: any, res: any, _next: any) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Internal Server Error' });
-  });
-
   const httpServer = createServer(app);
   return httpServer;
 }
