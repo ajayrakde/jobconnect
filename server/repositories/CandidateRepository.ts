@@ -94,7 +94,7 @@ export class CandidateRepository {
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-    const allJobs = await db
+    const jobsWithEmployers = await db
       .select({
         id: jobPosts.id,
         jobCode: jobPosts.jobCode,
@@ -107,22 +107,20 @@ export class CandidateRepository {
         location: jobPosts.location,
         createdAt: jobPosts.createdAt,
         employerId: jobPosts.employerId,
+        organizationName: employers.organizationName,
       })
       .from(jobPosts)
+      .leftJoin(employers, eq(jobPosts.employerId, employers.id))
       .where(and(gte(jobPosts.createdAt, ninetyDaysAgo), eq(jobPosts.isActive, true), eq(jobPosts.fulfilled, false)));
 
-    const jobsWithEmployers = [] as any[];
-    for (const job of allJobs) {
-      const employer = await EmployerRepository.getEmployer(job.employerId);
-      jobsWithEmployers.push({
-        ...job,
-        employer: {
-          organizationName: employer?.organizationName || 'Unknown Organization',
-        },
-      });
-    }
+    const jobsWithEmployersMapped = jobsWithEmployers.map(job => ({
+      ...job,
+      employer: {
+        organizationName: job.organizationName || 'Unknown Organization',
+      },
+    }));
 
-    const jobsWithScores = jobsWithEmployers.map(job => {
+    const jobsWithScores = jobsWithEmployersMapped.map(job => {
       const { score, factors } = this.calculateJobCompatibility(job, candidate);
       return {
         ...job,
@@ -237,5 +235,3 @@ export class CandidateRepository {
   }
 }
 
-// Import EmployerRepository after declaration to avoid circular dependency
-import { EmployerRepository } from './EmployerRepository';
