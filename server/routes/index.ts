@@ -6,6 +6,7 @@ import { candidatesRouter } from './candidates';
 import { employersRouter } from './employers';
 import { jobsRouter } from './jobs';
 import { adminRouter } from './admin';
+import { adminSearchRouter } from './admin/search';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use(express.json());
@@ -18,6 +19,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/candidates', candidatesRouter);
   app.use('/api/employers', employersRouter);
   app.use('/api/jobs', jobsRouter);
+  app.use('/api/admin/search', adminSearchRouter);
   app.use('/api/admin', adminRouter);
 
   const httpServer = createServer(app);
