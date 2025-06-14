@@ -6,6 +6,7 @@ import { requireRole } from '../middleware/authorization';
 import { asyncHandler } from '../utils/asyncHandler';
 import { validateBody } from '../middleware/validation';
 import { CandidateRepository } from '../repositories';
+import { storage } from '../storage';
 
 export const candidatesRouter = Router();
 

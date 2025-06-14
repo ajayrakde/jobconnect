@@ -1,7 +1,7 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '../db';
-import { employers, users } from '@/shared/schema';
-import type { InsertEmployer } from '@/shared/schema';
+import { employers, users, jobPosts, applications } from '@shared/schema';
+import type { InsertEmployer } from '@shared/schema';
 
 /**
  * Repository for handling employer-related database operations
@@ -109,9 +109,9 @@ export class EmployerRepository {
   /**
    * Get employer statistics
    */
-  static async getStats(employerId: number) {
+  static async getEmployerStats(employerId: number) {
     // Add your statistics query here
-    const stats = await db.transaction(async (tx) => {
+    const stats = await db.transaction(async (tx: any) => {
       const [activeJobsCount] = await tx
         .select({ count: sql<number>`count(*)` })
         .from(jobPosts)
@@ -144,13 +144,82 @@ export class EmployerRepository {
   static async delete(id: number) {
     const [deleted] = await db
       .update(employers)
-      .set({ 
+      .set({
         deleted: true,
         updatedAt: new Date()
       })
       .where(eq(employers.id, id))
       .returning();
-    
+
     return deleted;
+  }
+
+  /** Retrieve employer by ID */
+  static async getEmployer(id: number) {
+    const [employer] = await db
+      .select()
+      .from(employers)
+      .where(eq(employers.id, id))
+      .limit(1);
+    return employer;
+  }
+
+  /** Retrieve employer by user ID */
+  static async getEmployerByUserId(userId: number) {
+    return this.findByUserId(userId);
+  }
+
+  /** Alias for create */
+  static async createEmployer(data: InsertEmployer) {
+    return this.create(data);
+  }
+
+  /** Alias for update */
+  static async updateEmployer(id: number, data: Partial<InsertEmployer>) {
+    return this.update(id, data);
+  }
+
+  /** Get all unverified employers */
+  static async getUnverifiedEmployers() {
+    return this.findUnverified();
+  }
+
+  /** Alias for verify */
+  static async verifyEmployer(id: number) {
+    return this.verify(id);
+  }
+
+  /** Alias for delete */
+  static async softDeleteEmployer(id: number) {
+    return this.delete(id);
+  }
+
+  /** Retrieve fulfilled jobs for employer */
+  static async getFulfilledJobsByEmployer(employerId: number) {
+    return db
+      .select()
+      .from(jobPosts)
+      .where(
+        and(
+          eq(jobPosts.employerId, employerId),
+          eq(jobPosts.fulfilled, true)
+        )
+      )
+      .orderBy(desc(jobPosts.createdAt));
+  }
+
+  /** Retrieve active, unfulfilled jobs for employer */
+  static async getActiveUnfulfilledJobsByEmployer(employerId: number) {
+    return db
+      .select()
+      .from(jobPosts)
+      .where(
+        and(
+          eq(jobPosts.employerId, employerId),
+          eq(jobPosts.fulfilled, false),
+          eq(jobPosts.isActive, true)
+        )
+      )
+      .orderBy(desc(jobPosts.createdAt));
   }
 }

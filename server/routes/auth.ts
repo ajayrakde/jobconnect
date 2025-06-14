@@ -3,14 +3,14 @@ import { insertUserSchema, type InsertUser } from '../../shared/schema';
 import { authenticateUser } from '../middleware/authenticate';
 import { asyncHandler } from '../utils/asyncHandler';
 import { validateBody } from '../middleware/validation';
-import { UserRepository } from '../repositories';
+import { UserRepository, CandidateRepository, EmployerRepository } from '../repositories';
 
 export const authRouter = Router();
 
 authRouter.post('/register', 
   validateBody(insertUserSchema),
   asyncHandler(async (req, res) => {
-    const userData = req.body as InsertUser;
+    const userData = req.body as any;
     
     const existingUserByUid = await UserRepository.findByFirebaseUid(userData.firebaseUid);
     if (existingUserByUid) {
