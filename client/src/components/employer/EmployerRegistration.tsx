@@ -9,6 +9,7 @@ import { Building, FileText, Upload, Save, X } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { debugLog } from "@/lib/logger";
 import { useLocation } from "wouter";
 
 interface EmployerFormData {
@@ -58,10 +59,10 @@ export const EmployerRegistration: React.FC = () => {
   const createEmployerMutation = useMutation({
     mutationFn: async (employerData: EmployerFormData) => {
       try {
-        console.log("Submitting employer data:", employerData);
+        debugLog("Submitting employer data:", employerData);
         const response = await apiRequest("/api/employers", "POST", employerData);
         const result = await response.json();
-        console.log("Registration response:", result);
+        debugLog("Registration response:", result);
         return result;
       } catch (error: any) {
         console.error("Registration error:", error);
@@ -79,7 +80,7 @@ export const EmployerRegistration: React.FC = () => {
       }
     },
     onSuccess: (data) => {
-      console.log("Registration successful:", data);
+      debugLog("Registration successful:", data);
       toast({
         title: "Registration successful",
         description: "Your employer profile has been created successfully",

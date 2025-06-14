@@ -39,8 +39,8 @@ export const MatchingModal: React.FC<MatchingModalProps> = ({
   });
 
   const title = matchingType === "job-candidates" 
-    ? `Matching Candidates for ${selectedJob?.title}`
-    : `Matching Jobs for ${selectedCandidate?.name}`;
+    ? `Matching Candidates for ${selectedJob?.title || 'Job'}`
+    : `Matching Jobs for ${selectedCandidate?.name || 'Candidate'}`;
 
   const renderJobCandidateMatches = () => (
     <div className="space-y-4">
@@ -87,15 +87,19 @@ export const MatchingModal: React.FC<MatchingModalProps> = ({
                   <h3 className="font-semibold text-lg text-gray-900">
                     {match.candidate.name}
                   </h3>
-                  <p className="text-gray-600">{match.candidate.role}</p>
+                  <p className="text-gray-600">{match.candidate.role || 'Professional'}</p>
                   <div className="flex items-center space-x-3 mt-2">
                     <span className="text-sm text-gray-500 flex items-center">
                       <MapPin className="h-4 w-4 mr-1" />
-                      {match.candidate.location}
+                      {typeof match.candidate.location === 'object' 
+                        ? match.candidate.location.city || 'Location'
+                        : match.candidate.location || 'Location'}
                     </span>
                     <span className="text-sm text-gray-500 flex items-center">
                       <Clock className="h-4 w-4 mr-1" />
-                      {match.candidate.experience} years exp
+                      {typeof match.candidate.experience === 'object'
+                        ? `${match.candidate.experience.years || 0} years exp`
+                        : `${match.candidate.experience || 0} years exp`}
                     </span>
                   </div>
                 </div>
@@ -128,15 +132,21 @@ export const MatchingModal: React.FC<MatchingModalProps> = ({
                 <div>
                   <span className="text-sm text-gray-600">Skills Match:</span>
                   <div className="mt-1 flex flex-wrap gap-1">
-                    {match.skillsMatch?.map((skill: any) => (
-                      <Badge
-                        key={skill.name}
-                        variant={skill.matches ? "default" : "outline"}
-                        className="text-xs"
-                      >
-                        {skill.name} {skill.matches && "✓"}
-                      </Badge>
-                    ))}
+                    {match.skillsMatch?.map((skill: any) => {
+                      // Make sure skill is not an object, or extract the name if it is
+                      const skillName = typeof skill === 'string' ? skill : skill.name;
+                      const matches = typeof skill === 'string' ? true : skill.matches;
+                      
+                      return (
+                        <Badge
+                          key={skillName}
+                          variant={matches ? "default" : "outline"}
+                          className="text-xs"
+                        >
+                          {skillName} {matches && "✓"}
+                        </Badge>
+                      );
+                    })}
                   </div>
                 </div>
                 <div>
@@ -144,7 +154,10 @@ export const MatchingModal: React.FC<MatchingModalProps> = ({
                   <div className={`font-medium ${
                     match.experienceMatch ? "text-green-600" : "text-yellow-600"
                   }`}>
-                    {match.candidate.experience} years ({match.experienceMatch ? "Perfect" : "Good"})
+                    {typeof match.candidate.experience === 'object' 
+                      ? `${match.candidate.experience.years || 0} years` 
+                      : `${match.candidate.experience} years`} 
+                    ({match.experienceMatch ? "Perfect" : "Good"})
                   </div>
                 </div>
                 <div>

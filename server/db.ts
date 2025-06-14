@@ -19,7 +19,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Configure pool with timeout settings
-export const pool = new Pool({ 
+export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   connectionTimeoutMillis: 10000,
   max: 20,

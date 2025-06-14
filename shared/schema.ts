@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -108,6 +108,17 @@ export const adminInviteCodes = pgTable("admin_invite_codes", {
   usedAt: timestamp("used_at"),
 });
 
+export const searchAnalytics = pgTable('search_analytics', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id').notNull(),
+  searchType: varchar('search_type').notNull(),
+  query: text('query').notNull(),
+  filters: jsonb('filters'),
+  resultCount: integer('result_count').notNull(),
+  timestamp: timestamp('timestamp').notNull().defaultNow(),
+  cached: boolean('cached').notNull().default(false),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   firebaseUid: true,
@@ -169,3 +180,26 @@ export type MatchScore = typeof matchScores.$inferSelect;
 export type AdminInviteCode = typeof adminInviteCodes.$inferSelect;
 export const insertAdminInviteCodeSchema = createInsertSchema(adminInviteCodes);
 export type InsertAdminInviteCode = z.infer<typeof insertAdminInviteCodeSchema>;
+
+// Search Types
+export interface AdminSearchResult {
+  id: number;
+  type: 'candidate' | 'employer' | 'job';
+  name?: string;
+  email?: string;
+  qualification?: string;
+  experience?: string | { years: number };
+  city?: string;
+  status: 'verified' | 'pending' | 'rejected' | 'active' | 'inactive' | 'flagged';
+  avatar?: string;
+  companyName?: string;
+  industry?: string;
+  size?: string;
+  logo?: string;
+  title?: string;
+  employer?: string;
+  employerId?: number;
+  postedOn?: string;
+  category?: string;
+  experienceRequired?: string;
+}

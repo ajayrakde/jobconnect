@@ -1,6 +1,86 @@
 # LokalTalent
 
-This project is a full stack job marketplace built with React and Express. Docker images are built from the included `Dockerfile` and can be deployed to Azure.
+LokalTalent is a full stack job marketplace with a Vite-based React client and Express API. Docker images built from the included Dockerfile can be deployed to Azure.
+
+## Quick Start
+
+1. **Clone and Setup**
+   ```bash
+   git clone <repository-url>
+   cd lokaltalent
+   ```
+
+2. **Environment Configuration**
+   ```bash
+   # Copy the environment template
+   cp .env.example .env
+   
+   # Edit with your settings
+   nano .env
+
+   # Do NOT commit this file. `.env` is gitignored for security.
+   ```
+
+3. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+4. **Start Development**
+   ```bash
+   npm run dev
+   ```
+
+## Environment Configuration
+
+The application uses a `.env` file for configuration. A template file `.env.example` is provided as a reference:
+
+**Important:** Keep your `.env` private and out of version control.
+
+### Required Variables
+
+```env
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/lokaltalent"
+
+# Authentication
+FIREBASE_PROJECT_ID="your-project-id"
+FIREBASE_CLIENT_EMAIL="your-client-email"
+FIREBASE_PRIVATE_KEY="your-private-key"
+```
+
+### Optional Features
+
+#### Caching (Optional)
+```env
+# Master switch for caching
+CACHE_ENABLED=false
+
+# Individual feature toggles
+CACHE_CANDIDATES_ENABLED=false
+CACHE_EMPLOYERS_ENABLED=false
+CACHE_JOBS_ENABLED=false
+
+# Performance thresholds
+CACHE_MIN_RECORDS=1000  # Start caching when records exceed this number
+```
+
+#### Redis (Required if caching is enabled)
+```env
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=your_password
+```
+
+### Why .env.example?
+
+We maintain an `.env.example` file for several reasons:
+1. **Security**: Real credentials in `.env` should never be committed to git
+2. **Documentation**: Shows what environment variables are needed
+3. **Onboarding**: New developers can quickly set up their environment
+4. **Version Control**: Track required configuration changes
+
+Always update `.env.example` when adding new environment variables!
 
 ## Azure Resources
 
@@ -23,17 +103,65 @@ A Terraform configuration is provided under `deploy/terraform` to provision thes
 
 To configure a custom domain, set `custom_domain_name` and certificate variables in `terraform.tfvars` before applying.
 
-# LokalTalent
-
-This project contains a Vite-based client and an Express API.
-
 ## Build
 
 ```bash
 npm run build
 ```
 
+
 The command bundles the server and produces `dist/index.js` which can be deployed.
+
+
+## Schema Workflow
+
+The canonical database schema lives in `shared/schema.ts`. `drizzle-kit` reads
+from this file when generating migrations. Any changes to the database should be
+made here.
+
+1. Update `shared/schema.ts` with your table or column changes.
+2. Run `npx drizzle-kit generate` to create a new migration under `migrations/`.
+3. Apply the migration to your database.
+4. Commit the updated migration along with the schema file.
+
+The TypeScript files inside `drizzle/schema/` are kept only for reference and are
+not used by the migration tooling.
+
+## Error Handling
+
+Express route handlers in this project use an `asyncHandler` helper to catch
+errors from asynchronous code. Wrapping each route with this helper forwards any
+exceptions to the global `errorHandler` middleware.
+
+```typescript
+// server/routes/users.ts
+import { Router } from 'express';
+import { asyncHandler } from '../middleware/asyncHandler';
+
+const router = Router();
+
+router.get('/users/:id', asyncHandler(async (req, res) => {
+  const user = await storage.getUserById(req.params.id);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+  res.json(user);
+}));
+
+export default router;
+```
+
+At the application level, the `errorHandler` middleware centralizes error
+responses and logging:
+
+```typescript
+// server/index.ts
+import { errorHandler } from './middleware/errorHandler';
+
+// ... register routes
+app.use(errorHandler);
+```
 
 ## Deploying to Azure Functions
 

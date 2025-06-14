@@ -86,15 +86,15 @@ export const MatchingEngine: React.FC = () => {
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900">{job.title}</h3>
-                    <p className="text-sm text-gray-600">{job.company}</p>
+                    <p className="text-sm text-gray-600">{job.company?.name || 'Company Name'}</p>
                     <div className="flex items-center space-x-4 mt-2">
                       <Badge variant="outline" className="text-xs">
                         <MapPin className="h-3 w-3 mr-1" />
-                        {job.location}
+                        {job.location?.city || job.location || 'Location'}
                       </Badge>
                       <Badge variant="outline" className="text-xs">
                         <DollarSign className="h-3 w-3 mr-1" />
-                        {job.salaryRange}
+                        {job.salaryRange || 'Salary range'}
                       </Badge>
                     </div>
                   </div>
@@ -136,22 +136,40 @@ export const MatchingEngine: React.FC = () => {
               >
                 <div className="flex items-center space-x-4">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src={candidate.avatar} alt={candidate.name} />
+                    <AvatarImage src={candidate.avatar} alt={
+                      typeof candidate.name === 'object'
+                        ? `${candidate.name.first || ''} ${candidate.name.last || ''}`
+                        : candidate.name || 'Candidate'
+                    } />
                     <AvatarFallback>
-                      {candidate.name?.split(" ").map((n: string) => n[0]).join("")}
+                      {typeof candidate.name === 'object'
+                        ? `${(candidate.name.first?.[0] || '')}${(candidate.name.last?.[0] || '')}`
+                        : (candidate.name?.split(" ").map((n: string) => n[0]).join("") || "?")}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{candidate.name}</h3>
-                    <p className="text-sm text-gray-600">{candidate.role || "Professional"}</p>
+                    <h3 className="font-semibold text-gray-900">
+                      {typeof candidate.name === 'object' 
+                        ? `${candidate.name.first || ''} ${candidate.name.last || ''}`
+                        : candidate.name || 'Candidate'}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {typeof candidate.role === 'object'
+                        ? candidate.role.title || "Professional"
+                        : candidate.role || "Professional"}
+                    </p>
                     <div className="flex items-center space-x-2 mt-1">
                       <Badge variant="outline" className="text-xs">
                         <Clock className="h-3 w-3 mr-1" />
-                        {candidate.experience} years
+                        {typeof candidate.experience === 'object'
+                          ? `${candidate.experience.years || 0} years`
+                          : `${candidate.experience || 0} years`}
                       </Badge>
                       <Badge variant="outline" className="text-xs">
                         <MapPin className="h-3 w-3 mr-1" />
-                        {candidate.location}
+                        {typeof candidate.location === 'object'
+                          ? candidate.location.city || 'Location'
+                          : candidate.location || 'Location'}
                       </Badge>
                     </div>
                   </div>

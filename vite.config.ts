@@ -31,6 +31,7 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
   },
+  envPrefix: "VITE_",
   server: {
     fs: {
       strict: true,
