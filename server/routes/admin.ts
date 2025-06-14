@@ -1,22 +1,69 @@
 import { Router } from 'express';
-import { storage } from '../storage';
-import { insertShortlistSchema } from '@shared/schema';
 import { authenticateUser } from '../middleware/authenticate';
+import { requireRole } from '../middleware/authorization';
+import { asyncHandler } from '../utils/asyncHandler';
+import { validateQuery } from '../middleware/validation';
+import { z } from 'zod';
+import { AdminRepository } from '../repositories';
 import { calculateMatchScore } from '../utils/matchingEngine';
 import { exportToExcel, exportToPDF } from '../utils/exportUtils';
-import { asyncHandler } from '../utils/asyncHandler';
-import { verifyFirebaseToken } from '../utils/firebase-admin';
+
+// Validation schemas
+const searchQuerySchema = z.object({
+  type: z.enum(['candidate', 'employer', 'job']).optional(),
+  q: z.string().min(1),
+  sort: z.enum(['latest', 'relevance']).optional(),
+  page: z.number().optional(),
+  limit: z.number().optional(),
+});
 
 export const adminRouter = Router();
 
-adminRouter.get('/stats', authenticateUser, asyncHandler(async (req: any, res) => {
-  const user = await storage.getUserByFirebaseUid(req.user.uid);
-  if (!user || user.role !== 'admin') {
-    return res.status(403).json({ message: 'Access denied' });
-  }
-  const stats = await storage.getAdminStats();
-  res.json(stats);
-}));
+/**
+ * @swagger
+ * /api/admin/search:
+ *   get:
+ *     summary: Search across candidates, employers, and jobs
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ */
+adminRouter.get(
+  '/search',
+  authenticateUser,
+  requireRole('admin'),
+  validateQuery(searchQuerySchema),
+  asyncHandler(async (req, res) => {
+    const { type, q = '', sort = 'latest', page = 1, limit = 20 } = req.query;
+    const results = await AdminRepository.search({
+      type,
+      query: q,
+      sort,
+      page,
+      limit
+    });
+    res.json(results);
+  })
+);
+
+/**
+ * @swagger
+ * /api/admin/stats:
+ *   get:
+ *     summary: Get admin dashboard statistics
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ */
+adminRouter.get(
+  '/stats',
+  authenticateUser,
+  requireRole('admin'),
+  asyncHandler(async (req, res) => {
+    const stats = await AdminRepository.getStats();
+    res.json(stats);
+  })
+);
 
 adminRouter.get('/jobs', authenticateUser, asyncHandler(async (req: any, res) => {
   const user = await storage.getUserByFirebaseUid(req.user.uid);
