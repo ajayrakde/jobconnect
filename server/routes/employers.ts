@@ -1,12 +1,11 @@
-import { Router, Request, Response } from 'express';
-import { insertEmployerSchema, insertJobPostSchema, type InsertEmployer, type InsertJobPost } from '../../shared/schema';
+import { Router } from 'express';
+import { insertEmployerSchema, type InsertEmployer } from '../../shared/schema';
 import { authenticateUser } from '../middleware/authenticate';
 import { requireRole } from '../middleware/authorization';
 import { requireVerifiedRole } from '../middleware/verifiedRole';
 import { asyncHandler } from '../utils/asyncHandler';
 import { validateBody } from '../middleware/validation';
 import { EmployerRepository, JobPostRepository } from '../repositories';
-import { storage } from '../storage';
 
 export const employersRouter = Router();
 
@@ -40,7 +39,7 @@ employersRouter.get(
   '/stats',
   ...requireVerifiedRole('employer'),
   asyncHandler(async (req: any, res) => {
-    const employer = (req as any).employer;
+    const employer = req.employer;
     const stats = await storage.getEmployerStats(employer.id);
     res.json(stats);
   })
@@ -50,7 +49,7 @@ employersRouter.get(
   '/jobs',
   ...requireVerifiedRole('employer'),
   asyncHandler(async (req: any, res) => {
-    const employer = (req as any).employer;
+    const employer = req.employer;
     const jobPosts = await storage.getJobPostsByEmployer(employer.id);
     res.json(jobPosts);
   })
@@ -60,7 +59,7 @@ employersRouter.get(
   '/recent-jobs',
   ...requireVerifiedRole('employer'),
   asyncHandler(async (req: any, res) => {
-    const employer = (req as any).employer;
+    const employer = req.employer;
     const recentJobs = await storage.getActiveUnfulfilledJobsByEmployer(employer.id);
     res.json(recentJobs.slice(0, 5));
   })
@@ -70,7 +69,7 @@ employersRouter.get(
   '/fulfilled-jobs',
   ...requireVerifiedRole('employer'),
   asyncHandler(async (req: any, res) => {
-    const employer = (req as any).employer;
+    const employer = req.employer;
     const fulfilledJobs = await storage.getFulfilledJobsByEmployer(employer.id);
     res.json(fulfilledJobs);
   })
@@ -81,7 +80,7 @@ employersRouter.post(
   '/jobs',
   ...requireVerifiedRole('employer'),
   asyncHandler(async (req: Request, res: Response) => {
-    const employer = (req as any).employer;
+    const employer = req.employer;
     const jobData = { ...req.body, employerId: employer.id, status: 'active', createdAt: new Date(), updatedAt: new Date() };
     const jobPost = await storage.createJobPost(jobData);
     res.status(201).json({ success: true, data: jobPost });

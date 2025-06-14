@@ -6,7 +6,6 @@ import { requireVerifiedRole } from '../middleware/verifiedRole';
 import { asyncHandler } from '../utils/asyncHandler';
 import { validateBody } from '../middleware/validation';
 import { JobPostRepository } from '../repositories';
-import { storage } from '../storage';
 
 export const jobsRouter = Router();
 
@@ -38,11 +37,11 @@ jobsRouter.patch(
     const jobId = parseInt(req.params.id);
     const job = await JobPostRepository.findById(jobId);
     
-    if (!job || job.employer.id !== employer.id) {
+    if (!job || job.employerId !== employer.id) {
       return res.status(404).json({ message: 'Job not found' });
     }
     
-    const fulfilledJob = await JobPostRepository.update(jobId, { status: 'fulfilled' } as any);
+    const fulfilledJob = await JobPostRepository.update(jobId, { fulfilled: true });
     res.json(fulfilledJob);
   })
 );
@@ -54,7 +53,7 @@ jobsRouter.patch(
     const employer = req.employer;
     const jobId = parseInt(req.params.id);
     const job = await storage.getJobPost(jobId);
-    if (!job || job.employer.id !== employer.id) {
+    if (!job || job.employerId !== employer.id) {
       return res.status(404).json({ message: 'Job not found' });
     }
     if (job.fulfilled) {
@@ -72,7 +71,7 @@ jobsRouter.patch(
     const employer = req.employer;
     const jobId = parseInt(req.params.id);
     const job = await storage.getJobPost(jobId);
-    if (!job || job.employer.id !== employer.id) {
+    if (!job || job.employerId !== employer.id) {
       return res.status(404).json({ message: 'Job not found' });
     }
     if (job.fulfilled) {
@@ -90,7 +89,7 @@ jobsRouter.get(
     const employer = req.employer;
     const jobId = parseInt(req.params.id);
     const job = await storage.getJobPost(jobId);
-    if (!job || job.employer.id !== employer.id) {
+    if (!job || job.employerId !== employer.id) {
       return res.status(404).json({ message: 'Job not found' });
     }
     res.json(job);
@@ -104,7 +103,7 @@ jobsRouter.get(
     const employer = req.employer;
     const jobId = parseInt(req.params.id);
     const job = await storage.getJobPost(jobId);
-    if (!job || job.employer.id !== employer.id) {
+    if (!job || job.employerId !== employer.id) {
       return res.status(404).json({ message: 'Job not found' });
     }
     const applications = await storage.getApplicationsByJob(jobId);
@@ -125,7 +124,7 @@ jobsRouter.put(
     if (job.fulfilled) {
       return res.status(403).json({ message: 'Cannot edit fulfilled jobs' });
     }
-    if (job.employer.id !== employer.id) {
+    if (job.employerId !== employer.id) {
       return res.status(403).json({ message: 'Access denied' });
     }
     const updateData = insertJobPostSchema.partial().parse(req.body) as Partial<InsertJobPost>;
@@ -141,7 +140,7 @@ jobsRouter.post(
     const employer = req.employer;
     const jobId = parseInt(req.params.id);
     const job = await storage.getJobPost(jobId);
-    if (!job || job.employer.id !== employer.id) {
+    if (!job || job.employerId !== employer.id) {
       return res.status(404).json({ message: 'Job not found' });
     }
     const jobCode = `JOB-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
