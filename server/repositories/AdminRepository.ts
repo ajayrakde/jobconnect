@@ -7,8 +7,8 @@ import {
   employers,
   jobPosts,
   applications 
-} from '@/shared/schema';
-import type { InsertAdminInviteCode } from '@/shared/schema';
+} from '@shared/schema';
+import type { InsertAdminInviteCode } from '@shared/schema';
 
 /**
  * Repository for handling admin-related database operations
@@ -62,7 +62,7 @@ export class AdminRepository {
    * Get admin dashboard statistics
    */
   static async getStats() {
-    const stats = await db.transaction(async (tx) => {
+    const stats = await db.transaction(async (tx: any) => {
       const [userStats] = await tx
         .select({
           totalUsers: sql<number>`count(*)`,
@@ -108,7 +108,7 @@ export class AdminRepository {
   /**
    * Search across all entities (candidates, employers, jobs)
    */
-  static async search(query: string, type?: 'candidate' | 'employer' | 'job') {
+  static async search(query: string, type?: 'candidate' | 'employer' | 'job'): Promise<any> {
     // Implementation depends on your search requirements
     // This is a basic example
     if (type === 'candidate') {
@@ -134,7 +134,7 @@ export class AdminRepository {
     }
 
     // Search all by default
-    const results = await Promise.all([
+    const results: any[] = await Promise.all([
       this.search(query, 'candidate'),
       this.search(query, 'employer'),
       this.search(query, 'job')

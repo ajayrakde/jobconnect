@@ -5,6 +5,7 @@ import { authenticateUser } from '../middleware/authenticate';
 import { calculateMatchScore } from '../utils/matchingEngine';
 import { exportToExcel, exportToPDF } from '../utils/exportUtils';
 import { asyncHandler } from '../utils/asyncHandler';
+import { verifyFirebaseToken } from '../utils/firebase-admin';
 
 export const adminRouter = Router();
 

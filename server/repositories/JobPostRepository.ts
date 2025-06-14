@@ -1,6 +1,6 @@
 import { eq, and, or, desc, sql } from 'drizzle-orm';
 import { db } from '../db';
-import { jobPosts } from '../db/schema';
+import { jobPosts } from '@shared/schema';
 import { 
   jobPostSchema,
   type CreateJobPostInput,
@@ -8,7 +8,7 @@ import {
   type JobPostSearchParams,
   type JobPostResponse,
   type JobPostDetailResponse
-} from '@/shared/schemas/JobPostSchema';
+} from '@shared/schemas/JobPostSchema';
 import { generateJobCode } from '../utils/jobCodeGenerator';
 
 /**

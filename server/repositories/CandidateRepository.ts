@@ -1,7 +1,7 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '../db';
-import { candidates, users } from '@/shared/schema';
-import type { InsertCandidate } from '@/shared/schema';
+import { candidates, users, applications, jobPosts } from '@shared/schema';
+import type { InsertCandidate } from '@shared/schema';
 
 /**
  * Repository for handling candidate-related database operations
@@ -112,13 +112,88 @@ export class CandidateRepository {
   static async delete(id: number) {
     const [deleted] = await db
       .update(candidates)
-      .set({ 
+      .set({
         deleted: true,
         updatedAt: new Date()
       })
       .where(eq(candidates.id, id))
       .returning();
-    
+
     return deleted;
+  }
+
+  /** Retrieve candidate by ID */
+  static async getCandidate(id: number) {
+    const [candidate] = await db
+      .select()
+      .from(candidates)
+      .where(eq(candidates.id, id))
+      .limit(1);
+    return candidate;
+  }
+
+  /** Retrieve candidate by user ID */
+  static async getCandidateByUserId(userId: number) {
+    return this.findByUserId(userId);
+  }
+
+  /** Create candidate via alias */
+  static async createCandidate(data: InsertCandidate) {
+    return this.create(data);
+  }
+
+  /** Update candidate via alias */
+  static async updateCandidate(id: number, data: Partial<InsertCandidate>) {
+    return this.update(id, data);
+  }
+
+  /** Get all candidates */
+  static async getAllCandidates() {
+    return db.select().from(candidates).where(eq(candidates.deleted, false));
+  }
+
+  /** Get unverified candidates */
+  static async getUnverifiedCandidates() {
+    return this.findUnverified();
+  }
+
+  /** Verify candidate via alias */
+  static async verifyCandidate(id: number) {
+    return this.verify(id);
+  }
+
+  /** Soft delete candidate via alias */
+  static async softDeleteCandidate(id: number) {
+    return this.delete(id);
+  }
+
+  /**
+   * Basic candidate statistics - total applications count
+   */
+  static async getCandidateStats(candidateId: number) {
+    const [countRow] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(applications)
+      .where(eq(applications.candidateId, candidateId));
+    return { applications: countRow.count };
+  }
+
+  /**
+   * Fetch candidate job applications
+   */
+  static async getCandidateApplications(candidateId: number) {
+    return db
+      .select()
+      .from(applications)
+      .where(eq(applications.candidateId, candidateId))
+      .orderBy(desc(applications.appliedAt));
+  }
+
+  /**
+   * Placeholder for recommended jobs
+   */
+  static async getRecommendedJobs(_candidateId: number) {
+    // Recommendation logic is not implemented yet
+    return [] as any[];
   }
 }
