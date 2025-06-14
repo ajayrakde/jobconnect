@@ -67,17 +67,21 @@ const useAdminSearch = (type: string, query: string, filters: SearchFilters, sor
     queryKey: ['/api/admin/search', type, query, filters, sort],
     queryFn: async () => {
       try {
+        // Skip if no meaningful search criteria
+        if (!query && Object.values(filters).every(v => !v)) {
+          return [];
+        }
+
         const params = new URLSearchParams({
           type,
           q: query,
           sort,
-          ...filters
+          ...Object.fromEntries(
+            Object.entries(filters).filter(([_, v]) => v != null && v !== '')
+          )
         });
         
-        const url = `${API_BASE_URL}${ENDPOINTS.ADMIN.SEARCH}?${params}`;
-        debugLog('Fetching from:', url);
-        
-        const response = await apiRequest(url, 'GET');
+        const response = await apiRequest(`/api/admin/search?${params}`, 'GET');
         const data = await response.json();
         
         // Log the response for debugging

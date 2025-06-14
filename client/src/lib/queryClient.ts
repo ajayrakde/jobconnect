@@ -2,7 +2,8 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { authService } from "./auth";
 
 // API configuration using Vite's import.meta.env
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://super-succotash-5pv746gvx537r9w-5000.app.github.dev';
+// Uses API_BASE_URL from api.ts config
+import { API_BASE_URL } from '@/config/api';
 
 export async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
