@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { qualifications, experienceLevels } from "@shared/constants";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, Briefcase, Plus, Minus } from "lucide-react";
@@ -289,12 +290,9 @@ export const EmployerJobCreate: React.FC = () => {
                   <SelectValue placeholder="Select minimum qualification" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="High School">High School</SelectItem>
-                  <SelectItem value="Associate Degree">Associate Degree</SelectItem>
-                  <SelectItem value="Bachelor's Degree">Bachelor's Degree</SelectItem>
-                  <SelectItem value="Master's Degree">Master's Degree</SelectItem>
-                  <SelectItem value="PhD">PhD</SelectItem>
-                  <SelectItem value="Professional Certification">Professional Certification</SelectItem>
+                  {qualifications.map((q) => (
+                    <SelectItem key={q} value={q}>{q}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {errors.minQualification && (
@@ -312,12 +310,9 @@ export const EmployerJobCreate: React.FC = () => {
                   <SelectValue placeholder="Select experience level" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Entry Level (0-1 years)">Entry Level (0-1 years)</SelectItem>
-                  <SelectItem value="Junior (1-3 years)">Junior (1-3 years)</SelectItem>
-                  <SelectItem value="Mid-Level (3-5 years)">Mid-Level (3-5 years)</SelectItem>
-                  <SelectItem value="Senior (5-8 years)">Senior (5-8 years)</SelectItem>
-                  <SelectItem value="Lead (8+ years)">Lead (8+ years)</SelectItem>
-                  <SelectItem value="Executive (10+ years)">Executive (10+ years)</SelectItem>
+                  {experienceLevels.map((lvl) => (
+                    <SelectItem key={lvl} value={lvl}>{lvl}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {errors.experienceRequired && (

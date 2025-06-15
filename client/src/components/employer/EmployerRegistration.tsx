@@ -11,6 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { debugLog } from "@/lib/logger";
 import { useLocation } from "wouter";
+import { businessTypes } from "@shared/constants";
 
 interface EmployerFormData {
   organizationName: string;
@@ -193,18 +194,7 @@ export const EmployerRegistration: React.FC = () => {
     createEmployerMutation.mutate(formData);
   };
 
-  const businessTypes = [
-    "Technology",
-    "Healthcare",
-    "Finance",
-    "Education",
-    "Manufacturing",
-    "Retail",
-    "Consulting",
-    "Government",
-    "Non-profit",
-    "Other"
-  ];
+
 
   // Show loading while checking for existing profile
   if (checkingProfile) {

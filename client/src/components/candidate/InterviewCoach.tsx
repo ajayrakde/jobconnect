@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
+import { interviewLevels } from "@shared/constants";
 import { 
   BrainCircuit, 
   MessageSquare, 
@@ -242,10 +243,9 @@ export const InterviewCoach: React.FC = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="beginner">Beginner (Entry Level)</SelectItem>
-                  <SelectItem value="intermediate">Intermediate (2-5 years)</SelectItem>
-                  <SelectItem value="advanced">Advanced (5+ years)</SelectItem>
-                  <SelectItem value="senior">Senior (Leadership roles)</SelectItem>
+                  {interviewLevels.map((lvl) => (
+                    <SelectItem key={lvl} value={lvl}>{lvl}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
