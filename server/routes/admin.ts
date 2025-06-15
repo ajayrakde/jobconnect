@@ -7,6 +7,9 @@ import { z } from 'zod';
 import { AdminRepository } from '../repositories';
 import { calculateMatchScore } from '../utils/matchingEngine';
 import { exportToExcel, exportToPDF } from '../utils/exportUtils';
+import { storage } from '../storage';
+import { insertShortlistSchema } from '@shared/zod';
+import { verifyFirebaseToken } from '../utils/firebase-admin';
 
 // Validation schemas
 const searchQuerySchema = z.object({
