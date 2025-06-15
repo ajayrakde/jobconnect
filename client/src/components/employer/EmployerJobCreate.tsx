@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { qualifications, experienceLevels } from "@shared/constants";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, Briefcase, Plus, Minus } from "lucide-react";
@@ -290,12 +291,9 @@ export const EmployerJobCreate: React.FC = () => {
                   <SelectValue placeholder="Select minimum qualification" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="High School">High School</SelectItem>
-                  <SelectItem value="Associate Degree">Associate Degree</SelectItem>
-                  <SelectItem value="Bachelor's Degree">Bachelor's Degree</SelectItem>
-                  <SelectItem value="Master's Degree">Master's Degree</SelectItem>
-                  <SelectItem value="PhD">PhD</SelectItem>
-                  <SelectItem value="Professional Certification">Professional Certification</SelectItem>
+                  {qualifications.map((q) => (
+                    <SelectItem key={q} value={q}>{q}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {errors.minQualification && (
@@ -315,6 +313,7 @@ export const EmployerJobCreate: React.FC = () => {
                 <SelectContent>
                   {experienceLevels.map(level => (
                     <SelectItem key={level} value={level}>{level}</SelectItem>
+
                   ))}
                 </SelectContent>
               </Select>

@@ -18,7 +18,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertJobPostSchema } from "@shared/zod";
 import { apiRequest } from "@/lib/queryClient";
-import { experienceLevels } from "@shared/constants";
+
+import { qualifications, experienceLevels } from "@shared/constants";
+
 import { debugLog } from "@/lib/logger";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -254,12 +256,9 @@ export const EmployerJobEdit: React.FC = () => {
                   <SelectValue placeholder="Select minimum qualification" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="High School">High School</SelectItem>
-                  <SelectItem value="Associate Degree">Associate Degree</SelectItem>
-                  <SelectItem value="Bachelor's Degree">Bachelor's Degree</SelectItem>
-                  <SelectItem value="Master's Degree">Master's Degree</SelectItem>
-                  <SelectItem value="PhD">PhD</SelectItem>
-                  <SelectItem value="Professional Certification">Professional Certification</SelectItem>
+                  {qualifications.map((q) => (
+                    <SelectItem key={q} value={q}>{q}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {form.formState.errors.minQualification && (
