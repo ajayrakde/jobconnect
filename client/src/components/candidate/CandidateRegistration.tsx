@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/components/auth/AuthProvider";
+
 import { genders, maritalStatuses, allowedFileTypes } from "@shared/constants";
 
 interface CandidateFormData {
@@ -218,6 +219,7 @@ export const CandidateRegistration: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {genders.map((g) => (
+
                       <SelectItem key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1)}</SelectItem>
                     ))}
                   </SelectContent>
