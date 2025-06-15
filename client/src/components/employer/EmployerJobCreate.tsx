@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, Briefcase, Plus, Minus } from "lucide-react";
-import { jobPostValidationSchema } from "@shared/schema";
+import { jobPostValidationSchema } from "@shared/zod";
 
 type JobPostFormData = z.infer<typeof jobPostValidationSchema>;
 

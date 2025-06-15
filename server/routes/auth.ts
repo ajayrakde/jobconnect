@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { insertUserSchema, type InsertUser } from '../../shared/schema';
+import { insertUserSchema } from '@shared/zod';
+import type { InsertUser } from '@shared/types';
 import { authenticateUser } from '../middleware/authenticate';
 import { asyncHandler } from '../utils/asyncHandler';
 import { validateBody } from '../middleware/validation';

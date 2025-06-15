@@ -16,7 +16,7 @@ import { ArrowLeft, Save } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertJobPostSchema } from "@shared/schema";
+import { insertJobPostSchema } from "@shared/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { debugLog } from "@/lib/logger";
 import { useToast } from "@/hooks/use-toast";

@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { insertEmployerSchema, type InsertEmployer } from '../../shared/schema';
+import { insertEmployerSchema } from '@shared/zod';
+import type { InsertEmployer } from '@shared/types';
 import { authenticateUser } from '../middleware/authenticate';
 import { requireRole } from '../middleware/authorization';
 import { requireVerifiedRole } from '../middleware/verifiedRole';
