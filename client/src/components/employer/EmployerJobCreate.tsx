@@ -23,6 +23,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, Briefcase, Plus, Minus } from "lucide-react";
 import { jobPostValidationSchema } from "@shared/zod";
+import { experienceLevels } from "@shared/constants";
 
 type JobPostFormData = z.infer<typeof jobPostValidationSchema>;
 
@@ -310,8 +311,9 @@ export const EmployerJobCreate: React.FC = () => {
                   <SelectValue placeholder="Select experience level" />
                 </SelectTrigger>
                 <SelectContent>
-                  {experienceLevels.map((lvl) => (
-                    <SelectItem key={lvl} value={lvl}>{lvl}</SelectItem>
+                  {experienceLevels.map(level => (
+                    <SelectItem key={level} value={level}>{level}</SelectItem>
+
                   ))}
                 </SelectContent>
               </Select>

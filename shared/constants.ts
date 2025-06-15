@@ -1,5 +1,5 @@
-export const genders = ["male", "female", "other"] as const;
-export type Gender = typeof genders[number];
+
+// Consistent labels used across admin filters and employer forms
 
 export const businessTypes = [
   "Technology",
@@ -30,13 +30,15 @@ export const experienceLevels = [
   "Senior (5-8 years)",
   "Lead (8+ years)",
   "Executive (10+ years)"
+] as const;
+
+export type ExperienceLevel = typeof experienceLevels[number];
 ];
 
 export const genders = [
   "male",
   "female",
   "other",
-  "prefer-not-to-say"
 ];
 
 export const maritalStatuses = [

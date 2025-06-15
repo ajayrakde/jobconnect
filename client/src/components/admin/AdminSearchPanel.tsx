@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Filter, Search, SortAsc, MoreVertical, Eye, Edit, Trash2, CheckCircle, User, Building2, FileText, FlaskConical, Users, Briefcase, MapPin, Calendar } from "lucide-react";
+import { experienceLevels } from "@shared/constants";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { debugLog } from "@/lib/logger";

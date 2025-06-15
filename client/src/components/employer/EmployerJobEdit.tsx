@@ -18,7 +18,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertJobPostSchema } from "@shared/zod";
 import { apiRequest } from "@/lib/queryClient";
+
 import { qualifications, experienceLevels } from "@shared/constants";
+
 import { debugLog } from "@/lib/logger";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -276,8 +278,8 @@ export const EmployerJobEdit: React.FC = () => {
                   <SelectValue placeholder="Select experience level" />
                 </SelectTrigger>
                 <SelectContent>
-                  {experienceLevels.map((lvl) => (
-                    <SelectItem key={lvl} value={lvl}>{lvl}</SelectItem>
+                  {experienceLevels.map(level => (
+                    <SelectItem key={level} value={level}>{level}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
