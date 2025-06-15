@@ -31,7 +31,7 @@ import {
   Download
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { JobPost, Application } from "@shared/schema";
+import type { JobPost, Application } from "@shared/types";
 import { formatDistanceToNow } from "date-fns";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";

@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../db';
-import { users } from '../../shared/schema';
-import { type InsertUser } from '@/shared/schema';
+import { users } from '@shared/schema';
+import type { InsertUser } from '@shared/types';
 
 /**
  * Repository for handling user-related database operations

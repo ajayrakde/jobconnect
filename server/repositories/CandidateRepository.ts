@@ -1,7 +1,7 @@
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '../db';
 import { candidates, users, applications, jobPosts } from '@shared/schema';
-import type { InsertCandidate } from '@shared/schema';
+import type { InsertCandidate } from '@shared/types';
 
 /**
  * Repository for handling candidate-related database operations

@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { insertJobPostSchema, type InsertJobPost } from '@shared/schema';
+import { insertJobPostSchema } from '@shared/zod';
+import type { InsertJobPost } from '@shared/types';
 import { authenticateUser } from '../middleware/authenticate';
 import { requireRole } from '../middleware/authorization';
 import { requireVerifiedRole } from '../middleware/verifiedRole';

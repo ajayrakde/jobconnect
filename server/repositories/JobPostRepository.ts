@@ -1,14 +1,14 @@
 import { eq, and, or, desc, sql } from 'drizzle-orm';
 import { db } from '../db';
-import { 
-  jobPosts,
-  jobPostValidationSchema,
-  type CreateJobPostInput,
-  type UpdateJobPostInput,
-  type JobPostSearchParams,
-  type JobPostResponse,
-  type JobPostDetailResponse
-} from '@shared/schema';
+import { jobPosts } from '@shared/schema';
+import { jobPostValidationSchema } from '@shared/zod';
+import type {
+  CreateJobPostInput,
+  UpdateJobPostInput,
+  JobPostSearchParams,
+  JobPostResponse,
+  JobPostDetailResponse
+} from '@shared/types';
 import { generateJobCode } from '../utils/jobCodeGenerator';
 
 /**

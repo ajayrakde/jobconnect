@@ -1,14 +1,14 @@
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '../db';
-import { 
-  adminInviteCodes, 
-  users, 
-  candidates, 
+import {
+  adminInviteCodes,
+  users,
+  candidates,
   employers,
   jobPosts,
-  applications 
+  applications
 } from '@shared/schema';
-import type { InsertAdminInviteCode } from '@shared/schema';
+import type { InsertAdminInviteCode } from '@shared/types';
 
 /**
  * Repository for handling admin-related database operations

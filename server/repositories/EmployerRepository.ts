@@ -1,7 +1,7 @@
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '../db';
 import { employers, users, jobPosts, applications } from '@shared/schema';
-import type { InsertEmployer } from '@shared/schema';
+import type { InsertEmployer } from '@shared/types';
 
 /**
  * Repository for handling employer-related database operations

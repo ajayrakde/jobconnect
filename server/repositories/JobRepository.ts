@@ -1,5 +1,6 @@
 import { db } from '../db';
-import { JobPost, InsertJobPost, jobPosts } from '@shared/schema';
+import { jobPosts } from '@shared/schema';
+import type { JobPost, InsertJobPost } from '@shared/types';
 import { eq } from 'drizzle-orm';
 
 export class JobRepository {

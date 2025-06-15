@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { insertCandidateSchema, type InsertCandidate } from '@shared/schema';
+import { insertCandidateSchema } from '@shared/zod';
+import type { InsertCandidate } from '@shared/types';
 import { requireVerifiedRole } from '../middleware/verifiedRole';
 import { authenticateUser } from '../middleware/authenticate';
 import { requireRole } from '../middleware/authorization';

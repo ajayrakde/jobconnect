@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { searchAnalytics } from '../../shared/schema';
+import { searchAnalytics } from '@shared/schema';
 import { eq, desc, sql } from 'drizzle-orm';
 import { getCachedData, setCachedData } from './cache';
 

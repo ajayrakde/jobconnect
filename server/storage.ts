@@ -1,8 +1,27 @@
-import { 
-  User, InsertUser, Candidate, InsertCandidate, Employer, InsertEmployer,
-  JobPost, InsertJobPost, Application, InsertApplication, Shortlist, InsertShortlist,
-  MatchScore, users, candidates, employers, jobPosts, applications, shortlists, matchScores
-} from "@shared/schema";
+import {
+  users,
+  candidates,
+  employers,
+  jobPosts,
+  applications,
+  shortlists,
+  matchScores
+} from '@shared/schema';
+import type {
+  User,
+  InsertUser,
+  Candidate,
+  InsertCandidate,
+  Employer,
+  InsertEmployer,
+  JobPost,
+  InsertJobPost,
+  Application,
+  InsertApplication,
+  Shortlist,
+  InsertShortlist,
+  MatchScore
+} from '@shared/types';
 import { db } from "./db";
 import { eq, ne, desc, and, gte, sql } from "drizzle-orm";
 import { CandidateRepository } from './repositories/CandidateRepository';
