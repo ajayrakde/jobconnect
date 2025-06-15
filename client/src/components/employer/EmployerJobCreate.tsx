@@ -22,6 +22,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, Briefcase, Plus, Minus } from "lucide-react";
 import { jobPostValidationSchema } from "@shared/zod";
+import { experienceLevels } from "@shared/constants";
 
 type JobPostFormData = z.infer<typeof jobPostValidationSchema>;
 
@@ -312,12 +313,9 @@ export const EmployerJobCreate: React.FC = () => {
                   <SelectValue placeholder="Select experience level" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Entry Level (0-1 years)">Entry Level (0-1 years)</SelectItem>
-                  <SelectItem value="Junior (1-3 years)">Junior (1-3 years)</SelectItem>
-                  <SelectItem value="Mid-Level (3-5 years)">Mid-Level (3-5 years)</SelectItem>
-                  <SelectItem value="Senior (5-8 years)">Senior (5-8 years)</SelectItem>
-                  <SelectItem value="Lead (8+ years)">Lead (8+ years)</SelectItem>
-                  <SelectItem value="Executive (10+ years)">Executive (10+ years)</SelectItem>
+                  {experienceLevels.map(level => (
+                    <SelectItem key={level} value={level}>{level}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {errors.experienceRequired && (
