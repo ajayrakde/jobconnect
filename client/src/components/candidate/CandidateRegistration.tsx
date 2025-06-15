@@ -12,7 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { genders } from "@shared/constants";
+
+import { genders, maritalStatuses, allowedFileTypes } from "@shared/constants";
 
 interface CandidateFormData {
   dateOfBirth: string;
@@ -96,8 +97,7 @@ export const CandidateRegistration: React.FC = () => {
 
   const handleFileUpload = async (file: File, documentType: string) => {
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-    if (!allowedTypes.includes(file.type)) {
+    if (!allowedFileTypes.includes(file.type)) {
       toast({
         title: "Invalid File Type",
         description: "Please upload only PDF or image files (JPG, PNG)",
@@ -219,9 +219,8 @@ export const CandidateRegistration: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {genders.map((g) => (
-                      <SelectItem key={g} value={g}>
-                        {g.charAt(0).toUpperCase() + g.slice(1)}
-                      </SelectItem>
+
+                      <SelectItem key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -233,10 +232,9 @@ export const CandidateRegistration: React.FC = () => {
                     <SelectValue placeholder="Select Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="single">Single</SelectItem>
-                    <SelectItem value="married">Married</SelectItem>
-                    <SelectItem value="divorced">Divorced</SelectItem>
-                    <SelectItem value="widowed">Widowed</SelectItem>
+                    {maritalStatuses.map((m) => (
+                      <SelectItem key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

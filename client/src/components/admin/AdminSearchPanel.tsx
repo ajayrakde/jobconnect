@@ -11,6 +11,15 @@ import { apiRequest } from "@/lib/queryClient";
 import { debugLog } from "@/lib/logger";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLocation } from "wouter";
+import {
+  qualifications,
+  experienceLevels,
+  profileStatus,
+  industries,
+  businessSizes,
+  jobCategories,
+  jobStatus,
+} from "@shared/constants";
 
 interface SearchFilters {
   qualification?: string;
@@ -141,54 +150,54 @@ export const AdminSearchPanel: React.FC = () => {
   // Filter definitions per type with predefined options
   const filterOptions = {
     candidate: [
-      { 
+      {
         key: "qualification",
         label: "Qualification",
-        options: ["Bachelor's", "Master's", "PhD", "High School", "Other"]
+        options: qualifications,
       },
-      { 
+      {
         key: "experience",
         label: "Experience Level",
-        options: ["0-2 years", "3-5 years", "5-10 years", "10+ years"]
+        options: ["0-2 years", "3-5 years", "5-10 years", "10+ years"],
       },
-      { 
+      {
         key: "status",
         label: "Verification Status",
-        options: ["verified", "pending", "rejected"]
+        options: profileStatus,
       },
     ],
     employer: [
-      { 
+      {
         key: "industry",
         label: "Industry",
-        options: ["Technology", "Healthcare", "Finance", "Education", "Manufacturing", "Other"]
+        options: industries,
       },
-      { 
+      {
         key: "size",
         label: "Business Size",
-        options: ["1-10", "11-50", "51-200", "201-1000", "1000+"]
+        options: businessSizes,
       },
-      { 
+      {
         key: "status",
         label: "Verification Status",
-        options: ["verified", "pending", "rejected"]
+        options: profileStatus,
       },
     ],
     job: [
-      { 
+      {
         key: "category",
         label: "Category",
-        options: ["Engineering", "Design", "Marketing", "Sales", "Management", "Other"]
+        options: jobCategories,
       },
-      { 
+      {
         key: "experience",
         label: "Experience Required",
-        options: ["Entry Level", "Mid Level", "Senior", "Lead", "Executive"]
+        options: experienceLevels,
       },
-      { 
+      {
         key: "status",
         label: "Status",
-        options: ["active", "inactive", "flagged"]
+        options: jobStatus,
       },
     ],
   };

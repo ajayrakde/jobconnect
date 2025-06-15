@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { businessTypes } from "@shared/constants";
 import { 
   Building, 
   Edit, 
@@ -123,18 +124,7 @@ export const EmployerProfile: React.FC = () => {
     });
   };
 
-  const businessTypes = [
-    "Technology",
-    "Healthcare",
-    "Finance",
-    "Education",
-    "Manufacturing",
-    "Retail",
-    "Consulting",
-    "Government",
-    "Non-profit",
-    "Other"
-  ];
+
 
   if (isLoading) {
     return (
