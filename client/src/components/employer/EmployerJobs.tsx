@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import React, { useState, useEffect, useDeferredValue } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 

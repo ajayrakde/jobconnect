@@ -6,41 +6,190 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Filter, Search, SortAsc, MoreVertical, Eye, Edit, Trash2, CheckCircle, User, Building2, FileText, FlaskConical, Users, Briefcase, MapPin, Calendar } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { debugLog } from "@/lib/logger";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useLocation } from "wouter";
 
-// Placeholder data fetchers (replace with real API hooks)
-const useAdminSearch = (type, query, filters, sort) => {
-  // Return mock data for now
-  return { data: [], isLoading: false };
+interface SearchFilters {
+  qualification?: string;
+  experience?: string;
+  city?: string;
+  status?: string;
+  industry?: string;
+  size?: string;
+  category?: string;
+  location?: string;
+}
+
+interface Candidate {
+  id: number;
+  type: 'candidate';
+  name: string;
+  email: string;
+  qualification: string;
+  experience: string | { years: number };
+  city: string;
+  status: 'verified' | 'pending' | 'rejected';
+  avatar?: string;
+}
+
+interface Employer {
+  id: number;
+  type: 'employer';
+  companyName: string;
+  industry: string;
+  size: string;
+  city: string;
+  status: 'verified' | 'pending' | 'rejected';
+  logo?: string;
+}
+
+interface JobPost {
+  id: number;
+  type: 'job';
+  title: string;
+  employer: string;
+  employerId: number;
+  city: string;
+  status: 'active' | 'inactive' | 'flagged';
+  postedOn: string;
+  category: string;
+  experienceRequired: string;
+}
+
+type SearchResult = Candidate | Employer | JobPost;
+
+// Enhanced search hook with proper typing
+const useAdminSearch = (type: string, query: string, filters: SearchFilters, sort: string) => {
+  return useQuery({
+    queryKey: ['/api/admin/search', type, query, filters, sort],
+    queryFn: async () => {
+      try {
+        // Skip if no meaningful search criteria
+        if (!query && Object.values(filters).every(v => !v)) {
+          return [];
+        }
+
+        const params = new URLSearchParams({
+          type,
+          q: query,
+          sort,
+          ...Object.fromEntries(
+            Object.entries(filters).filter(([_, v]) => v != null && v !== '')
+          )
+        });
+        
+        const response = await apiRequest(`/api/admin/search?${params}`, 'GET');
+        const data = await response.json();
+        
+        // Log the response for debugging
+        debugLog('Search response:', data);
+        
+        if (!response.ok) {
+          throw new Error(data.message || data.error || 'Search failed');
+        }
+
+        // Extract results from the response
+        const results = data.success ? data.data : data;
+        return Array.isArray(results) ? results : [];
+        
+      } catch (error) {
+        console.error('Search error:', error);
+        throw error instanceof Error ? error : new Error('Search failed');
+      }
+    },
+    enabled: query.length >= 2 || Object.keys(filters).length > 0,
+    retry: false,
+    staleTime: 30000,
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
+  });
 };
 
 export const AdminSearchPanel: React.FC = () => {
-  const [type, setType] = useState("candidate"); // Changed default to "candidate" instead of "all"
+  const { user, userProfile } = useAuth();
+  const [, setLocation] = useLocation();
+
+  // Redirect if not admin
+  React.useEffect(() => {
+    if (!user || userProfile?.role !== "admin") {
+      setLocation("/admin");
+    }
+  }, [user, userProfile, setLocation]);
+
+  const [type, setType] = useState<'candidate' | 'employer' | 'job'>('candidate');
   const [search, setSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [sort, setSort] = useState("latest");
-  const [filters, setFilters] = useState({});
+  const [sort, setSort] = useState<'latest' | 'name' | 'relevance'>('latest');
+  const [filters, setFilters] = useState<SearchFilters>({});
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
 
-  const { data: results, isLoading } = useAdminSearch(type, search, filters, sort);
+  // Debounce search input
+  React.useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
-  // Filter definitions per type
+  const { data: results = [], isLoading, isError, error } = useAdminSearch(
+    type,
+    debouncedSearch,
+    filters,
+    sort
+  );
+
+  // Filter definitions per type with predefined options
   const filterOptions = {
     candidate: [
-      { key: "qualification", label: "Qualification" },
-      { key: "experience", label: "Experience Level" },
-      { key: "city", label: "City" },
-      { key: "status", label: "Status" },
+      { 
+        key: "qualification",
+        label: "Qualification",
+        options: ["Bachelor's", "Master's", "PhD", "High School", "Other"]
+      },
+      { 
+        key: "experience",
+        label: "Experience Level",
+        options: ["0-2 years", "3-5 years", "5-10 years", "10+ years"]
+      },
+      { 
+        key: "status",
+        label: "Verification Status",
+        options: ["verified", "pending", "rejected"]
+      },
     ],
     employer: [
-      { key: "industry", label: "Industry" },
-      { key: "size", label: "Business Size" },
-      { key: "city", label: "City" },
-      { key: "status", label: "Status" },
+      { 
+        key: "industry",
+        label: "Industry",
+        options: ["Technology", "Healthcare", "Finance", "Education", "Manufacturing", "Other"]
+      },
+      { 
+        key: "size",
+        label: "Business Size",
+        options: ["1-10", "11-50", "51-200", "201-1000", "1000+"]
+      },
+      { 
+        key: "status",
+        label: "Verification Status",
+        options: ["verified", "pending", "rejected"]
+      },
     ],
     job: [
-      { key: "category", label: "Category" },
-      { key: "experience", label: "Experience Required" },
-      { key: "location", label: "Location" },
-      { key: "status", label: "Status" },
+      { 
+        key: "category",
+        label: "Category",
+        options: ["Engineering", "Design", "Marketing", "Sales", "Management", "Other"]
+      },
+      { 
+        key: "experience",
+        label: "Experience Required",
+        options: ["Entry Level", "Mid Level", "Senior", "Lead", "Executive"]
+      },
+      { 
+        key: "status",
+        label: "Status",
+        options: ["active", "inactive", "flagged"]
+      },
     ],
   };
 
@@ -238,27 +387,105 @@ export const AdminSearchPanel: React.FC = () => {
       {showFilters && (
         <div className="flex flex-wrap gap-4 p-4 bg-muted/30 rounded-lg border border-border">
           {filterOptions[type].map(opt => (
-            <div key={opt.key} className="flex flex-col">
+            <div key={opt.key} className="flex flex-col min-w-[200px]">
               <label className="text-xs font-medium mb-1">{opt.label}</label>
-              <Input
-                className="bg-background border-border"
-                placeholder={opt.label}
-                value={filters[opt.key] || ""}
-                onChange={e => setFilters(f => ({ ...f, [opt.key]: e.target.value }))}
-              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start"
+                  >
+                    {filters[opt.key] || `Select ${opt.label}`}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[200px]">
+                  {opt.options.map(value => (
+                    <DropdownMenuItem
+                      key={value}
+                      onClick={() => setFilters(f => ({ ...f, [opt.key]: value }))}
+                    >
+                      {value}
+                    </DropdownMenuItem>
+                  ))}
+                  {filters[opt.key] && (
+                    <DropdownMenuItem
+                      onClick={() => setFilters(f => {
+                        const newFilters = { ...f };
+                        delete newFilters[opt.key];
+                        return newFilters;
+                      })}
+                      className="text-destructive"
+                    >
+                      Clear
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           ))}
+          {Object.keys(filters).length > 0 && (
+            <Button
+              variant="outline"
+              className="self-end"
+              onClick={() => setFilters({})}
+            >
+              Clear All Filters
+            </Button>
+          )}
         </div>
       )}
 
       {/* Search Results */}
       <div className="space-y-4">
         {isLoading ? (
-          <div>Loading...</div>
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+            <div className="mt-4 text-muted-foreground">Loading results...</div>
+          </div>
+        ) : isError ? (
+          <div className="text-center text-destructive py-12">
+            <div className="mb-2">Error loading results</div>
+            <div className="text-sm text-muted-foreground">
+              {error instanceof Error 
+                ? error.message.includes('<!DOCTYPE') 
+                  ? 'Server error occurred. Please try again.' 
+                  : error.message
+                : 'Please try again'}
+            </div>
+            {process.env.NODE_ENV === 'development' && error instanceof Error && (
+              <pre className="mt-4 text-xs text-left bg-muted/30 p-4 rounded overflow-auto">
+                {error.message}
+              </pre>
+            )}
+          </div>
         ) : results.length === 0 ? (
-          <div className="text-center text-muted-foreground py-12">No results found.</div>
+          <div className="text-center text-muted-foreground py-12">
+            {search || Object.keys(filters).length > 0 ? (
+              <>
+                <div className="mb-2">No results found</div>
+                <div className="text-sm">Try adjusting your search or filters</div>
+              </>
+            ) : (
+              <>
+                <div className="mb-2">Start searching</div>
+                <div className="text-sm">Use the search bar or filters above to find {type}s</div>
+              </>
+            )}
+          </div>
         ) : (
-          results.map(renderCard)
+          <>
+            <div className="flex justify-between items-center mb-4">
+              <div className="text-sm text-muted-foreground">
+                Found {results.length} {type}{results.length !== 1 ? 's' : ''}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Showing verified {type}s only
+              </div>
+            </div>
+            <div className="space-y-4">
+              {results.map(renderCard)}
+            </div>
+          </>
         )}
       </div>
     </div>

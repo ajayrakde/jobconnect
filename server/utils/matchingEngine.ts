@@ -1,4 +1,4 @@
-import { JobPost, Candidate } from "@shared/schema";
+import type { JobPost, Candidate } from "@shared/types";
 
 interface MatchFactors {
   skillsScore: number;

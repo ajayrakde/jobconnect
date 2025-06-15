@@ -1,10 +1,32 @@
-import { 
-  User, InsertUser, Candidate, InsertCandidate, Employer, InsertEmployer,
-  JobPost, InsertJobPost, Application, InsertApplication, Shortlist, InsertShortlist,
-  MatchScore, users, candidates, employers, jobPosts, applications, shortlists, matchScores
-} from "@shared/schema";
+import {
+  users,
+  candidates,
+  employers,
+  jobPosts,
+  applications,
+  shortlists,
+  matchScores
+} from '@shared/schema';
+import type {
+  User,
+  InsertUser,
+  Candidate,
+  InsertCandidate,
+  Employer,
+  InsertEmployer,
+  JobPost,
+  InsertJobPost,
+  Application,
+  InsertApplication,
+  Shortlist,
+  InsertShortlist,
+  MatchScore
+} from '@shared/types';
 import { db } from "./db";
 import { eq, ne, desc, and, gte, sql } from "drizzle-orm";
+import { CandidateRepository } from './repositories/CandidateRepository';
+import { EmployerRepository } from './repositories/EmployerRepository';
+import { JobRepository } from './repositories/JobRepository';
 
 export interface IStorage {
   // User operations
@@ -105,428 +127,125 @@ export class DatabaseStorage implements IStorage {
 
   // Candidate operations
   async getCandidate(id: number): Promise<Candidate | undefined> {
-    const [candidate] = await db
-      .select()
-      .from(candidates)
-      .where(and(eq(candidates.id, id), eq(candidates.deleted, false)));
-    return candidate || undefined;
+    return CandidateRepository.getCandidate(id);
   }
 
   async getCandidateByUserId(userId: number): Promise<Candidate | undefined> {
-    const [candidate] = await db
-      .select()
-      .from(candidates)
-      .where(and(eq(candidates.userId, userId), eq(candidates.deleted, false)));
-    return candidate || undefined;
+    return CandidateRepository.getCandidateByUserId(userId);
   }
 
   async createCandidate(insertCandidate: InsertCandidate): Promise<Candidate> {
-    const [candidate] = await db
-      .insert(candidates)
-      .values({
-        ...insertCandidate,
-        profileStatus: 'pending',
-      })
-      .returning();
-    return candidate;
+    return CandidateRepository.createCandidate(insertCandidate);
   }
 
   async updateCandidate(id: number, updates: Partial<Candidate>): Promise<Candidate> {
-    const [candidate] = await db
-      .update(candidates)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(candidates.id, id))
-      .returning();
-    if (!candidate) throw new Error("Candidate not found");
-    return candidate;
+    return CandidateRepository.updateCandidate(id, updates);
   }
 
   async getAllCandidates(): Promise<Candidate[]> {
-    return await db
-      .select()
-      .from(candidates)
-      .where(eq(candidates.deleted, false));
+    return CandidateRepository.getAllCandidates();
   }
 
   async getUnverifiedCandidates(): Promise<Candidate[]> {
-    return await db
-      .select()
-      .from(candidates)
-      .where(and(eq(candidates.deleted, false), ne(candidates.profileStatus, 'verified')));
+    return CandidateRepository.getUnverifiedCandidates();
   }
 
   async verifyCandidate(id: number): Promise<Candidate> {
-    const [candidate] = await db
-      .update(candidates)
-      .set({ profileStatus: 'verified', updatedAt: new Date() })
-      .where(eq(candidates.id, id))
-      .returning();
-    if (!candidate) throw new Error("Candidate not found");
-    return candidate;
+    return CandidateRepository.verifyCandidate(id);
   }
 
   async softDeleteCandidate(id: number): Promise<Candidate> {
-    const [candidate] = await db
-      .update(candidates)
-      .set({ deleted: true, updatedAt: new Date() })
-      .where(eq(candidates.id, id))
-      .returning();
-    if (!candidate) throw new Error("Candidate not found");
-    return candidate;
+    return CandidateRepository.softDeleteCandidate(id);
   }
 
   async getCandidateStats(candidateId: number): Promise<any> {
-    const candidateApplications: Application[] = await db.select().from(applications).where(eq(applications.candidateId, candidateId));
-    const interviews = candidateApplications.filter((app: Application) => app.status === "interviewed").length;
-    
-    return {
-      profileViews: Math.floor(Math.random() * 100) + 20,
-      applications: candidateApplications.length,
-      interviews,
-      matchScore: Math.floor(Math.random() * 20) + 80,
-    };
+    return CandidateRepository.getCandidateStats(candidateId);
   }
 
   async getRecommendedJobs(candidateId: number): Promise<any[]> {
-    // Get candidate profile
-    const candidate = await this.getCandidate(candidateId);
-    if (!candidate) return [];
-
-    // Get jobs from last 90 days
-    const ninetyDaysAgo = new Date();
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-
-    const allJobs = await db.select({
-      id: jobPosts.id,
-      jobCode: jobPosts.jobCode,
-      title: jobPosts.title,
-      description: jobPosts.description,
-      minQualification: jobPosts.minQualification,
-      experienceRequired: jobPosts.experienceRequired,
-      skills: jobPosts.skills,
-      salaryRange: jobPosts.salaryRange,
-      location: jobPosts.location,
-      createdAt: jobPosts.createdAt,
-      employerId: jobPosts.employerId,
-    })
-    .from(jobPosts)
-    .where(and(
-      gte(jobPosts.createdAt, ninetyDaysAgo),
-      eq(jobPosts.isActive, true),
-      eq(jobPosts.fulfilled, false)
-    ));
-
-    // Get employer names
-    const jobsWithEmployers = [];
-    for (const job of allJobs) {
-      const employer = await this.getEmployer(job.employerId);
-      jobsWithEmployers.push({
-        ...job,
-        employer: {
-          organizationName: employer?.organizationName || "Unknown Organization"
-        }
-      });
-    }
-
-    // Calculate compatibility scores
-    const jobsWithScores = jobsWithEmployers.map(job => {
-      const { score, factors } = this.calculateJobCompatibility(job, candidate);
-      return {
-        ...job,
-        compatibilityScore: Math.round(score),
-        matchFactors: {
-          skillsScore: Math.round(factors.skillsScore),
-          experienceScore: Math.round(factors.experienceScore),
-          salaryScore: Math.round(factors.salaryScore),
-          locationScore: Math.round(factors.locationScore),
-          qualificationScore: Math.round(factors.qualificationScore),
-        }
-      };
-    });
-
-    // Sort by compatibility (desc) then by date (desc)
-    jobsWithScores.sort((a, b) => {
-      if (a.compatibilityScore !== b.compatibilityScore) {
-        return b.compatibilityScore - a.compatibilityScore;
-      }
-      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return dateB - dateA;
-    });
-
-    // Filter top 10% by compatibility score
-    if (jobsWithScores.length === 0) return [];
-    
-    const topPercentileCount = Math.max(1, Math.ceil(jobsWithScores.length * 0.1));
-    return jobsWithScores.slice(0, topPercentileCount);
-  }
-
-  private calculateJobCompatibility(job: any, candidate: any): { score: number, factors: any } {
-    const candidateSkills = Array.isArray(candidate.skills) ? candidate.skills : [];
-    const candidateExperience = Array.isArray(candidate.experience) ? candidate.experience : [];
-    const candidateQualifications = Array.isArray(candidate.qualifications) ? candidate.qualifications : [];
-
-    // Skills matching
-    const jobSkills = job.skills ? job.skills.toLowerCase().split(',').map((s: string) => s.trim()) : [];
-    const matchingSkills = candidateSkills.filter((skill: string) => 
-      jobSkills.some((jobSkill: string) => jobSkill.includes(skill.toLowerCase()))
-    );
-    const skillsScore = jobSkills.length > 0 ? (matchingSkills.length / jobSkills.length) * 100 : 50;
-
-    // Experience matching
-    const totalExperience = candidateExperience.reduce((total: number, exp: any) => {
-      const duration = parseInt(exp.duration?.toString() || '0');
-      return total + (isNaN(duration) ? 0 : duration);
-    }, 0);
-    
-    const requiredExperience = parseInt(job.experienceRequired?.match(/\d+/)?.[0] || '0');
-    const experienceScore = requiredExperience > 0 
-      ? Math.min((totalExperience / requiredExperience) * 100, 100)
-      : totalExperience > 0 ? 100 : 50;
-
-    // Salary matching
-    const expectedSalary = candidate.expectedSalary || 0;
-    const salaryRange = job.salaryRange || '';
-    const salaryNumbers = salaryRange.match(/\d+/g);
-    const maxSalary = salaryNumbers ? parseInt(salaryNumbers[salaryNumbers.length - 1]) : 0;
-    const salaryScore = expectedSalary > 0 && maxSalary > 0
-      ? Math.max(0, 100 - Math.abs(expectedSalary - maxSalary) / maxSalary * 100)
-      : 50;
-
-    // Location matching
-    const candidateLocation = candidate.address?.toLowerCase() || '';
-    const jobLocation = job.location?.toLowerCase() || '';
-    const locationScore = candidateLocation && jobLocation
-      ? (candidateLocation.includes(jobLocation) || jobLocation.includes(candidateLocation) ? 100 : 30)
-      : 50;
-
-    // Qualification matching
-    const highestQualification = candidateQualifications.length > 0 
-      ? candidateQualifications[candidateQualifications.length - 1]?.degree?.toLowerCase() || ''
-      : '';
-    const requiredQualification = job.minQualification?.toLowerCase() || '';
-    
-    const qualificationLevels = ['high school', 'diploma', 'bachelor', 'master', 'phd'];
-    const candidateLevel = qualificationLevels.findIndex(level => highestQualification.includes(level));
-    const requiredLevel = qualificationLevels.findIndex(level => requiredQualification.includes(level));
-    
-    const qualificationScore = candidateLevel >= 0 && requiredLevel >= 0
-      ? candidateLevel >= requiredLevel ? 100 : Math.max(0, 100 - (requiredLevel - candidateLevel) * 25)
-      : 50;
-
-    // Overall score (weighted average)
-    const overallScore = (
-      skillsScore * 0.3 +
-      experienceScore * 0.25 +
-      qualificationScore * 0.2 +
-      salaryScore * 0.15 +
-      locationScore * 0.1
-    );
-
-    return {
-      score: overallScore,
-      factors: {
-        skillsScore,
-        experienceScore,
-        salaryScore,
-        locationScore,
-        qualificationScore
-      }
-    };
+    return CandidateRepository.getRecommendedJobs(candidateId);
   }
 
   async getCandidateApplications(candidateId: number): Promise<any[]> {
-    const candidateApplications: Application[] = await db.select().from(applications).where(eq(applications.candidateId, candidateId));
-    const applicationsWithJobs = [];
-
-    for (const app of candidateApplications) {
-      const [job] = await db.select().from(jobPosts).where(eq(jobPosts.id, app.jobPostId));
-      applicationsWithJobs.push({
-        ...app,
-        jobTitle: job?.title || "Unknown Job",
-        company: "Sample Company",
-        appliedDate: app.appliedAt?.toDateString() || "Recently",
-      });
-    }
-    return applicationsWithJobs;
+    return CandidateRepository.getCandidateApplications(candidateId);
   }
 
   // Employer operations
   async getEmployer(id: number): Promise<Employer | undefined> {
-    const [employer] = await db
-      .select()
-      .from(employers)
-      .where(and(eq(employers.id, id), eq(employers.deleted, false)));
-    return employer || undefined;
+    return EmployerRepository.getEmployer(id);
   }
 
   async getEmployerByUserId(userId: number): Promise<Employer | undefined> {
-    const [employer] = await db
-      .select()
-      .from(employers)
-      .where(and(eq(employers.userId, userId), eq(employers.deleted, false)));
-    return employer || undefined;
+    return EmployerRepository.getEmployerByUserId(userId);
   }
 
   async createEmployer(insertEmployer: InsertEmployer): Promise<Employer> {
-    const [employer] = await db
-      .insert(employers)
-      .values({
-        ...insertEmployer,
-        profileStatus: 'pending',
-      })
-      .returning();
-    return employer;
+    return EmployerRepository.createEmployer(insertEmployer);
   }
 
   async updateEmployer(id: number, updates: Partial<Employer>): Promise<Employer> {
-    const [employer] = await db
-      .update(employers)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(employers.id, id))
-      .returning();
-    if (!employer) throw new Error("Employer not found");
-    return employer;
+    return EmployerRepository.updateEmployer(id, updates);
   }
 
   async getUnverifiedEmployers(): Promise<Employer[]> {
-    return await db
-      .select()
-      .from(employers)
-      .where(and(eq(employers.deleted, false), ne(employers.profileStatus, 'verified')));
+    return EmployerRepository.getUnverifiedEmployers();
   }
 
   async verifyEmployer(id: number): Promise<Employer> {
-    const [employer] = await db
-      .update(employers)
-      .set({ profileStatus: 'verified', updatedAt: new Date() })
-      .where(eq(employers.id, id))
-      .returning();
-    if (!employer) throw new Error("Employer not found");
-    return employer;
+    return EmployerRepository.verifyEmployer(id);
   }
 
   async softDeleteEmployer(id: number): Promise<Employer> {
-    const [employer] = await db
-      .update(employers)
-      .set({ deleted: true, updatedAt: new Date() })
-      .where(eq(employers.id, id))
-      .returning();
-    if (!employer) throw new Error("Employer not found");
-    return employer;
+    return EmployerRepository.softDeleteEmployer(id);
   }
 
   // Job post operations
   async getJobPost(id: number): Promise<JobPost | undefined> {
-    const [jobPost] = await db
-      .select()
-      .from(jobPosts)
-      .where(and(eq(jobPosts.id, id), eq(jobPosts.deleted, false)));
-    return jobPost || undefined;
+    return JobRepository.getJobPost(id);
   }
 
   async createJobPost(insertJobPost: InsertJobPost): Promise<JobPost> {
-    const [jobPost] = await db
-      .insert(jobPosts)
-      .values({
-        ...insertJobPost,
-        isActive: true,
-        applicationsCount: 0,
-      })
-      .returning();
-    return jobPost;
+    return JobRepository.createJobPost(insertJobPost);
   }
 
   async updateJobPost(id: number, updates: Partial<JobPost>): Promise<JobPost> {
-    const [jobPost] = await db
-      .update(jobPosts)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(jobPosts.id, id))
-      .returning();
-    if (!jobPost) throw new Error("Job post not found");
-    return jobPost;
+    return JobRepository.updateJobPost(id, updates);
   }
 
   async getJobPostsByEmployer(employerId: number): Promise<JobPost[]> {
-    return await db
-      .select()
-      .from(jobPosts)
-      .where(and(eq(jobPosts.employerId, employerId), eq(jobPosts.deleted, false)));
+    return JobRepository.getJobPostsByEmployer(employerId);
   }
 
   async getAllJobPosts(): Promise<JobPost[]> {
-    return await db.select().from(jobPosts);
+    return JobRepository.getAllJobPosts();
   }
 
   async getEmployerStats(employerId: number): Promise<any> {
-    const employerJobs: JobPost[] = await db.select().from(jobPosts).where(eq(jobPosts.employerId, employerId));
-    const activeJobs = employerJobs.filter((job: JobPost) => job.isActive && !job.fulfilled).length;
-    const fulfilledJobs = employerJobs.filter((job: JobPost) => job.fulfilled).length;
-    const totalApplications = employerJobs.reduce((sum: number, job: JobPost) => sum + (job.applicationsCount || 0), 0);
-    
-    return {
-      activeJobs,
-      fulfilledJobs,
-      totalApplications,
-      profileViews: Math.floor(Math.random() * 200) + 50,
-      successfulHires: Math.floor(Math.random() * 10) + 2,
-    };
+    return EmployerRepository.getEmployerStats(employerId);
   }
 
   async markJobAsFulfilled(jobId: number): Promise<JobPost> {
-    const [updatedJob] = await db
-      .update(jobPosts)
-      .set({ fulfilled: true, updatedAt: new Date() })
-      .where(eq(jobPosts.id, jobId))
-      .returning();
-    return updatedJob;
+    return JobRepository.markJobAsFulfilled(jobId);
   }
 
   async activateJob(jobId: number): Promise<JobPost> {
-    const [updatedJob] = await db
-      .update(jobPosts)
-      .set({ isActive: true, updatedAt: new Date() })
-      .where(eq(jobPosts.id, jobId))
-      .returning();
-    return updatedJob;
+    return JobRepository.activateJob(jobId);
   }
 
   async deactivateJob(jobId: number): Promise<JobPost> {
-    const [updatedJob] = await db
-      .update(jobPosts)
-      .set({ isActive: false, updatedAt: new Date() })
-      .where(eq(jobPosts.id, jobId))
-      .returning();
-    return updatedJob;
+    return JobRepository.deactivateJob(jobId);
   }
 
   async softDeleteJobPost(jobId: number): Promise<JobPost> {
-    const [updatedJob] = await db
-      .update(jobPosts)
-      .set({ deleted: true, updatedAt: new Date() })
-      .where(eq(jobPosts.id, jobId))
-      .returning();
-    return updatedJob;
+    return JobRepository.softDeleteJobPost(jobId);
   }
 
   async getFulfilledJobsByEmployer(employerId: number): Promise<JobPost[]> {
-    return await db
-      .select()
-      .from(jobPosts)
-      .where(and(eq(jobPosts.employerId, employerId), eq(jobPosts.fulfilled, true)))
-      .orderBy(desc(jobPosts.updatedAt));
+    return EmployerRepository.getFulfilledJobsByEmployer(employerId);
   }
 
   async getActiveUnfulfilledJobsByEmployer(employerId: number): Promise<JobPost[]> {
-    return await db
-      .select()
-      .from(jobPosts)
-      .where(and(
-        eq(jobPosts.employerId, employerId),
-        eq(jobPosts.isActive, true),
-        eq(jobPosts.fulfilled, false)
-      ))
-      .orderBy(desc(jobPosts.createdAt));
+    return EmployerRepository.getActiveUnfulfilledJobsByEmployer(employerId);
   }
 
   // Application operations
