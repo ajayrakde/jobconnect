@@ -13,6 +13,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useFileUpload } from "@/hooks/useFileUpload";
+import { genders } from "@shared/constants";
 
 interface CandidateData {
   id: number;
@@ -263,10 +264,11 @@ export const CandidateProfileEdit: React.FC = () => {
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                        <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                        {genders.map((g) => (
+                          <SelectItem key={g} value={g}>
+                            {g.charAt(0).toUpperCase() + g.slice(1)}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
