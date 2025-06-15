@@ -7,6 +7,7 @@ import { requireVerifiedRole } from '../middleware/verifiedRole';
 import { asyncHandler } from '../utils/asyncHandler';
 import { validateBody } from '../middleware/validation';
 import { JobPostRepository } from '../repositories';
+import { storage } from '../storage';
 
 export const jobsRouter = Router();
 

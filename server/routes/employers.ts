@@ -1,12 +1,13 @@
 import { Router } from 'express';
-import { insertEmployerSchema } from '@shared/zod';
-import type { InsertEmployer } from '@shared/types';
+import { insertEmployerSchema, insertJobPostSchema } from '@shared/zod';
+import type { InsertEmployer, InsertJobPost } from '@shared/types';
 import { authenticateUser } from '../middleware/authenticate';
 import { requireRole } from '../middleware/authorization';
 import { requireVerifiedRole } from '../middleware/verifiedRole';
 import { asyncHandler } from '../utils/asyncHandler';
 import { validateBody } from '../middleware/validation';
 import { EmployerRepository, JobPostRepository } from '../repositories';
+import { storage } from '../storage';
 
 export const employersRouter = Router();
 
