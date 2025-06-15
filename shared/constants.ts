@@ -1,3 +1,4 @@
+// Consistent labels used across admin filters and employer forms
 export const experienceLevels = [
   "Entry Level (0-1 years)",
   "Junior (1-3 years)",
