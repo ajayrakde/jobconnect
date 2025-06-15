@@ -2,10 +2,9 @@ import React from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,20 +21,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, Briefcase, Plus, Minus } from "lucide-react";
+import { jobPostValidationSchema } from "@shared/schema";
 
-const jobPostSchema = z.object({
-  title: z.string().min(1, "Role name is required"),
-  minQualification: z.string().min(1, "Qualification is required"),
-  skills: z.string().min(1, "Skill requirements are required"),
-  responsibilities: z.string().min(1, "Responsibilities are required"),
-  vacancy: z.number().min(1, "Number of positions must be at least 1"),
-  experienceRequired: z.string().min(1, "Experience requirement is required"),
-  salaryRange: z.string().min(1, "Salary range is required"),
-  location: z.string().min(1, "Location is required"),
-  description: z.string().min(1, "Job description is required"),
-});
-
-type JobPostFormData = z.infer<typeof jobPostSchema>;
+type JobPostFormData = z.infer<typeof jobPostValidationSchema>;
 
 export const EmployerJobCreate: React.FC = () => {
   const [, setLocation] = useLocation();
@@ -74,7 +62,7 @@ export const EmployerJobCreate: React.FC = () => {
     watch,
     reset,
   } = useForm<JobPostFormData>({
-    resolver: zodResolver(jobPostSchema),
+    resolver: zodResolver(jobPostValidationSchema),
     defaultValues,
   });
 

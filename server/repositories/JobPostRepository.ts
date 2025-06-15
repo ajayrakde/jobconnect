@@ -1,14 +1,14 @@
 import { eq, and, or, desc, sql } from 'drizzle-orm';
 import { db } from '../db';
-import { jobPosts } from '@shared/schema';
 import { 
-  jobPostSchema,
+  jobPosts,
+  jobPostValidationSchema,
   type CreateJobPostInput,
   type UpdateJobPostInput,
   type JobPostSearchParams,
   type JobPostResponse,
   type JobPostDetailResponse
-} from '@shared/schemas/JobPostSchema';
+} from '@shared/schema';
 import { generateJobCode } from '../utils/jobCodeGenerator';
 
 /**
@@ -19,7 +19,7 @@ export class JobPostRepository {
    * Create a new job post
    */
   static async create(input: CreateJobPostInput): Promise<JobPostResponse> {
-    const validated = jobPostSchema.parse({
+    const validated = jobPostValidationSchema.parse({
       ...input,
       jobCode: await generateJobCode(),
       status: 'active',
@@ -71,7 +71,7 @@ export class JobPostRepository {
    * Update an existing job post
    */
   static async update(id: number, input: UpdateJobPostInput): Promise<JobPostResponse> {
-    const validated = jobPostSchema.partial().parse({
+    const validated = jobPostValidationSchema.partial().parse({
       ...input,
       updatedAt: new Date()
     });
