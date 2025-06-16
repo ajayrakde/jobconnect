@@ -96,13 +96,29 @@ export class EmployerRepository {
   static async reject(id: number) {
     const [updated] = await db
       .update(employers)
-      .set({ 
+      .set({
         profileStatus: 'rejected',
         updatedAt: new Date()
       })
       .where(eq(employers.id, id))
       .returning();
-    
+
+    return updated;
+  }
+
+  /**
+   * Put an employer's profile back to pending
+   */
+  static async hold(id: number) {
+    const [updated] = await db
+      .update(employers)
+      .set({
+        profileStatus: 'pending',
+        updatedAt: new Date()
+      })
+      .where(eq(employers.id, id))
+      .returning();
+
     return updated;
   }
 
@@ -187,6 +203,11 @@ export class EmployerRepository {
   /** Alias for verify */
   static async verifyEmployer(id: number) {
     return this.verify(id);
+  }
+
+  /** Hold employer via alias */
+  static async holdEmployer(id: number) {
+    return this.hold(id);
   }
 
   /** Alias for delete */

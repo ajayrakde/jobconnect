@@ -95,6 +95,25 @@ adminRouter.get('/unverified-candidates', authenticateUser, asyncHandler(async (
   res.json(candidates);
 }));
 
+// Unified endpoint for admin verifications
+adminRouter.get('/verifications/:type', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const type = req.params.type;
+  if (type === 'candidate') {
+    return res.json(await storage.getUnverifiedCandidates());
+  }
+  if (type === 'employer') {
+    return res.json(await storage.getUnverifiedEmployers());
+  }
+  if (type === 'job') {
+    return res.json(await storage.getInactiveJobPosts());
+  }
+  res.status(400).json({ message: 'Invalid type' });
+}));
+
 adminRouter.patch('/employers/:id/verify', authenticateUser, asyncHandler(async (req: any, res) => {
   const user = await storage.getUserByFirebaseUid(req.user.uid);
   if (!user || user.role !== 'admin') {
@@ -105,6 +124,36 @@ adminRouter.patch('/employers/:id/verify', authenticateUser, asyncHandler(async 
   res.json(employer);
 }));
 
+adminRouter.patch('/employers/:id/approve', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const id = parseInt(req.params.id);
+  const employer = await storage.verifyEmployer(id);
+  res.json(employer);
+}));
+
+adminRouter.patch('/employers/:id/reject', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const id = parseInt(req.params.id);
+  const employer = await storage.rejectEmployer(id);
+  res.json(employer);
+}));
+
+adminRouter.patch('/employers/:id/hold', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const id = parseInt(req.params.id);
+  const employer = await storage.holdEmployer(id);
+  res.json(employer);
+}));
+
 adminRouter.patch('/candidates/:id/verify', authenticateUser, asyncHandler(async (req: any, res) => {
   const user = await storage.getUserByFirebaseUid(req.user.uid);
   if (!user || user.role !== 'admin') {
@@ -112,6 +161,36 @@ adminRouter.patch('/candidates/:id/verify', authenticateUser, asyncHandler(async
   }
   const id = parseInt(req.params.id);
   const candidate = await storage.verifyCandidate(id);
+  res.json(candidate);
+}));
+
+adminRouter.patch('/candidates/:id/approve', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const id = parseInt(req.params.id);
+  const candidate = await storage.verifyCandidate(id);
+  res.json(candidate);
+}));
+
+adminRouter.patch('/candidates/:id/reject', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const id = parseInt(req.params.id);
+  const candidate = await storage.rejectCandidate(id);
+  res.json(candidate);
+}));
+
+adminRouter.patch('/candidates/:id/hold', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const id = parseInt(req.params.id);
+  const candidate = await storage.holdCandidate(id);
   res.json(candidate);
 }));
 
@@ -142,6 +221,36 @@ adminRouter.delete('/jobs/:id', authenticateUser, asyncHandler(async (req: any, 
   }
   const id = parseInt(req.params.id);
   const job = await storage.softDeleteJobPost(id);
+  res.json(job);
+}));
+
+adminRouter.patch('/jobs/:id/approve', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const id = parseInt(req.params.id);
+  const job = await storage.approveJob(id);
+  res.json(job);
+}));
+
+adminRouter.patch('/jobs/:id/reject', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const id = parseInt(req.params.id);
+  const job = await storage.softDeleteJobPost(id);
+  res.json(job);
+}));
+
+adminRouter.patch('/jobs/:id/hold', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const id = parseInt(req.params.id);
+  const job = await storage.holdJob(id);
   res.json(job);
 }));
 

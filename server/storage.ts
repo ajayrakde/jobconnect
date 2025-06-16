@@ -44,6 +44,8 @@ export interface IStorage {
   getAllCandidates(): Promise<Candidate[]>;
   getUnverifiedCandidates(): Promise<Candidate[]>;
   verifyCandidate(id: number): Promise<Candidate>;
+  holdCandidate(id: number): Promise<Candidate>;
+  rejectCandidate(id: number): Promise<Candidate>;
   softDeleteCandidate(id: number): Promise<Candidate>;
   getCandidateStats(candidateId: number): Promise<any>;
   getRecommendedJobs(candidateId: number): Promise<any[]>;
@@ -56,6 +58,8 @@ export interface IStorage {
   updateEmployer(id: number, updates: Partial<Employer>): Promise<Employer>;
   getUnverifiedEmployers(): Promise<Employer[]>;
   verifyEmployer(id: number): Promise<Employer>;
+  holdEmployer(id: number): Promise<Employer>;
+  rejectEmployer(id: number): Promise<Employer>;
   softDeleteEmployer(id: number): Promise<Employer>;
 
   // Job post operations
@@ -64,11 +68,14 @@ export interface IStorage {
   updateJobPost(id: number, updates: Partial<JobPost>): Promise<JobPost>;
   getJobPostsByEmployer(employerId: number): Promise<JobPost[]>;
   getAllJobPosts(): Promise<JobPost[]>;
+  getInactiveJobPosts(): Promise<JobPost[]>;
   softDeleteJobPost(id: number): Promise<JobPost>;
   getEmployerStats(employerId: number): Promise<any>;
   markJobAsFulfilled(jobId: number): Promise<JobPost>;
   activateJob(jobId: number): Promise<JobPost>;
   deactivateJob(jobId: number): Promise<JobPost>;
+  approveJob(jobId: number): Promise<JobPost>;
+  holdJob(jobId: number): Promise<JobPost>;
   getFulfilledJobsByEmployer(employerId: number): Promise<JobPost[]>;
   getActiveUnfulfilledJobsByEmployer(employerId: number): Promise<JobPost[]>;
 
@@ -154,6 +161,14 @@ export class DatabaseStorage implements IStorage {
     return CandidateRepository.verifyCandidate(id);
   }
 
+  async holdCandidate(id: number): Promise<Candidate> {
+    return CandidateRepository.holdCandidate(id);
+  }
+
+  async rejectCandidate(id: number): Promise<Candidate> {
+    return CandidateRepository.reject(id);
+  }
+
   async softDeleteCandidate(id: number): Promise<Candidate> {
     return CandidateRepository.softDeleteCandidate(id);
   }
@@ -195,6 +210,14 @@ export class DatabaseStorage implements IStorage {
     return EmployerRepository.verifyEmployer(id);
   }
 
+  async holdEmployer(id: number): Promise<Employer> {
+    return EmployerRepository.holdEmployer(id);
+  }
+
+  async rejectEmployer(id: number): Promise<Employer> {
+    return EmployerRepository.reject(id);
+  }
+
   async softDeleteEmployer(id: number): Promise<Employer> {
     return EmployerRepository.softDeleteEmployer(id);
   }
@@ -220,6 +243,10 @@ export class DatabaseStorage implements IStorage {
     return JobRepository.getAllJobPosts();
   }
 
+  async getInactiveJobPosts(): Promise<JobPost[]> {
+    return JobRepository.getInactiveJobs();
+  }
+
   async getEmployerStats(employerId: number): Promise<any> {
     return EmployerRepository.getEmployerStats(employerId);
   }
@@ -234,6 +261,14 @@ export class DatabaseStorage implements IStorage {
 
   async deactivateJob(jobId: number): Promise<JobPost> {
     return JobRepository.deactivateJob(jobId);
+  }
+
+  async approveJob(jobId: number): Promise<JobPost> {
+    return JobRepository.approveJob(jobId);
+  }
+
+  async holdJob(jobId: number): Promise<JobPost> {
+    return JobRepository.holdJob(jobId);
   }
 
   async softDeleteJobPost(jobId: number): Promise<JobPost> {
