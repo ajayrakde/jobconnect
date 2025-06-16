@@ -77,6 +77,73 @@ adminRouter.get('/jobs', authenticateUser, asyncHandler(async (req: any, res) =>
   res.json(jobs);
 }));
 
+/**
+ * @swagger
+ * /api/admin/jobs/{id}:
+ *   get:
+ *     summary: Get a job post by id
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Job post retrieved
+ *       404:
+ *         description: Job not found
+ */
+adminRouter.get('/jobs/:id', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const jobId = parseInt(req.params.id);
+  const job = await storage.getJobPost(jobId);
+  if (!job) {
+    return res.status(404).json({ message: 'Job not found' });
+  }
+  res.json(job);
+}));
+
+/**
+ * @swagger
+ * /api/admin/jobs/{id}/applications:
+ *   get:
+ *     summary: Get applications for a job post
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of applications
+ *       404:
+ *         description: Job not found
+ */
+adminRouter.get('/jobs/:id/applications', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const jobId = parseInt(req.params.id);
+  const job = await storage.getJobPost(jobId);
+  if (!job) {
+    return res.status(404).json({ message: 'Job not found' });
+  }
+  const applications = await storage.getApplicationsByJob(jobId);
+  res.json(applications);
+}));
+
 adminRouter.get('/unverified-employers', authenticateUser, asyncHandler(async (req: any, res) => {
   const user = await storage.getUserByFirebaseUid(req.user.uid);
   if (!user || user.role !== 'admin') {
