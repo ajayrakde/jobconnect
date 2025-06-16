@@ -1,5 +1,6 @@
 import React from "react";
 import { useParams, Link } from "wouter";
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
@@ -20,7 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
+ import {
   ArrowLeft,
   MapPin,
   Calendar,
@@ -77,7 +78,7 @@ export const AdminJobDetails: React.FC = () => {
       toast({ title: "Deleted", description: "Job deleted" });
     },
   });
-
+      
   if (isLoading || appsLoading) {
     return (
       <div className="max-w-6xl mx-auto space-y-6">
@@ -277,7 +278,6 @@ export const AdminJobDetails: React.FC = () => {
               <div className="text-sm text-muted-foreground">{employer?.contactPhone}</div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader>
               <CardTitle>Job Statistics</CardTitle>
