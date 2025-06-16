@@ -201,9 +201,7 @@ export const AdminVerifications: React.FC = () => {
             city: item.candidate?.address?.city,
           }}
           actions={actions}
-        >
-          {email && <div className="text-sm text-muted-foreground">{email}</div>}
-          {submittedInfo}
+        >  
         </CandidateCard>
       );
     }
@@ -220,7 +218,7 @@ export const AdminVerifications: React.FC = () => {
           }}
           actions={actions}
         >
-          {submittedInfo}
+          
         </EmployerCard>
       );
     }
@@ -235,10 +233,10 @@ export const AdminVerifications: React.FC = () => {
           experience: item.experienceRequired,
           city: item.location,
           postedOn: formatDate(item.createdAt),
-        }}
+        },{submittedInfo}}
         actions={actions}
       >
-        {submittedInfo}
+
       </JobCard>
     );
   };
