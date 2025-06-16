@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CandidateCard, EmployerCard, JobCard } from "@/components/common";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -207,99 +208,138 @@ export const AdminSearchPanel: React.FC = () => {
   // Card renderers
   const renderCard = (item) => {
     if (item.type === "candidate") {
+      const actions = (
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <Eye className="h-4 w-4" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <CheckCircle className="h-4 w-4 mr-2" />Verify
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Edit className="h-4 w-4 mr-2" />Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Trash2 className="h-4 w-4 mr-2" />Delete
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Eye className="h-4 w-4 mr-2" />View As
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      );
+
       return (
-        <Card key={item.id} className="bg-card border-border">
-          <CardContent className="p-4 flex justify-between items-center">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <User className="h-5 w-5 text-primary" />
-                <span className="font-semibold text-foreground">{item.name}</span>
-                <Badge variant={item.status === "verified" ? "success" : "secondary"}>{item.status}</Badge>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {item.qualification} • {item.experience} • {item.city}
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm"><Eye className="h-4 w-4" /></Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm"><MoreVertical className="h-4 w-4" /></Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem><CheckCircle className="h-4 w-4 mr-2" />Verify</DropdownMenuItem>
-                  <DropdownMenuItem><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
-                  <DropdownMenuItem><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
-                  <DropdownMenuItem><Eye className="h-4 w-4 mr-2" />View As</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </CardContent>
-        </Card>
+        <CandidateCard
+          key={item.id}
+          candidate={{
+            fullName: item.name,
+            qualification: item.qualification,
+            industry: item.industry,
+            experience:
+              typeof item.experience === "object"
+                ? `${item.experience.years} years`
+                : item.experience,
+            city: item.city,
+          }}
+          actions={actions}
+        />
       );
     }
     if (item.type === "employer") {
+      const actions = (
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <Eye className="h-4 w-4" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <CheckCircle className="h-4 w-4 mr-2" />Verify
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Edit className="h-4 w-4 mr-2" />Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Trash2 className="h-4 w-4 mr-2" />Delete
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Eye className="h-4 w-4 mr-2" />View As
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      );
+
       return (
-        <Card key={item.id} className="bg-card border-border">
-          <CardContent className="p-4 flex justify-between items-center">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Building2 className="h-5 w-5 text-primary" />
-                <span className="font-semibold text-foreground">{item.companyName}</span>
-                <Badge variant={item.status === "verified" ? "success" : "secondary"}>{item.status}</Badge>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {item.industry} • {item.size} • {item.city}
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm"><Eye className="h-4 w-4" /></Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm"><MoreVertical className="h-4 w-4" /></Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem><CheckCircle className="h-4 w-4 mr-2" />Verify</DropdownMenuItem>
-                  <DropdownMenuItem><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
-                  <DropdownMenuItem><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
-                  <DropdownMenuItem><Eye className="h-4 w-4 mr-2" />View As</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </CardContent>
-        </Card>
+        <EmployerCard
+          key={item.id}
+          employer={{
+            organizationName: item.companyName,
+            registrationNumber: item.regNo,
+            industry: item.industry,
+            city: item.city,
+          }}
+          actions={actions}
+        />
       );
     }
     if (item.type === "job") {
+      const actions = (
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <Eye className="h-4 w-4" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <CheckCircle className="h-4 w-4 mr-2" />Approve
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Edit className="h-4 w-4 mr-2" />Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Trash2 className="h-4 w-4 mr-2" />Delete
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <FlaskConical className="h-4 w-4 mr-2" />Run Compatibility
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      );
+
       return (
-        <Card key={item.id} className="bg-card border-border">
-          <CardContent className="p-4 flex justify-between items-center">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <FileText className="h-5 w-5 text-primary" />
-                <span className="font-semibold text-foreground">{item.title}</span>
-                <Badge variant={item.status === "active" ? "success" : item.status === "flagged" ? "destructive" : "secondary"}>{item.status}</Badge>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {item.employer} • {item.city} • Posted {item.postedOn}
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm"><Eye className="h-4 w-4" /></Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm"><MoreVertical className="h-4 w-4" /></Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem><CheckCircle className="h-4 w-4 mr-2" />Approve</DropdownMenuItem>
-                  <DropdownMenuItem><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
-                  <DropdownMenuItem><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
-                  <DropdownMenuItem><FlaskConical className="h-4 w-4 mr-2" />Run Compatibility</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </CardContent>
-        </Card>
+        <JobCard
+          key={item.id}
+          job={{
+            title: item.title,
+            positions: item.vacancy,
+            qualification: item.qualification,
+            experience: item.experienceRequired,
+            city: item.city,
+            postedOn: item.postedOn,
+          }}
+          actions={actions}
+        />
       );
     }
     // Fallback for mixed/all
