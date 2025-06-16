@@ -8,8 +8,8 @@ import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { useToast } from "../../hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, throwIfResNotOk } from "../../lib/queryClient";
+import { Link } from "wouter";
 import {
-  Filter,
   Search,
   SortAsc,
   MoreVertical,
@@ -17,12 +17,10 @@ import {
   Edit,
   Trash2,
   CheckCircle,
-  XCircle,
   User,
   Building2,
   FileText,
-  Clock,
-  Calendar
+  Clock
 } from "lucide-react";
 
 export const AdminVerifications: React.FC = () => {
@@ -40,7 +38,7 @@ export const AdminVerifications: React.FC = () => {
 
   // Mutations for verification actions
   const verifyMutation = useMutation({
-    mutationFn: async ({ id, type, action }: { id: number; type: string; action: 'approve' | 'reject' }) => {
+    mutationFn: async ({ id, type, action }: { id: number; type: string; action: 'approve' | 'reject' | 'hold' }) => {
       const response = await apiRequest(`/api/admin/${type}s/${id}/${action}`, "PATCH");
       await throwIfResNotOk(response);
       return response.json();
@@ -49,7 +47,12 @@ export const AdminVerifications: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: [`/api/admin/verifications/${variables.type}`] });
       toast({
         title: "Success",
-        description: `\${variables.type} \${variables.action === 'approve' ? 'approved' : 'rejected'} successfully`,
+        description:
+          variables.action === 'approve'
+            ? `${variables.type} approved successfully`
+            : variables.action === 'reject'
+            ? `${variables.type} rejected successfully`
+            : `${variables.type} put on hold`,
       });
     },
     onError: (error) => {
@@ -59,6 +62,19 @@ export const AdminVerifications: React.FC = () => {
         variant: "destructive",
       });
     },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async ({ id, type }: { id: number; type: string }) => {
+      const res = await apiRequest(`/api/admin/${type}s/${id}`, 'DELETE');
+      await throwIfResNotOk(res);
+      return res.json();
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/verifications/${vars.type}`] });
+      toast({ title: 'Deleted' });
+    },
+    onError: () => toast({ title: 'Failed', variant: 'destructive' })
   });
 
   // Helper function to format dates
@@ -75,6 +91,18 @@ export const AdminVerifications: React.FC = () => {
     const isCandidate = type === "candidate";
     const isEmployer = type === "employer";
     const isJob = type === "job";
+
+    const viewLink = isCandidate
+      ? `/candidate/profile/edit?id=${item.id}`
+      : isEmployer
+      ? `/employer/profile?id=${item.id}`
+      : `/jobs/${item.id}`;
+
+    const editLink = isCandidate
+      ? `/candidate/profile/edit?id=${item.id}`
+      : isEmployer
+      ? `/employer/profile?id=${item.id}`
+      : `/jobs/${item.id}/edit`;
 
     return (
       <Card key={item.id} className="bg-card border-border">
@@ -118,28 +146,34 @@ export const AdminVerifications: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => verifyMutation.mutate({ id: item.id, type, action: 'approve' })}
-                disabled={verifyMutation.isPending}
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Approve
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => verifyMutation.mutate({ id: item.id, type, action: 'reject' })}
-                disabled={verifyMutation.isPending}
-                className="text-destructive hover:text-destructive"
-              >
-                <XCircle className="h-4 w-4 mr-2" />
-                Reject
-              </Button>
-              <Button variant="outline" size="sm">
-                <Eye className="h-4 w-4" />
-              </Button>
+              <Link href={viewLink}>
+                <Button variant="outline" size="sm">
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => verifyMutation.mutate({ id: item.id, type, action: 'approve' })}>
+                    <CheckCircle className="h-4 w-4 mr-2" /> Verify
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => verifyMutation.mutate({ id: item.id, type, action: 'hold' })}>
+                    <Clock className="h-4 w-4 mr-2" /> Hold
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={editLink}>
+                      <Edit className="h-4 w-4 mr-2" /> Edit
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => deleteMutation.mutate({ id: item.id, type })} className="text-destructive">
+                    <Trash2 className="h-4 w-4 mr-2" /> Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardContent>

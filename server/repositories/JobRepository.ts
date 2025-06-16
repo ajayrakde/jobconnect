@@ -46,6 +46,13 @@ export class JobRepository {
     return await db.select().from(jobPosts);
   }
 
+  static async getInactiveJobs(): Promise<JobPost[]> {
+    return await db
+      .select()
+      .from(jobPosts)
+      .where(eq(jobPosts.isActive, false));
+  }
+
   static async markJobAsFulfilled(jobId: number): Promise<JobPost> {
     const [updatedJob] = await db
       .update(jobPosts)
@@ -53,6 +60,14 @@ export class JobRepository {
       .where(eq(jobPosts.id, jobId))
       .returning();
     return updatedJob;
+  }
+
+  static async approveJob(jobId: number): Promise<JobPost> {
+    return this.activateJob(jobId);
+  }
+
+  static async holdJob(jobId: number): Promise<JobPost> {
+    return this.deactivateJob(jobId);
   }
 
   static async activateJob(jobId: number): Promise<JobPost> {

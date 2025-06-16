@@ -96,13 +96,29 @@ export class CandidateRepository {
   static async reject(id: number) {
     const [updated] = await db
       .update(candidates)
-      .set({ 
+      .set({
         profileStatus: 'rejected',
         updatedAt: new Date()
       })
       .where(eq(candidates.id, id))
       .returning();
-    
+
+    return updated;
+  }
+
+  /**
+   * Put a candidate profile back to pending status
+   */
+  static async hold(id: number) {
+    const [updated] = await db
+      .update(candidates)
+      .set({
+        profileStatus: 'pending',
+        updatedAt: new Date()
+      })
+      .where(eq(candidates.id, id))
+      .returning();
+
     return updated;
   }
 
@@ -160,6 +176,11 @@ export class CandidateRepository {
   /** Verify candidate via alias */
   static async verifyCandidate(id: number) {
     return this.verify(id);
+  }
+
+  /** Hold candidate via alias */
+  static async holdCandidate(id: number) {
+    return this.hold(id);
   }
 
   /** Soft delete candidate via alias */

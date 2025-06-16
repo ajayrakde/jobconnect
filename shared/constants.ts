@@ -33,7 +33,6 @@ export const experienceLevels = [
 ] as const;
 
 export type ExperienceLevel = typeof experienceLevels[number];
-];
 
 export const genders = [
   "male",
