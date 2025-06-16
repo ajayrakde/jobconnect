@@ -1,6 +1,10 @@
 import React from "react";
 import { useParams, Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import {
   Card,
   CardContent,
@@ -12,26 +16,45 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+ import {
   ArrowLeft,
   MapPin,
   Calendar,
   Users,
   Briefcase,
   DollarSign,
+  Building,
+  MoreVertical,
+  Edit,
+  Trash,
+  CheckCircle,
   FileText,
   Clock,
   Mail,
   Phone,
 } from "lucide-react";
-import type { JobPost, Application } from "@shared/types";
+import type { JobPost, Application, Employer } from "@shared/types";
 import { formatDistanceToNow } from "date-fns";
 
 export const AdminJobDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: job, isLoading } = useQuery<JobPost>({
     queryKey: [`/api/admin/jobs/${id}`],
     enabled: !!id,
+  });
+
+  const { data: employer } = useQuery<Employer>({
+    queryKey: job ? [`/api/admin/employers/${job.employerId}`] : [],
+    enabled: !!job?.employerId,
   });
 
   const { data: applications = [], isLoading: appsLoading } = useQuery<Application[]>({
@@ -39,6 +62,23 @@ export const AdminJobDetails: React.FC = () => {
     enabled: !!id,
   });
 
+  const fulfillMutation = useMutation({
+    mutationFn: () => apiRequest(`/api/admin/jobs/${id}/fulfill`, "PATCH"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/jobs/${id}`] });
+      toast({ title: "Success", description: "Job marked as fulfilled" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => apiRequest(`/api/admin/jobs/${id}`, "DELETE"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/jobs"] });
+      setLocation("/admin/dashboard");
+      toast({ title: "Deleted", description: "Job deleted" });
+    },
+  });
+      
   if (isLoading || appsLoading) {
     return (
       <div className="max-w-6xl mx-auto space-y-6">
@@ -118,6 +158,31 @@ export const AdminJobDetails: React.FC = () => {
         <Badge className={getStatusColor(job.fulfilled ? 'fulfilled' : (job.isActive ? 'active' : 'inactive'))}>
           {job.fulfilled ? 'Fulfilled' : (job.isActive ? 'Active' : 'Inactive')}
         </Badge>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link href={`/admin/jobs/${job.id}/edit`}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Job
+              </Link>
+            </DropdownMenuItem>
+            {!job.fulfilled && (
+              <DropdownMenuItem onClick={() => fulfillMutation.mutate()} disabled={fulfillMutation.isPending}>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                {fulfillMutation.isPending ? 'Marking...' : 'Mark as Fulfilled'}
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending}>
+              <Trash className="h-4 w-4 mr-2" />
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete Job'}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -200,6 +265,19 @@ export const AdminJobDetails: React.FC = () => {
         </div>
 
         <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building className="h-5 w-5" />
+                Employer Info
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="font-semibold">{employer?.organizationName}</div>
+              <div className="text-sm text-muted-foreground">{employer?.contactEmail}</div>
+              <div className="text-sm text-muted-foreground">{employer?.contactPhone}</div>
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader>
               <CardTitle>Job Statistics</CardTitle>

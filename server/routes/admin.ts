@@ -8,7 +8,8 @@ import { AdminRepository } from '../repositories';
 import { calculateMatchScore } from '../utils/matchingEngine';
 import { exportToExcel, exportToPDF } from '../utils/exportUtils';
 import { storage } from '../storage';
-import { insertShortlistSchema } from '@shared/zod';
+import { insertShortlistSchema, insertJobPostSchema } from '@shared/zod';
+import type { InsertJobPost } from '@shared/types';
 import { verifyFirebaseToken } from '../utils/firebase-admin';
 
 // Validation schemas
@@ -110,6 +111,35 @@ adminRouter.get('/jobs/:id', authenticateUser, asyncHandler(async (req: any, res
   res.json(job);
 }));
 
+adminRouter.put('/jobs/:id', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const jobId = parseInt(req.params.id);
+  const job = await storage.getJobPost(jobId);
+  if (!job) {
+    return res.status(404).json({ message: 'Job not found' });
+  }
+  const updateData = insertJobPostSchema.partial().parse(req.body) as Partial<InsertJobPost>;
+  const updatedJob = await storage.updateJobPost(jobId, updateData);
+  res.json(updatedJob);
+}));
+
+adminRouter.patch('/jobs/:id/fulfill', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const jobId = parseInt(req.params.id);
+  const job = await storage.getJobPost(jobId);
+  if (!job) {
+    return res.status(404).json({ message: 'Job not found' });
+  }
+  const fulfilledJob = await storage.markJobAsFulfilled(jobId);
+  res.json(fulfilledJob);
+}));
+
 /**
  * @swagger
  * /api/admin/jobs/{id}/applications:
@@ -151,6 +181,19 @@ adminRouter.get('/unverified-employers', authenticateUser, asyncHandler(async (r
   }
   const employers = await storage.getUnverifiedEmployers();
   res.json(employers);
+}));
+
+adminRouter.get('/employers/:id', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const id = parseInt(req.params.id);
+  const employer = await storage.getEmployer(id);
+  if (!employer) {
+    return res.status(404).json({ message: 'Employer not found' });
+  }
+  res.json(employer);
 }));
 
 adminRouter.get('/unverified-candidates', authenticateUser, asyncHandler(async (req: any, res) => {
