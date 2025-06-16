@@ -125,15 +125,11 @@ export const MatchingEngine: React.FC = () => {
         <CardContent>
           <div className="space-y-4">
             {candidates?.map((candidate: any, index: number) => (
-              <div
+              <Link
                 key={candidate.id ?? candidate.candidate?.id ?? index}
-                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                onClick={() => handleCandidateClick(candidate)}
+                href={`/candidates/${candidate.id ?? candidate.candidate?.id ?? ''}`}
               >
-                <div
-                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={() => handleCandidateClick(candidate)}
-                >
+                <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                   <div className="flex items-center space-x-4">
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={candidate.avatar} alt={
