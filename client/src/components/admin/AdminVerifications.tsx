@@ -33,7 +33,23 @@ export const AdminVerifications: React.FC = () => {
   // Fetch pending verifications based on type
   const { data: verifications = [], isLoading } = useQuery({
     queryKey: [`/api/admin/verifications/${type}`],
-    enabled: !!type
+    enabled: !!type,
+    onError: (error: any) => {
+      const message = error?.message || "Failed to fetch verifications";
+      if (typeof message === 'string' && message.toLowerCase().includes('unauthorized')) {
+        toast({
+          title: 'Unauthorized',
+          description: 'You are not authorized to view this content.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: message,
+          variant: 'destructive',
+        });
+      }
+    },
   });
 
   // Mutations for verification actions
