@@ -79,15 +79,6 @@ export const industries = [
   "Other"
 ];
 
-export const jobCategories = [
-  "Engineering",
-  "Design",
-  "Marketing",
-  "Sales",
-  "Management",
-  "Other"
-];
-
 export const allowedFileTypes = [
   "image/jpeg",
   "image/jpg",

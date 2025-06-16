@@ -17,7 +17,6 @@ import {
   profileStatus,
   industries,
   businessSizes,
-  jobCategories,
   jobStatus,
 } from "@shared/constants";
 
@@ -188,9 +187,9 @@ export const AdminSearchPanel: React.FC = () => {
     ],
     job: [
       {
-        key: "category",
-        label: "Category",
-        options: jobCategories,
+        key: "industry",
+        label: "Industry",
+        options: industries,
       },
       {
         key: "experience",
