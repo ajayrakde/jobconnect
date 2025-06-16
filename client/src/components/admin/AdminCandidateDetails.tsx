@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, User, Briefcase } from "lucide-react";
 
-export const CandidateDetails: React.FC = () => {
+export const AdminCandidateDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
 
   const { data: candidate, isLoading } = useQuery({

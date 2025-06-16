@@ -118,7 +118,7 @@ export class AdminRepository {
         .innerJoin(users, eq(users.id, candidates.userId))
         .where(sql`to_tsvector('english', ${users.name}) @@ plainto_tsquery('english', ${query})`);
 
-      return results.map((r) => ({ ...r, type: 'candidate' }));
+      return results.map((r: any) => ({ ...r, type: 'candidate' }));
     }
 
     if (type === 'employer') {
@@ -127,7 +127,7 @@ export class AdminRepository {
         .from(employers)
         .where(sql`to_tsvector('english', organization_name) @@ plainto_tsquery('english', ${query})`);
 
-      return results.map((r) => ({ ...r, type: 'employer' }));
+      return results.map((r: any) => ({ ...r, type: 'employer' }));
     }
 
     if (type === 'job') {
@@ -136,7 +136,7 @@ export class AdminRepository {
         .from(jobPosts)
         .where(sql`to_tsvector('english', title || ' ' || description) @@ plainto_tsquery('english', ${query})`);
 
-      return results.map((r) => ({ ...r, type: 'job' }));
+      return results.map((r: any) => ({ ...r, type: 'job' }));
     }
 
     // Search all by default

@@ -92,20 +92,49 @@ export const AdminVerifications: React.FC = () => {
     const isEmployer = type === "employer";
     const isJob = type === "job";
 
-    const viewLink = isCandidate
-      ? `/candidate/profile/edit?id=${item.id}`
+    const id = isCandidate
+      ? item.candidate?.id
       : isEmployer
-      ? `/employer/profile?id=${item.id}`
-      : `/jobs/${item.id}`;
+      ? item.employer?.id
+      : item.id;
+
+    const viewLink = isCandidate
+      ? `/admin/candidates/${id}`
+      : isEmployer
+      ? `/admin/employers/${id}`
+      : `/admin/jobs/${id}`;
 
     const editLink = isCandidate
-      ? `/candidate/profile/edit?id=${item.id}`
+      ? `/admin/candidates/${id}/edit`
       : isEmployer
-      ? `/employer/profile?id=${item.id}`
-      : `/jobs/${item.id}/edit`;
+      ? `/admin/employers/${id}/edit`
+      : `/admin/jobs/${id}/edit`;
+
+    const name = isCandidate
+      ? item.user?.name
+      : isEmployer
+      ? item.employer?.organizationName
+      : item.title;
+
+    const email = isCandidate
+      ? item.user?.email
+      : isEmployer
+      ? item.user?.email
+      : undefined;
+
+    const qualification = isCandidate
+      ? item.candidate?.qualifications?.[0]?.degree
+      : undefined;
+
+    const experience = isCandidate
+      ? item.candidate?.experience?.[0]?.position
+      : undefined;
+
+    const industry = isEmployer ? item.employer?.businessType : undefined;
+    const registration = isEmployer ? item.employer?.registrationNumber : undefined;
 
     return (
-      <Card key={item.id} className="bg-card border-border">
+      <Card key={id} className="bg-card border-border">
         <CardContent className="p-4">
           <div className="flex justify-between items-start">
             <div className="space-y-2">
@@ -113,28 +142,30 @@ export const AdminVerifications: React.FC = () => {
                 {isCandidate && <User className="h-5 w-5 text-primary" />}
                 {isEmployer && <Building2 className="h-5 w-5 text-primary" />}
                 {isJob && <FileText className="h-5 w-5 text-primary" />}
-                <span className="font-semibold text-foreground">
-                  {isCandidate ? item.name : isEmployer ? item.organizationName : item.title}
-                </span>
+                <span className="font-semibold text-foreground">{name}</span>
                 <Badge variant="secondary">Pending</Badge>
               </div>
               
               <div className="text-sm text-muted-foreground space-y-1">
                 {isCandidate && (
                   <>
-                    <div>{item.email}</div>
-                    <div>{item.qualification} • {item.experience}</div>
+                    {email && <div>{email}</div>}
+                    <div>
+                      {qualification || "N/A"}
+                      {experience ? ` • ${experience}` : ""}
+                    </div>
                   </>
                 )}
                 {isEmployer && (
                   <>
-                    <div>{item.industry}</div>
-                    <div>{item.size} employees • {item.location}</div>
+                    {industry && <div>{industry}</div>}
+                    {registration && <div>Reg No: {registration}</div>}
+                    {item.employer?.address && <div>{item.employer.address}</div>}
                   </>
                 )}
                 {isJob && (
                   <>
-                    <div>{item.employer}</div>
+                    {item.employerId && <div>Employer ID: {item.employerId}</div>}
                     <div>{item.location} • Posted {formatDate(item.createdAt)}</div>
                   </>
                 )}
@@ -158,10 +189,10 @@ export const AdminVerifications: React.FC = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => verifyMutation.mutate({ id: item.id, type, action: 'approve' })}>
+                  <DropdownMenuItem onClick={() => verifyMutation.mutate({ id, type, action: 'approve' })}>
                     <CheckCircle className="h-4 w-4 mr-2" /> Verify
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => verifyMutation.mutate({ id: item.id, type, action: 'hold' })}>
+                  <DropdownMenuItem onClick={() => verifyMutation.mutate({ id, type, action: 'hold' })}>
                     <Clock className="h-4 w-4 mr-2" /> Hold
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -169,7 +200,7 @@ export const AdminVerifications: React.FC = () => {
                       <Edit className="h-4 w-4 mr-2" /> Edit
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => deleteMutation.mutate({ id: item.id, type })} className="text-destructive">
+                  <DropdownMenuItem onClick={() => deleteMutation.mutate({ id, type })} className="text-destructive">
                     <Trash2 className="h-4 w-4 mr-2" /> Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>

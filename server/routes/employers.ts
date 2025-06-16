@@ -81,7 +81,7 @@ employersRouter.get(
 employersRouter.post(
   '/jobs',
   ...requireVerifiedRole('employer'),
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: any, res: any) => {
     const employer = req.employer;
     const jobData = { ...req.body, employerId: employer.id, status: 'active', createdAt: new Date(), updatedAt: new Date() };
     const jobPost = await storage.createJobPost(jobData);
