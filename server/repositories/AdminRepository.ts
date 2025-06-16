@@ -112,25 +112,31 @@ export class AdminRepository {
     // Implementation depends on your search requirements
     // This is a basic example
     if (type === 'candidate') {
-      return db
+      const results = await db
         .select()
         .from(candidates)
         .innerJoin(users, eq(users.id, candidates.userId))
         .where(sql`to_tsvector('english', ${users.name}) @@ plainto_tsquery('english', ${query})`);
+
+      return results.map((r) => ({ ...r, type: 'candidate' }));
     }
 
     if (type === 'employer') {
-      return db
+      const results = await db
         .select()
         .from(employers)
         .where(sql`to_tsvector('english', organization_name) @@ plainto_tsquery('english', ${query})`);
+
+      return results.map((r) => ({ ...r, type: 'employer' }));
     }
 
     if (type === 'job') {
-      return db
+      const results = await db
         .select()
         .from(jobPosts)
         .where(sql`to_tsvector('english', title || ' ' || description) @@ plainto_tsquery('english', ${query})`);
+
+      return results.map((r) => ({ ...r, type: 'job' }));
     }
 
     // Search all by default
