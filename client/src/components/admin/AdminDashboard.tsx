@@ -69,7 +69,7 @@ export const AdminDashboard: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600">Active Jobs</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {stats?.jobs || 0}
+                  {stats?.jobs?.activeJobs || 0}
                 </p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
