@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { CandidateCard, EmployerCard, JobCard } from "../common/EntityCards";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -149,82 +150,94 @@ export const AdminVerifications: React.FC = () => {
     const industry = isEmployer ? item.employer?.businessType : undefined;
     const registration = isEmployer ? item.employer?.registrationNumber : undefined;
 
-    return (
-      <Card key={id} className="bg-card border-border">
-        <CardContent className="p-4">
-          <div className="flex justify-between items-start">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                {isCandidate && <User className="h-5 w-5 text-primary" />}
-                {isEmployer && <Building2 className="h-5 w-5 text-primary" />}
-                {isJob && <FileText className="h-5 w-5 text-primary" />}
-                <span className="font-semibold text-foreground">{name}</span>
-                <Badge variant="secondary">Pending</Badge>
-              </div>
-              
-              <div className="text-sm text-muted-foreground space-y-1">
-                {isCandidate && (
-                  <>
-                    {email && <div>{email}</div>}
-                    <div>
-                      {qualification || "N/A"}
-                      {experience ? ` • ${experience}` : ""}
-                    </div>
-                  </>
-                )}
-                {isEmployer && (
-                  <>
-                    {industry && <div>{industry}</div>}
-                    {registration && <div>Reg No: {registration}</div>}
-                    {item.employer?.address && <div>{item.employer.address}</div>}
-                  </>
-                )}
-                {isJob && (
-                  <>
-                    {item.employerId && <div>Employer ID: {item.employerId}</div>}
-                    <div>{item.location} • Posted {formatDate(item.createdAt)}</div>
-                  </>
-                )}
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span>Submitted {formatDate(item.createdAt)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Link href={viewLink}>
-                <Button variant="outline" size="sm">
-                  <Eye className="h-4 w-4" />
-                </Button>
+    const actions = (
+      <div className="flex items-center gap-2">
+        <Link href={viewLink}>
+          <Button variant="outline" size="sm">
+            <Eye className="h-4 w-4" />
+          </Button>
+        </Link>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => verifyMutation.mutate({ id, type, action: 'approve' })}>
+              <CheckCircle className="h-4 w-4 mr-2" /> Verify
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => verifyMutation.mutate({ id, type, action: 'hold' })}>
+              <Clock className="h-4 w-4 mr-2" /> Hold
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={editLink}>
+                <Edit className="h-4 w-4 mr-2" /> Edit
               </Link>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => verifyMutation.mutate({ id, type, action: 'approve' })}>
-                    <CheckCircle className="h-4 w-4 mr-2" /> Verify
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => verifyMutation.mutate({ id, type, action: 'hold' })}>
-                    <Clock className="h-4 w-4 mr-2" /> Hold
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href={editLink}>
-                      <Edit className="h-4 w-4 mr-2" /> Edit
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => deleteMutation.mutate({ id, type })} className="text-destructive">
-                    <Trash2 className="h-4 w-4 mr-2" /> Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => deleteMutation.mutate({ id, type })} className="text-destructive">
+              <Trash2 className="h-4 w-4 mr-2" /> Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+
+    const submittedInfo = (
+      <div className="flex items-center gap-2">
+        <Clock className="h-4 w-4" />
+        <span>Submitted {formatDate(item.createdAt)}</span>
+      </div>
+    );
+
+    if (isCandidate) {
+      return (
+        <CandidateCard
+          key={id}
+          candidate={{
+            fullName: name,
+            qualification,
+            experience,
+            city: item.candidate?.address?.city,
+          }}
+          actions={actions}
+        >  
+        </CandidateCard>
+      );
+    }
+
+    if (isEmployer) {
+      return (
+        <EmployerCard
+          key={id}
+          employer={{
+            organizationName: name,
+            registrationNumber: registration,
+            industry,
+            city: item.employer?.address,
+          }}
+          actions={actions}
+        >
+          
+        </EmployerCard>
+      );
+    }
+
+    return (
+      <JobCard
+        key={id}
+        job={{
+          title: name,
+          positions: item.vacancy,
+          qualification: item.minQualification,
+          experience: item.experienceRequired,
+          city: item.location,
+          postedOn: formatDate(item.createdAt),
+        },{submittedInfo}}
+        actions={actions}
+      >
+
+      </JobCard>
     );
   };
 

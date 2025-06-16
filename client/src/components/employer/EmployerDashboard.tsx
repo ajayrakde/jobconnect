@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { JobCard } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -384,39 +385,18 @@ export const EmployerDashboard: React.FC = () => {
                 ))
               ) : (
                 // Jobs display
-                cardContent.data.slice(0, 10).map((job: any) => (
-                  <div key={job.id} className="flex items-center justify-between p-4 border border-border rounded-lg bg-muted/20">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-foreground">{job.title}</h3>
-                        <Badge className={getJobStatusColor(getJobStatus(job))}>
-                          {getStatusIcon(getJobStatus(job))}
-                          <span className="ml-1 capitalize">{getJobStatus(job)}</span>
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Building className="h-4 w-4" />
-                          {job.location}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          {job.applicationsCount || 0} applications
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          Posted {new Date(job.createdAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
+                cardContent.data.slice(0, 10).map((job: any) => {
+                  const status = getJobStatus(job);
+                  const daysSinceCreated = Math.floor((new Date().getTime() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+
+                  const actions = (
+                    <div className="flex gap-2 ml-4">
                       <Link href={`/jobs/${job.id}`}>
                         <Button variant="outline" size="sm" className="border-border hover:bg-accent">
                           <Eye className="h-4 w-4 mr-1" />
                           View
                         </Button>
                       </Link>
-                      
                       {isVerified && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -431,26 +411,20 @@ export const EmployerDashboard: React.FC = () => {
                                 Edit Job
                               </Link>
                             </DropdownMenuItem>
-
                             <DropdownMenuItem onClick={() => handleCloneJob(job)}>
                               <Copy className="h-4 w-4 mr-2" />
                               Clone Job
                             </DropdownMenuItem>
-
                             <DropdownMenuSeparator />
-
-                            {getJobStatus(job) === "active" && (
+                            {status === "active" && (
                               <DropdownMenuItem
                                 onClick={() => handleMarkAsFulfilled(job.id)}
                                 disabled={markAsFulfilledMutation.isPending}
                               >
                                 <CheckCircle className="h-4 w-4 mr-2" />
-                                {markAsFulfilledMutation.isPending
-                                  ? "Marking..."
-                                  : "Mark as Fulfilled"}
+                                {markAsFulfilledMutation.isPending ? "Marking..." : "Mark as Fulfilled"}
                               </DropdownMenuItem>
                             )}
-
                             {!job.isActive && (
                               <DropdownMenuItem>
                                 <RotateCcw className="h-4 w-4 mr-2" />
@@ -461,8 +435,49 @@ export const EmployerDashboard: React.FC = () => {
                         </DropdownMenu>
                       )}
                     </div>
-                  </div>
-                ))
+                  );
+
+                  return (
+                    <JobCard
+                      key={job.id}
+                      job={{
+                        title: job.title,
+                        positions: job.vacancy,
+                        qualification: job.minQualification,
+                        experience: job.experienceRequired,
+                        city: job.location,
+                        postedOn: new Date(job.createdAt).toLocaleDateString(),
+                      }}
+                      actions={actions}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <Badge className={getStatusColor(status)}>
+                          {getStatusIcon(status)}
+                          <span className="ml-1 capitalize">{status}</span>
+                        </Badge>
+                        {status === "dormant" && (
+                          <Badge variant="outline" className="border-orange-500 text-orange-500">
+                            {daysSinceCreated}+ days old
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-6 text-sm text-muted-foreground mb-3">
+                        <div className="flex items-center gap-1">
+                          <Users className="h-4 w-4" />
+                          {job.applicationsCount || 0} applications
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Briefcase className="h-4 w-4" />
+                          {job.jobCode}
+                        </div>
+                      </div>
+                      <p className="text-muted-foreground text-sm line-clamp-2">{job.description}</p>
+                      <div className="mt-3">
+                        <span className="text-sm font-medium text-green-600 dark:text-green-400">{job.salaryRange}</span>
+                      </div>
+                    </JobCard>
+                  );
+                })
               )}
             </div>
           ) : (

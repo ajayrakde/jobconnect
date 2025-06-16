@@ -1,5 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { JobCard } from "@/components/common";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, DollarSign, Clock, Building, Star, Calendar } from "lucide-react";
@@ -100,54 +101,37 @@ export const CandidateJobs: React.FC = () => {
 
       <div className="space-y-4">
         {jobs.map((job: Job) => (
-          <Card key={job.id} className="bg-card border-border hover:bg-accent/50 dark:hover:bg-accent/20 transition-colors">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CardTitle className="text-xl text-foreground">{job.title}</CardTitle>
-                    {job.compatibilityScore && (
-                      <Badge className={getCompatibilityColor(job.compatibilityScore)}>
-                        <Star className="h-3 w-3 mr-1" />
-                        {job.compatibilityScore}% {getCompatibilityLabel(job.compatibilityScore)}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Building className="h-4 w-4" />
-                      {job.employer.organizationName}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      {job.location}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
-                    </div>
-                  </div>
-                </div>
-                <Badge variant="outline" className="ml-4 border-border">
-                  {job.jobCode}
+          <JobCard
+            key={job.id}
+            job={{
+              title: job.title,
+              positions: job.vacancy,
+              qualification: job.minQualification,
+              experience: job.experienceRequired,
+              city: job.location,
+              postedOn: formatDistanceToNow(new Date(job.createdAt), { addSuffix: true }),
+            }}
+            actions={<Badge variant="outline" className="border-border">{job.jobCode}</Badge>}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              {job.compatibilityScore && (
+                <Badge className={getCompatibilityColor(job.compatibilityScore)}>
+                  <Star className="h-3 w-3 mr-1" />
+                  {job.compatibilityScore}% {getCompatibilityLabel(job.compatibilityScore)}
                 </Badge>
+              )}
+            </div>
+
+            <p className="text-foreground mb-4 line-clamp-3">{job.description}</p>
+
+            <div className="grid md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <h4 className="font-medium text-sm text-foreground mb-1">Experience Required</h4>
+                <p className="text-sm text-muted-foreground">{job.experienceRequired}</p>
               </div>
-            </CardHeader>
-            
-            <CardContent className="pt-0">
-              <p className="text-foreground mb-4 line-clamp-3">
-                {job.description}
-              </p>
-              
-              <div className="grid md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <h4 className="font-medium text-sm text-foreground mb-1">Experience Required</h4>
-                  <p className="text-sm text-muted-foreground">{job.experienceRequired}</p>
-                </div>
-                <div>
-                  <h4 className="font-medium text-sm text-foreground mb-1">Minimum Qualification</h4>
-                  <p className="text-sm text-muted-foreground">{job.minQualification}</p>
-                </div>
+              <div>
+                <h4 className="font-medium text-sm text-foreground mb-1">Minimum Qualification</h4>
+                <p className="text-sm text-muted-foreground">{job.minQualification}</p>
               </div>
 
               {job.skills && (
@@ -196,6 +180,8 @@ export const CandidateJobs: React.FC = () => {
                 </div>
               )}
 
+              </div>
+
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
                   <DollarSign className="h-4 w-4" />
@@ -205,8 +191,7 @@ export const CandidateJobs: React.FC = () => {
                   Apply Now
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+          </JobCard>
         ))}
       </div>
     </div>
