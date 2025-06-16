@@ -46,11 +46,6 @@ export const MatchingEngine: React.FC = () => {
     },
   });
 
-  const handleJobClick = (job: any) => {
-    setSelectedJob(job);
-    setMatchingType("job-candidates");
-    setShowMatchingModal(true);
-  };
 
   const handleCandidateClick = (candidate: any) => {
     setSelectedCandidate(candidate);
@@ -79,12 +74,11 @@ export const MatchingEngine: React.FC = () => {
         <CardContent>
           <div className="space-y-4">
             {jobs?.map((job: any) => (
-              <div
-                key={job.id}
-                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                onClick={() => handleJobClick(job)}
-              >
-                <div className="flex justify-between items-start">
+              <Link key={job.id} href={`/jobs/${job.id}`}>
+                <div
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                >
+                  <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900">{job.title}</h3>
                     <p className="text-sm text-gray-600">{job.company?.name || 'Company Name'}</p>
@@ -106,7 +100,8 @@ export const MatchingEngine: React.FC = () => {
                     <div className="text-xs text-gray-500">matches</div>
                   </div>
                 </div>
-              </div>
+                </div>
+              </Link>
             ))}
 
             {(!jobs || jobs.length === 0) && (
@@ -129,11 +124,11 @@ export const MatchingEngine: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {candidates?.map((candidate: any) => (
-              <Link
-                key={candidate.id}
-                href={`/candidates/${candidate.id}`}
-                className="block"
+            {candidates?.map((candidate: any, index: number) => (
+              <div
+                key={candidate.id ?? candidate.candidate?.id ?? index}
+                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => handleCandidateClick(candidate)}
               >
                 <div
                   className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
