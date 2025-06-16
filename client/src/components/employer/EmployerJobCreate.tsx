@@ -23,7 +23,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, Briefcase, Plus, Minus } from "lucide-react";
 import { jobPostValidationSchema } from "@shared/zod";
-import { experienceLevels } from "@shared/constants";
+
 
 type JobPostFormData = z.infer<typeof jobPostValidationSchema>;
 
