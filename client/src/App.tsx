@@ -20,13 +20,14 @@ import { EmployerJobCreate } from "./components/employer/EmployerJobCreate";
 import { EmployerJobEdit } from "./components/employer/EmployerJobEdit";
 import { JobDetails } from "./components/employer/JobDetails";
 import { EmployerProfile } from "./components/employer/EmployerProfile";
-import { CandidateDetails } from "./components/admin/CandidateDetails";
+import { AdminCandidateDetails } from "./components/admin/AdminCandidateDetails";
 import { AdminJobDetails } from "./components/admin/AdminJobDetails";
 import { AdminJobEdit } from "./components/admin/AdminJobEdit";
 import { AdminDashboard } from "./components/admin/AdminDashboard";
 import { AdminSearchPanel } from "./components/admin/AdminSearchPanel";
 import { AdminVerifications } from "./components/admin/AdminVerifications";
 import { AdminTools } from "./components/admin/AdminTools";
+import { AdminEmployerDetails } from "./components/admin/AdminEmployerDetails";
 import NotFound from "./pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -151,6 +152,24 @@ function Router() {
             </div>
           </ProtectedRoute>
         </Route>
+        <Route path="/admin/candidates/:id">
+          <ProtectedRoute>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <AdminCandidateDetails />
+              </div>
+            </div>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/employers/:id">
+          <ProtectedRoute>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <AdminEmployerDetails />
+              </div>
+            </div>
+          </ProtectedRoute>
+        </Route>
 
         {/* Candidate Routes */}
         <Route path="/candidate">
@@ -259,7 +278,7 @@ function Router() {
           <ProtectedRoute>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <CandidateDetails />
+                <AdminCandidateDetails />
               </div>
             </div>
           </ProtectedRoute>
