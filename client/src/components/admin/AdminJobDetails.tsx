@@ -1,0 +1,292 @@
+import React from "react";
+import { useParams, Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  ArrowLeft,
+  MapPin,
+  Calendar,
+  Users,
+  Briefcase,
+  DollarSign,
+  FileText,
+  Clock,
+  Mail,
+  Phone,
+} from "lucide-react";
+import type { JobPost, Application } from "@shared/types";
+import { formatDistanceToNow } from "date-fns";
+
+export const AdminJobDetails: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+
+  const { data: job, isLoading } = useQuery<JobPost>({
+    queryKey: [`/api/admin/jobs/${id}`],
+    enabled: !!id,
+  });
+
+  const { data: applications = [], isLoading: appsLoading } = useQuery<Application[]>({
+    queryKey: [`/api/admin/jobs/${id}/applications`],
+    enabled: !!id,
+  });
+
+  if (isLoading || appsLoading) {
+    return (
+      <div className="max-w-6xl mx-auto space-y-6">
+        <Card className="animate-pulse bg-card border-border">
+          <CardContent className="p-6 space-y-4">
+            <div className="h-6 bg-muted rounded w-1/3"></div>
+            <div className="h-4 bg-muted rounded w-1/2"></div>
+            <div className="h-4 bg-muted rounded w-1/4"></div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <Card>
+          <CardContent className="p-12 text-center">
+            <h3 className="text-lg font-medium text-foreground mb-2">Job not found</h3>
+            <Link href="/admin/dashboard">
+              <Button>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "fulfilled":
+        return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400";
+      case "active":
+        return "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400";
+      case "dormant":
+        return "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400";
+      case "inactive":
+        return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400";
+      default:
+        return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400";
+    }
+  };
+
+  const getApplicationStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "applied":
+        return "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400";
+      case "reviewed":
+        return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400";
+      case "shortlisted":
+        return "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400";
+      case "interviewed":
+        return "bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400";
+      case "hired":
+        return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400";
+      case "rejected":
+        return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400";
+      default:
+        return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400";
+    }
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-6">
+      <div className="flex items-center gap-2">
+        <Link href="/admin/dashboard">
+          <Button variant="outline" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+        </Link>
+        <h1 className="text-3xl font-bold text-foreground">{job.title}</h1>
+        <Badge className={getStatusColor(job.fulfilled ? 'fulfilled' : (job.isActive ? 'active' : 'inactive'))}>
+          {job.fulfilled ? 'Fulfilled' : (job.isActive ? 'Active' : 'Inactive')}
+        </Badge>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5" />
+                Job Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Location:</span>
+                  <span className="font-medium">{job.location}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Salary:</span>
+                  <span className="font-medium text-green-600">{job.salaryRange}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Positions:</span>
+                  <span className="font-medium">{job.vacancy || 1}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Posted:</span>
+                  <span className="font-medium">
+                    {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
+                  </span>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h3 className="font-semibold mb-2">Job Description</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  {job.description || "No description provided."}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Minimum Qualification</h3>
+                <p className="text-muted-foreground">{job.minQualification}</p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Required Skills</h3>
+                <div className="flex flex-wrap gap-2">
+                  {job.skills?.split(',').map((skill: string, index: number) => (
+                    <Badge key={index} variant="secondary">
+                      {skill.trim()}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {job.responsibilities && (
+                <div>
+                  <h3 className="font-semibold mb-2">Responsibilities</h3>
+                  <div className="text-muted-foreground whitespace-pre-line">
+                    {job.responsibilities}
+                  </div>
+                </div>
+              )}
+
+              {job.experienceRequired && (
+                <div>
+                  <h3 className="font-semibold mb-2">Experience Required</h3>
+                  <p className="text-muted-foreground">{job.experienceRequired}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Job Statistics</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Total Applications</span>
+                <span className="font-bold text-2xl">{applications.length}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Views</span>
+                <span className="font-bold text-2xl">0</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Days Active</span>
+                <span className="font-bold text-2xl">
+                  {Math.floor((new Date().getTime() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60 * 24))}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Applications ({applications.length})
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {applications.length > 0 ? (
+            <div className="space-y-4">
+              {applications.map((application: any) => (
+                <div
+                  key={application.id}
+                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <Avatar>
+                      <AvatarFallback>
+                        {application.candidateName?.charAt(0) || 'A'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold">{application.candidateName || 'Anonymous Candidate'}</h3>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          Applied {formatDistanceToNow(new Date(application.appliedAt), { addSuffix: true })}
+                        </div>
+                        {application.candidateEmail && (
+                          <div className="flex items-center gap-1">
+                            <Mail className="h-4 w-4" />
+                            {application.candidateEmail}
+                          </div>
+                        )}
+                        {application.candidatePhone && (
+                          <div className="flex items-center gap-1">
+                            <Phone className="h-4 w-4" />
+                            {application.candidatePhone}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <Badge className={getApplicationStatusColor(application.status)}>
+                    {application.status || 'Applied'}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <FileText className="h-16 w-16 text-muted mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">No applications yet</h3>
+              <p className="text-muted-foreground">
+                Applications will appear here when candidates apply for this position.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};

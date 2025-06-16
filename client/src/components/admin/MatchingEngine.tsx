@@ -74,7 +74,7 @@ export const MatchingEngine: React.FC = () => {
         <CardContent>
           <div className="space-y-4">
             {jobs?.map((job: any) => (
-              <Link key={job.id} href={`/jobs/${job.id}`}>
+              <Link key={job.id} href={`/admin/jobs/${job.id}`}>
                 <div
                   className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                 >
