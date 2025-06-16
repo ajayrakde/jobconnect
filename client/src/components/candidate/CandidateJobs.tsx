@@ -191,7 +191,6 @@ export const CandidateJobs: React.FC = () => {
                   Apply Now
                 </Button>
               </div>
-            </CardContent>
           </JobCard>
         ))}
       </div>
