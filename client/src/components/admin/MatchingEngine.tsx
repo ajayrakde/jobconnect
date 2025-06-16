@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Building, MapPin, DollarSign, Clock, User, Briefcase } from "lucide-react";
+import { User, Briefcase } from "lucide-react";
+import { JobCard, CandidateCard } from "@/components/common";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -75,32 +74,14 @@ export const MatchingEngine: React.FC = () => {
           <div className="space-y-4">
             {jobs?.map((job: any) => (
               <Link key={job.id} href={`/admin/jobs/${job.id}`}>
-                <div
-                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                >
-                  <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{job.title}</h3>
-                    <p className="text-sm text-gray-600">{job.company?.name || 'Company Name'}</p>
-                    <div className="flex items-center space-x-4 mt-2">
-                      <Badge variant="outline" className="text-xs">
-                        <MapPin className="h-3 w-3 mr-1" />
-                        {job.location?.city || job.location || 'Location'}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        <DollarSign className="h-3 w-3 mr-1" />
-                        {job.salaryRange || 'Salary range'}
-                      </Badge>
-                    </div>
-                  </div>
+                <JobCard job={job}>
                   <div className="text-right">
                     <div className="text-lg font-bold text-green-600">
                       {job.matchCount || 0}
                     </div>
                     <div className="text-xs text-gray-500">matches</div>
                   </div>
-                </div>
-                </div>
+                </JobCard>
               </Link>
             ))}
 
@@ -129,54 +110,14 @@ export const MatchingEngine: React.FC = () => {
                 key={candidate.id ?? candidate.candidate?.id ?? index}
                 href={`/candidates/${candidate.id ?? candidate.candidate?.id ?? ''}`}
               >
-                <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={candidate.avatar} alt={
-                        typeof candidate.name === 'object'
-                          ? `${candidate.name.first || ''} ${candidate.name.last || ''}`
-                          : candidate.name || 'Candidate'
-                      } />
-                    <AvatarFallback>
-                      {typeof candidate.name === 'object'
-                        ? `${(candidate.name.first?.[0] || '')}${(candidate.name.last?.[0] || '')}`
-                        : (candidate.name?.split(" ").map((n: string) => n[0]).join("") || "?")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">
-                      {typeof candidate.name === 'object' 
-                        ? `${candidate.name.first || ''} ${candidate.name.last || ''}`
-                        : candidate.name || 'Candidate'}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {typeof candidate.role === 'object'
-                        ? candidate.role.title || "Professional"
-                        : candidate.role || "Professional"}
-                    </p>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
-                        <Clock className="h-3 w-3 mr-1" />
-                        {typeof candidate.experience === 'object'
-                          ? `${candidate.experience.years || 0} years`
-                          : `${candidate.experience || 0} years`}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        <MapPin className="h-3 w-3 mr-1" />
-                        {typeof candidate.location === 'object'
-                          ? candidate.location.city || 'Location'
-                          : candidate.location || 'Location'}
-                      </Badge>
-                    </div>
-                  </div>
+                <CandidateCard candidate={candidate}>
                   <div className="text-right">
                     <div className="text-lg font-bold text-primary">
                       {candidate.jobMatches || 0}
                     </div>
                     <div className="text-xs text-gray-500">job matches</div>
                   </div>
-                  </div>
-                </div>
+                </CandidateCard>
               </Link>
             ))}
 
