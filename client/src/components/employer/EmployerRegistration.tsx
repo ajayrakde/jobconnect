@@ -11,7 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { debugLog } from "@/lib/logger";
 import { useLocation } from "wouter";
-import { businessTypes } from "@shared/constants";
+import { industries } from "@shared/constants";
 
 interface EmployerFormData {
   organizationName: string;
@@ -262,7 +262,7 @@ export const EmployerRegistration: React.FC = () => {
                     <SelectValue placeholder="Select business type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {businessTypes.map((type) => (
+                    {industries.map((type) => (
                       <SelectItem key={type} value={type}>{type}</SelectItem>
                     ))}
                   </SelectContent>

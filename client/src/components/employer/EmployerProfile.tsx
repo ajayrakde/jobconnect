@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { businessTypes } from "@shared/constants";
+import { industries } from "@shared/constants";
 import { 
   Building, 
   Edit, 
@@ -216,7 +216,7 @@ export const EmployerProfile: React.FC = () => {
                     <SelectValue placeholder="Select business type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {businessTypes.map((type) => (
+                    {industries.map((type) => (
                       <SelectItem key={type} value={type}>{type}</SelectItem>
                     ))}
                   </SelectContent>

@@ -1,20 +1,10 @@
 
 // Consistent labels used across admin filters and employer forms
 
-export const businessTypes = [
-  "Technology",
-  "Healthcare",
-  "Finance",
-  "Education",
-  "Manufacturing",
-  "Retail",
-  "Consulting",
-  "Government",
-  "Non-profit",
-  "Other"
-];
-
 export const qualifications = [
+  "Secondary School",
+  "Vocational Training",
+  "Diploma",
   "High School",
   "Associate Degree",
   "Bachelor's Degree",
@@ -86,15 +76,6 @@ export const industries = [
   "Consulting",
   "Government",
   "Non-profit",
-  "Other"
-];
-
-export const jobCategories = [
-  "Engineering",
-  "Design",
-  "Marketing",
-  "Sales",
-  "Management",
   "Other"
 ];
 
