@@ -160,8 +160,8 @@ export const AdminSearchPanel: React.FC = () => {
       },
       {
         key: "experience",
-        label: "Experience Level",
-        options: ["0-2 years", "3-5 years", "5-10 years", "10+ years"],
+        label: "Experience",
+        options: experienceLevels,
       },
       {
         key: "status",
@@ -194,7 +194,7 @@ export const AdminSearchPanel: React.FC = () => {
       },
       {
         key: "experience",
-        label: "Experience Required",
+        label: "Experience",
         options: experienceLevels,
       },
       {
