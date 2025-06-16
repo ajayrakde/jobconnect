@@ -243,9 +243,7 @@ export const AdminVerifications: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-foreground">Pending Verifications</h1>
-      </div>
+
 
       {/* Top Bar Controls */}
       <div className="flex flex-col md:flex-row gap-4 items-center">
