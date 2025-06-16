@@ -117,7 +117,7 @@ export const MatchingEngine: React.FC = () => {
       {/* Candidates with Job Matches */}
       <Card>
         <CardHeader>
-          <CardTitle>Most Active Candidates</CardTitle>
+          <CardTitle>Top Active Candidates</CardTitle>
           <p className="text-sm text-gray-600">
             Click on a candidate to find matching jobs
           </p>
