@@ -128,9 +128,9 @@ export const MatchingEngine: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {candidates?.map((candidate: any) => (
+            {candidates?.map((candidate: any, index: number) => (
               <div
-                key={candidate.id}
+                key={candidate.id ?? candidate.candidate?.id ?? index}
                 className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                 onClick={() => handleCandidateClick(candidate)}
               >
