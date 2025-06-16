@@ -130,13 +130,17 @@ export const MatchingEngine: React.FC = () => {
                 className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                 onClick={() => handleCandidateClick(candidate)}
               >
-                <div className="flex items-center space-x-4">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={candidate.avatar} alt={
-                      typeof candidate.name === 'object'
-                        ? `${candidate.name.first || ''} ${candidate.name.last || ''}`
-                        : candidate.name || 'Candidate'
-                    } />
+                <div
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => handleCandidateClick(candidate)}
+                >
+                  <div className="flex items-center space-x-4">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={candidate.avatar} alt={
+                        typeof candidate.name === 'object'
+                          ? `${candidate.name.first || ''} ${candidate.name.last || ''}`
+                          : candidate.name || 'Candidate'
+                      } />
                     <AvatarFallback>
                       {typeof candidate.name === 'object'
                         ? `${(candidate.name.first?.[0] || '')}${(candidate.name.last?.[0] || '')}`
@@ -175,8 +179,9 @@ export const MatchingEngine: React.FC = () => {
                     </div>
                     <div className="text-xs text-gray-500">job matches</div>
                   </div>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
 
             {(!candidates || candidates.length === 0) && (

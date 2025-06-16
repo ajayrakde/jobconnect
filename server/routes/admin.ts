@@ -272,6 +272,19 @@ adminRouter.get('/active-candidates', authenticateUser, asyncHandler(async (req:
   res.json(candidates);
 }));
 
+adminRouter.get('/candidates/:id', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const id = parseInt(req.params.id);
+  const candidate = await storage.getCandidate(id);
+  if (!candidate) {
+    return res.status(404).json({ message: 'Candidate not found' });
+  }
+  res.json(candidate);
+}));
+
 adminRouter.get('/jobs/:jobId/matches', authenticateUser, asyncHandler(async (req: any, res) => {
   const user = await storage.getUserByFirebaseUid(req.user.uid);
   if (!user || user.role !== 'admin') {
