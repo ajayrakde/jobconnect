@@ -81,14 +81,17 @@ const useAdminSearch = (type: string, query: string, filters: SearchFilters, sor
           return [];
         }
 
-        const params = new URLSearchParams({
+        const queryParams: Record<string, string> = {
           type,
-          q: query,
           sort,
           ...Object.fromEntries(
             Object.entries(filters).filter(([_, v]) => v != null && v !== '')
           )
-        });
+        };
+        if (query) {
+          queryParams.q = query;
+        }
+        const params = new URLSearchParams(queryParams);
         
         const response = await apiRequest(`/api/admin/search?${params}`, 'GET');
         const data = await response.json();

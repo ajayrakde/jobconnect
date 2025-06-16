@@ -15,7 +15,7 @@ import { verifyFirebaseToken } from '../utils/firebase-admin';
 // Validation schemas
 const searchQuerySchema = z.object({
   type: z.enum(['candidate', 'employer', 'job']).optional(),
-  q: z.string().min(1),
+  q: z.string().optional(),
   sort: z.enum(['latest', 'relevance']).optional(),
   page: z.number().optional(),
   limit: z.number().optional(),
@@ -39,13 +39,10 @@ adminRouter.get(
   validateQuery(searchQuerySchema),
   asyncHandler(async (req, res) => {
     const { type, q = '', sort = 'latest', page = 1, limit = 20 } = req.query;
-    const results = await AdminRepository.search({
-      type,
-      query: q,
-      sort,
-      page,
-      limit
-    });
+    const results = await AdminRepository.search(
+      q as string,
+      type as 'candidate' | 'employer' | 'job' | undefined
+    );
     res.json(results);
   })
 );
