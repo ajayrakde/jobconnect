@@ -48,6 +48,30 @@ function Router() {
   const { user, userProfile, loading } = useAuth();
   const [location, setLocation] = useLocation();
 
+  useEffect(() => {
+    if (loading) return;
+
+    if (user && userProfile) {
+      const publicRoutes = ["/", "/admin"];
+
+      if (publicRoutes.includes(location)) {
+        if (userProfile.role === "admin") {
+          setLocation("/admin/dashboard");
+        } else if (userProfile.role === "employer") {
+          setLocation("/employer/dashboard");
+        } else {
+          setLocation("/dashboard");
+        }
+        return;
+      }
+
+      if (location.startsWith("/admin/") && userProfile.role !== "admin") {
+        setLocation("/");
+        return;
+      }
+    }
+  }, [user, userProfile, location, loading, setLocation]);
+
   // Show loading spinner while checking auth state
   if (loading) {
     return (
@@ -55,30 +79,6 @@ function Router() {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
-  }
-
-  // Handle authenticated users immediately
-  if (user && userProfile) {
-    // Redirect from public routes
-    const publicRoutes = ["/", "/admin"];
-    if (publicRoutes.includes(location)) {
-      if (userProfile.role === "admin") {
-        setLocation("/admin/dashboard");
-        return null; // Prevent flash
-      } else if (userProfile.role === "employer") {
-        setLocation("/employer/dashboard");
-        return null; // Prevent flash
-      } else {
-        setLocation("/dashboard");
-        return null; // Prevent flash
-      }
-    }
-
-    // Prevent non-admin access to admin routes
-    if (location.startsWith("/admin/") && userProfile.role !== "admin") {
-      setLocation("/");
-      return null; // Prevent flash
-    }
   }
 
   return (
