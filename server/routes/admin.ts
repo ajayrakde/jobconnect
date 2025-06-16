@@ -202,8 +202,8 @@ adminRouter.get('/unverified-candidates', authenticateUser, asyncHandler(async (
   res.json(candidates);
 }));
 
-// Unified endpoint for admin verifications
-adminRouter.get('/verifications/:type', authenticateUser, asyncHandler(async (req: any, res) => {
+// Handler reused by verification endpoints
+const verificationHandler = asyncHandler(async (req: any, res) => {
   const user = await storage.getUserByFirebaseUid(req.user.uid);
   if (!user || user.role !== 'admin') {
     return res.status(403).json({ message: 'Access denied' });
@@ -219,7 +219,41 @@ adminRouter.get('/verifications/:type', authenticateUser, asyncHandler(async (re
     return res.json(await storage.getInactiveJobPosts());
   }
   res.status(400).json({ message: 'Invalid type' });
-}));
+});
+
+// Static routes for each verification type
+adminRouter.get(
+  '/verifications/candidate',
+  authenticateUser,
+  (req, _res, next) => {
+    req.params.type = 'candidate';
+    next();
+  },
+  verificationHandler
+);
+
+adminRouter.get(
+  '/verifications/employer',
+  authenticateUser,
+  (req, _res, next) => {
+    req.params.type = 'employer';
+    next();
+  },
+  verificationHandler
+);
+
+adminRouter.get(
+  '/verifications/job',
+  authenticateUser,
+  (req, _res, next) => {
+    req.params.type = 'job';
+    next();
+  },
+  verificationHandler
+);
+
+// Unified endpoint for admin verifications (kept for backward compatibility)
+adminRouter.get('/verifications/:type', authenticateUser, verificationHandler);
 
 adminRouter.patch('/employers/:id/verify', authenticateUser, asyncHandler(async (req: any, res) => {
   const user = await storage.getUserByFirebaseUid(req.user.uid);
