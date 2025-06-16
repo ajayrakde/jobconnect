@@ -180,6 +180,8 @@ export const CandidateJobs: React.FC = () => {
                 </div>
               )}
 
+              </div>
+
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
                   <DollarSign className="h-4 w-4" />
