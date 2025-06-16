@@ -23,7 +23,7 @@ export const MatchingEngine: React.FC = () => {
   });
 
   const { data: candidates } = useQuery({
-    queryKey: ["/api/admin/candidates"],
+    queryKey: ["/api/admin/active-candidates"],
   });
 
   const shortlistMutation = useMutation({
@@ -121,7 +121,7 @@ export const MatchingEngine: React.FC = () => {
       {/* Candidates with Job Matches */}
       <Card>
         <CardHeader>
-          <CardTitle>Top Candidates</CardTitle>
+          <CardTitle>Most Active Candidates</CardTitle>
           <p className="text-sm text-gray-600">
             Click on a candidate to find matching jobs
           </p>

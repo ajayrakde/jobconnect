@@ -95,6 +95,7 @@ export interface IStorage {
   // Admin operations
   getAdminStats(): Promise<any>;
   getExportData(): Promise<any>;
+  getMostActiveCandidates(limit?: number): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -405,6 +406,10 @@ export class DatabaseStorage implements IStorage {
       applications: allApplications,
       shortlists: allShortlists,
     };
+  }
+
+  async getMostActiveCandidates(limit = 10): Promise<any[]> {
+    return CandidateRepository.getMostActiveCandidates(limit);
   }
 }
 

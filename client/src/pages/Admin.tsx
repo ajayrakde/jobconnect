@@ -14,7 +14,7 @@ export const Admin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { user, userProfile, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading, refreshProfile } = useAuth();
 
   // Early redirect for admin users
   useEffect(() => {
@@ -54,6 +54,7 @@ export const Admin: React.FC = () => {
       if (!response.ok) throw new Error("Not an admin or invalid credentials");
       const data = await response.json();
       toast({ title: "Welcome, Admin!", description: data.user.name || data.user.email });
+      refreshProfile();
       setShowLoginModal(false);
       setLocation("/admin/dashboard");
     } catch (error: any) {

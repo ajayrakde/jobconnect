@@ -17,9 +17,16 @@ import { ConfirmationResult } from "firebase/auth";
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onLoginSuccess?: () => void;
+  roleHint?: string;
 }
 
-export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
+export const LoginModal: React.FC<LoginModalProps> = ({
+  isOpen,
+  onClose,
+  onLoginSuccess,
+  roleHint,
+}) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
@@ -39,6 +46,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         description: "Logged in successfully!",
       });
       onClose();
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      }
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      }
     } catch (error: any) {
       console.error("Login error:", error);
       

@@ -211,6 +211,28 @@ export class CandidateRepository {
   }
 
   /**
+   * Retrieve the most active candidates based on application count
+   */
+  static async getMostActiveCandidates(limit = 10) {
+    return db
+      .select({
+        candidate: candidates,
+        user: {
+          name: users.name,
+          email: users.email,
+        },
+        applications: sql<number>`count(${applications.id})`.as('applications'),
+      })
+      .from(candidates)
+      .innerJoin(users, eq(users.id, candidates.userId))
+      .leftJoin(applications, eq(applications.candidateId, candidates.id))
+      .where(and(eq(candidates.deleted, false), eq(candidates.profileStatus, 'verified')))
+      .groupBy(candidates.id, users.id)
+      .orderBy(desc(sql`count(${applications.id})`))
+      .limit(limit);
+  }
+
+  /**
    * Placeholder for recommended jobs
    */
   static async getRecommendedJobs(_candidateId: number) {
