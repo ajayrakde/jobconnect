@@ -21,6 +21,8 @@ import { EmployerJobEdit } from "./components/employer/EmployerJobEdit";
 import { JobDetails } from "./components/employer/JobDetails";
 import { EmployerProfile } from "./components/employer/EmployerProfile";
 import { CandidateDetails } from "./components/admin/CandidateDetails";
+import { AdminJobDetails } from "./components/admin/AdminJobDetails";
+import { AdminJobEdit } from "./components/admin/AdminJobEdit";
 import { AdminDashboard } from "./components/admin/AdminDashboard";
 import { AdminSearchPanel } from "./components/admin/AdminSearchPanel";
 import { AdminVerifications } from "./components/admin/AdminVerifications";
@@ -127,6 +129,24 @@ function Router() {
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <AdminTools />
+              </div>
+            </div>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/jobs/:id/edit">
+          <ProtectedRoute>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <AdminJobEdit />
+              </div>
+            </div>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/admin/jobs/:id">
+          <ProtectedRoute>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <AdminJobDetails />
               </div>
             </div>
           </ProtectedRoute>
