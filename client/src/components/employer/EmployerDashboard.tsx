@@ -31,6 +31,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { apiRequest, throwIfResNotOk } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getJobStatus } from "@shared/utils/jobStatus";
 
 export const EmployerDashboard: React.FC = () => {
   const { userProfile } = useAuth();
@@ -196,13 +197,6 @@ export const EmployerDashboard: React.FC = () => {
     }
   ];
 
-  const getJobStatus = (job: any) => {
-    const daysSinceCreated = Math.floor((new Date().getTime() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (job.fulfilled) return 'fulfilled';
-    if (!job.isActive || daysSinceCreated > 90) return 'dormant';
-    return 'active';
-  };
 
   const getJobStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {

@@ -38,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { formatDistanceToNow } from "date-fns";
+import { getJobStatus } from "@shared/utils/jobStatus";
 
 interface Job {
   id: number;
@@ -179,16 +180,6 @@ export const EmployerJobs: React.FC = () => {
     setLocation(`/jobs/create?clone=${encodeURIComponent(JSON.stringify(cloneData))}&from=jobs`);
   };
 
-  const getJobStatus = (job: Job) => {
-    const daysSinceCreated = Math.floor(
-      (new Date().getTime() - new Date(job.createdAt).getTime()) /
-        (1000 * 60 * 60 * 24)
-    );
-
-    if (job.fulfilled) return 'fulfilled';
-    if (!job.isActive || daysSinceCreated > 90) return 'dormant';
-    return 'active';
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
