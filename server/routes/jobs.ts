@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { insertJobPostSchema } from '@shared/zod';
 import type { InsertJobPost } from '@shared/types';
+import { getJobStatus } from '@shared/utils/jobStatus';
 import { authenticateUser } from '../middleware/authenticate';
 import { requireRole } from '../middleware/authorization';
 import { requireVerifiedRole } from '../middleware/verifiedRole';
@@ -72,9 +73,8 @@ jobsRouter.patch(
     if (!job || (job as any).employerId !== employer.id) {
       return res.status(404).json({ message: 'Job not found' });
     }
-    const { allowed, message } = validateJobTransition(job, 'activate');
-    if (!allowed) {
-      return res.status(400).json({ message });
+if (getJobStatus(job) === 'fulfilled') {
+      return res.status(400).json({ message: 'Cannot activate a fulfilled job' });
     }
     const activatedJob = await storage.activateJob(jobId);
     res.json(activatedJob);
@@ -91,7 +91,7 @@ jobsRouter.patch(
     if (!job || (job as any).employerId !== employer.id) {
       return res.status(404).json({ message: 'Job not found' });
     }
-    if (job.fulfilled) {
+    if (getJobStatus(job) === 'fulfilled') {
       return res.status(400).json({ message: 'Cannot deactivate a fulfilled job' });
     }
     const deactivatedJob = await storage.deactivateJob(jobId);
@@ -138,7 +138,7 @@ jobsRouter.put(
     if (!job) {
       return res.status(404).json({ message: 'Job not found' });
     }
-    if (job.fulfilled) {
+    if (getJobStatus(job) === 'fulfilled') {
       return res.status(403).json({ message: 'Cannot edit fulfilled jobs' });
     }
     if (job.deleted) {

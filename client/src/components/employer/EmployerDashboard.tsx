@@ -234,16 +234,22 @@ export const EmployerDashboard: React.FC = () => {
 
   const getActiveJobs = () => {
     if (!allJobs) return [];
-    return allJobs.filter((job: any) => job.isActive === true && !job.fulfilled).sort((a: any, b: any) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    return allJobs
+      .filter((job: any) => getJobStatus(job) === 'active')
+      .sort(
+        (a: any, b: any) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
   };
 
   const getRecentJobs = () => {
     if (!recentJobs) return [];
-    return recentJobs.filter((job: any) => !job.fulfilled).sort((a: any, b: any) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    return recentJobs
+      .filter((job: any) => getJobStatus(job) !== 'fulfilled')
+      .sort(
+        (a: any, b: any) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
   };
 
   const getCardContent = () => {
@@ -427,7 +433,7 @@ export const EmployerDashboard: React.FC = () => {
                                 {markAsFulfilledMutation.isPending ? "Marking..." : "Mark as Fulfilled"}
                               </DropdownMenuItem>
                             )}
-                            {!job.isActive && (
+                            {status !== 'active' && (
                               <DropdownMenuItem>
                                 <RotateCcw className="h-4 w-4 mr-2" />
                                 Activate Job

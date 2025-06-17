@@ -155,7 +155,7 @@ export const EmployerJobEdit: React.FC = () => {
   }
 
   // Check if job is fulfilled and prevent editing
-  if (job.fulfilled) {
+  if (getJobStatus(job) === 'fulfilled') {
     return (
       <div className="max-w-4xl mx-auto">
         <Card>
