@@ -1,13 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { JobRepository } from '../JobRepository';
 
 
 var whereMock: any;
-var data: any[] = [];
 var callIndex = 0;
 
 vi.mock('../../db', () => {
-  data = [
+
+  const data = [
     { id: 1, employerId: 1, isActive: false, deleted: false },
     { id: 2, employerId: 1, isActive: false, deleted: true },
     { id: 3, employerId: 2, isActive: false, deleted: false },
@@ -15,10 +14,13 @@ vi.mock('../../db', () => {
   whereMock = vi.fn(() => {
     const current = callIndex++;
     let result;
+
     if (current === 0) {
       result = data.filter((j) => j.employerId === 1 && !j.deleted);
-    } else {
+    } else if (current === 1) {
       result = data.filter((j) => !j.isActive && !j.deleted);
+    } else {
+      result = data.filter((j) => !j.deleted);
     }
     return result;
   });
@@ -28,6 +30,7 @@ vi.mock('../../db', () => {
 });
 
 import { whereMock as dbWhereMock } from '../../db';
+import { JobRepository } from '../JobRepository';
 
 describe('JobRepository soft delete filters', () => {
   beforeEach(() => {
@@ -42,6 +45,11 @@ describe('JobRepository soft delete filters', () => {
 
   it('getInactiveJobs should filter deleted jobs', async () => {
     const jobs = await JobRepository.getInactiveJobs();
+    expect(jobs.every(j => !j.deleted)).toBe(true);
+  });
+
+  it('getAllJobPosts should filter deleted jobs', async () => {
+    const jobs = await JobRepository.getAllJobPosts();
     expect(jobs.every(j => !j.deleted)).toBe(true);
   });
 });

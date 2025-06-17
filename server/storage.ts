@@ -65,6 +65,7 @@ export interface IStorage {
   // Job post operations
 
   getJobPost(id: number): Promise<(JobPost & { status: string }) | undefined>;
+  getJobPostIncludingDeleted(id: number): Promise<(JobPost & { status: string }) | undefined>;
   createJobPost(jobPost: InsertJobPost): Promise<JobPost & { status: string }>;
   updateJobPost(id: number, updates: Partial<JobPost>): Promise<JobPost & { status: string }>;
   getJobPostsByEmployer(employerId: number): Promise<(JobPost & { status: string })[]>;
@@ -229,6 +230,10 @@ export class DatabaseStorage implements IStorage {
     return JobRepository.getJobPost(id);
   }
 
+  async getJobPostIncludingDeleted(id: number): Promise<(JobPost & { status: string }) | undefined> {
+    return JobRepository.getJobPostIncludingDeleted(id);
+  }
+
   async createJobPost(insertJobPost: InsertJobPost): Promise<JobPost & { status: string }> {
     return JobRepository.createJobPost(insertJobPost);
   }
@@ -242,7 +247,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllJobPosts(): Promise<(JobPost & { status: string })[]> {
-    return JobRepository.getAllJobPosts();
+    const jobs = await JobRepository.getAllJobPosts();
+    return jobs.filter(job => !job.deleted);
   }
 
   async getInactiveJobPosts(): Promise<(JobPost & { status: string })[]> {
