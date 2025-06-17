@@ -62,7 +62,7 @@ interface JobPost {
   employer: string;
   employerId: number;
   city: string;
-  status: 'active' | 'inactive' | 'flagged';
+  status: 'active' | 'inactive' | 'flagged' | 'onHold';
   postedOn: string;
   category: string;
   experienceRequired: string;

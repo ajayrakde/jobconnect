@@ -85,14 +85,19 @@ export class JobRepository {
     return this.activateJob(jobId);
   }
 
-  static async holdJob(jobId: number): Promise<JobPost> {
-    return this.deactivateJob(jobId);
+  static async holdJob(jobId: number): Promise<JobPost & { status: string }> {
+    const [updatedJob] = await db
+      .update(jobPosts)
+      .set({ isActive: false, onHold: true, updatedAt: new Date() })
+      .where(eq(jobPosts.id, jobId))
+      .returning();
+    return { ...updatedJob, status: getJobStatus(updatedJob) };
   }
 
   static async activateJob(jobId: number): Promise<JobPost & { status: string }> {
     const [updatedJob] = await db
       .update(jobPosts)
-      .set({ isActive: true, updatedAt: new Date() })
+      .set({ isActive: true, onHold: false, updatedAt: new Date() })
       .where(eq(jobPosts.id, jobId))
       .returning();
     return { ...updatedJob, status: getJobStatus(updatedJob) };
@@ -101,7 +106,7 @@ export class JobRepository {
   static async deactivateJob(jobId: number): Promise<JobPost & { status: string }> {
     const [updatedJob] = await db
       .update(jobPosts)
-      .set({ isActive: false, updatedAt: new Date() })
+      .set({ isActive: false, onHold: false, updatedAt: new Date() })
       .where(eq(jobPosts.id, jobId))
       .returning();
     return { ...updatedJob, status: getJobStatus(updatedJob) };

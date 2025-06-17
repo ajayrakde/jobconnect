@@ -17,6 +17,7 @@ export const jobPosts = pgTable('job_posts', {
   isActive: boolean('is_active').default(true),
   fulfilled: boolean('fulfilled').default(false),
   deleted: boolean('deleted').default(false),
+  onHold: boolean('on_hold').default(false),
   applicationsCount: integer('applications_count').default(0),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),

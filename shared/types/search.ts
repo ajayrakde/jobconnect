@@ -6,7 +6,7 @@ export interface AdminSearchResult {
   qualification?: string;
   experience?: string | { years: number };
   city?: string;
-  status: 'verified' | 'pending' | 'rejected' | 'active' | 'inactive' | 'flagged';
+  status: 'verified' | 'pending' | 'rejected' | 'active' | 'inactive' | 'flagged' | 'onHold';
   avatar?: string;
   companyName?: string;
   industry?: string;
