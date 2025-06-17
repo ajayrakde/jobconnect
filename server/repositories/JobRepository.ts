@@ -19,7 +19,7 @@ export class JobRepository {
       .insert(jobPosts)
       .values({
         ...insertJobPost,
-        isActive: true,
+        isActive: false,
         applicationsCount: 0,
       })
       .returning();
@@ -37,24 +37,24 @@ export class JobRepository {
   }
 
   static async getJobPostsByEmployer(employerId: number): Promise<(JobPost & { status: string })[]> {
-    const jobs = await db
-      .select()
-      .from(jobPosts)
-      .where(eq(jobPosts.employerId, employerId));
-    return jobs.map((j) => ({ ...j, status: getJobStatus(j) }));
+      const jobs = await db
+        .select()
+        .from(jobPosts)
+        .where(eq(jobPosts.employerId, employerId));
+      return jobs.map((j: JobPost) => ({ ...j, status: getJobStatus(j) }));
   }
 
   static async getAllJobPosts(): Promise<(JobPost & { status: string })[]> {
-    const jobs = await db.select().from(jobPosts);
-    return jobs.map((j) => ({ ...j, status: getJobStatus(j) }));
+      const jobs = await db.select().from(jobPosts);
+      return jobs.map((j: JobPost) => ({ ...j, status: getJobStatus(j) }));
   }
 
   static async getInactiveJobs(): Promise<(JobPost & { status: string })[]> {
-    const jobs = await db
-      .select()
-      .from(jobPosts)
-      .where(eq(jobPosts.isActive, false));
-    return jobs.map((j) => ({ ...j, status: getJobStatus(j) }));
+      const jobs = await db
+        .select()
+        .from(jobPosts)
+        .where(eq(jobPosts.isActive, false));
+      return jobs.map((j: JobPost) => ({ ...j, status: getJobStatus(j) }));
   }
 
   static async markJobAsFulfilled(jobId: number): Promise<JobPost & { status: string }> {
