@@ -7,6 +7,7 @@ import { requireVerifiedRole } from '../middleware/verifiedRole';
 import { asyncHandler } from '../utils/asyncHandler';
 import { validateBody } from '../middleware/validation';
 import { JobPostRepository } from '../repositories';
+import { validateJobTransition } from '../utils/jobTransitions';
 import { storage } from '../storage';
 
 export const jobsRouter = Router();
@@ -46,12 +47,17 @@ jobsRouter.patch(
     const employer = req.employer;
     const jobId = parseInt(req.params.id);
     const job = await JobPostRepository.findById(jobId);
-    
+
     if (!job || (job as any).employerId !== employer.id) {
       return res.status(404).json({ message: 'Job not found' });
     }
-    
-  const fulfilledJob = await JobPostRepository.update(jobId, { fulfilled: true } as any);
+
+    const { allowed, message } = validateJobTransition(job, 'fulfill');
+    if (!allowed) {
+      return res.status(400).json({ message });
+    }
+
+    const fulfilledJob = await JobPostRepository.update(jobId, { fulfilled: true } as any);
     res.json(fulfilledJob);
   })
 );
@@ -66,8 +72,9 @@ jobsRouter.patch(
     if (!job || (job as any).employerId !== employer.id) {
       return res.status(404).json({ message: 'Job not found' });
     }
-    if (job.fulfilled) {
-      return res.status(400).json({ message: 'Cannot activate a fulfilled job' });
+    const { allowed, message } = validateJobTransition(job, 'activate');
+    if (!allowed) {
+      return res.status(400).json({ message });
     }
     const activatedJob = await storage.activateJob(jobId);
     res.json(activatedJob);

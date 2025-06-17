@@ -12,6 +12,7 @@ import { storage } from '../storage';
 import { insertShortlistSchema, insertJobPostSchema } from '@shared/zod';
 import type { InsertJobPost } from '@shared/types';
 import { verifyFirebaseToken } from '../utils/firebase-admin';
+import { validateJobTransition } from '../utils/jobTransitions';
 
 // Validation schemas
 const searchQuerySchema = z.object({
@@ -147,6 +148,10 @@ adminRouter.patch('/jobs/:id/fulfill', authenticateUser, asyncHandler(async (req
   const job = await storage.getJobPost(jobId);
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
+  }
+  const { allowed, message } = validateJobTransition(job, 'fulfill');
+  if (!allowed) {
+    return res.status(400).json({ message });
   }
   const fulfilledJob = await storage.markJobAsFulfilled(jobId);
   res.json(fulfilledJob);
@@ -400,8 +405,16 @@ adminRouter.delete('/jobs/:id', authenticateUser, asyncHandler(async (req: any, 
     return res.status(403).json({ message: 'Access denied' });
   }
   const id = parseInt(req.params.id);
-  const job = await storage.softDeleteJobPost(id);
-  res.json(job);
+  const job = await storage.getJobPost(id);
+  if (!job) {
+    return res.status(404).json({ message: 'Job not found' });
+  }
+  const { allowed, message } = validateJobTransition(job, 'delete');
+  if (!allowed) {
+    return res.status(400).json({ message });
+  }
+  const deletedJob = await storage.softDeleteJobPost(id);
+  res.json(deletedJob);
 }));
 
 adminRouter.patch('/jobs/:id/approve', authenticateUser, asyncHandler(async (req: any, res) => {
@@ -410,8 +423,16 @@ adminRouter.patch('/jobs/:id/approve', authenticateUser, asyncHandler(async (req
     return res.status(403).json({ message: 'Access denied' });
   }
   const id = parseInt(req.params.id);
-  const job = await storage.approveJob(id);
-  res.json(job);
+  const job = await storage.getJobPost(id);
+  if (!job) {
+    return res.status(404).json({ message: 'Job not found' });
+  }
+  const { allowed, message } = validateJobTransition(job, 'approve');
+  if (!allowed) {
+    return res.status(400).json({ message });
+  }
+  const updated = await storage.approveJob(id);
+  res.json(updated);
 }));
 
 adminRouter.patch('/jobs/:id/reject', authenticateUser, asyncHandler(async (req: any, res) => {
@@ -420,8 +441,16 @@ adminRouter.patch('/jobs/:id/reject', authenticateUser, asyncHandler(async (req:
     return res.status(403).json({ message: 'Access denied' });
   }
   const id = parseInt(req.params.id);
-  const job = await storage.softDeleteJobPost(id);
-  res.json(job);
+  const job = await storage.getJobPost(id);
+  if (!job) {
+    return res.status(404).json({ message: 'Job not found' });
+  }
+  const { allowed, message } = validateJobTransition(job, 'reject');
+  if (!allowed) {
+    return res.status(400).json({ message });
+  }
+  const deleted = await storage.softDeleteJobPost(id);
+  res.json(deleted);
 }));
 
 adminRouter.patch('/jobs/:id/hold', authenticateUser, asyncHandler(async (req: any, res) => {
@@ -430,8 +459,16 @@ adminRouter.patch('/jobs/:id/hold', authenticateUser, asyncHandler(async (req: a
     return res.status(403).json({ message: 'Access denied' });
   }
   const id = parseInt(req.params.id);
-  const job = await storage.holdJob(id);
-  res.json(job);
+  const job = await storage.getJobPost(id);
+  if (!job) {
+    return res.status(404).json({ message: 'Job not found' });
+  }
+  const { allowed, message } = validateJobTransition(job, 'hold');
+  if (!allowed) {
+    return res.status(400).json({ message });
+  }
+  const updated = await storage.holdJob(id);
+  res.json(updated);
 }));
 
 adminRouter.get('/candidates', authenticateUser, asyncHandler(async (req: any, res) => {
