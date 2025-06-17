@@ -101,7 +101,7 @@ adminRouter.get('/jobs/:id', authenticateUser, asyncHandler(async (req: any, res
     return res.status(403).json({ message: 'Access denied' });
   }
   const jobId = parseInt(req.params.id);
-  const job = await storage.getJobPost(jobId);
+  const job = await storage.getJobPostIncludingDeleted(jobId);
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
   }

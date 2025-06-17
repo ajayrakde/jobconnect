@@ -16,6 +16,14 @@ export class JobRepository {
     return jobPost ? { ...jobPost, status: getJobStatus(jobPost) } : undefined;
   }
 
+  static async getJobPostIncludingDeleted(id: number): Promise<(JobPost & { status: string }) | undefined> {
+    const [jobPost] = await db
+      .select()
+      .from(jobPosts)
+      .where(eq(jobPosts.id, id));
+    return jobPost ? { ...jobPost, status: getJobStatus(jobPost) } : undefined;
+  }
+
   static async createJobPost(insertJobPost: InsertJobPost): Promise<JobPost & { status: string }> {
     const [jobPost] = await db
       .insert(jobPosts)
@@ -47,7 +55,10 @@ export class JobRepository {
   }
 
   static async getAllJobPosts(): Promise<(JobPost & { status: string })[]> {
-      const jobs = await db.select().from(jobPosts);
+      const jobs = await db
+        .select()
+        .from(jobPosts)
+        .where(eq(jobPosts.deleted, false));
       return jobs.map((j: JobPost) => ({ ...j, status: getJobStatus(j) }));
   }
 
