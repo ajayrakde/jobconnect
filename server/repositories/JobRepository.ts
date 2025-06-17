@@ -1,7 +1,7 @@
 import { db } from '../db';
 import { jobPosts } from '@shared/schema';
 import type { JobPost, InsertJobPost } from '@shared/types';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export class JobRepository {
   static async getJobPost(id: number): Promise<JobPost | undefined> {
@@ -51,6 +51,19 @@ export class JobRepository {
       .select()
       .from(jobPosts)
       .where(eq(jobPosts.isActive, false));
+  }
+
+  static async getPublicJobs(): Promise<JobPost[]> {
+    return await db
+      .select()
+      .from(jobPosts)
+      .where(
+        and(
+          eq(jobPosts.isActive, true),
+          eq(jobPosts.fulfilled, false),
+          eq(jobPosts.deleted, false),
+        ),
+      );
   }
 
   static async markJobAsFulfilled(jobId: number): Promise<JobPost> {

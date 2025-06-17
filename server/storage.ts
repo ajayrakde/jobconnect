@@ -69,6 +69,7 @@ export interface IStorage {
   getJobPostsByEmployer(employerId: number): Promise<JobPost[]>;
   getAllJobPosts(): Promise<JobPost[]>;
   getInactiveJobPosts(): Promise<JobPost[]>;
+  getPublicJobPosts(): Promise<JobPost[]>;
   softDeleteJobPost(id: number): Promise<JobPost>;
   getEmployerStats(employerId: number): Promise<any>;
   markJobAsFulfilled(jobId: number): Promise<JobPost>;
@@ -246,6 +247,10 @@ export class DatabaseStorage implements IStorage {
 
   async getInactiveJobPosts(): Promise<JobPost[]> {
     return JobRepository.getInactiveJobs();
+  }
+
+  async getPublicJobPosts(): Promise<JobPost[]> {
+    return JobRepository.getPublicJobs();
   }
 
   async getEmployerStats(employerId: number): Promise<any> {

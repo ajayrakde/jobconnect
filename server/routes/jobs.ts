@@ -11,6 +11,14 @@ import { storage } from '../storage';
 
 export const jobsRouter = Router();
 
+jobsRouter.get(
+  '/public',
+  asyncHandler(async (_req, res) => {
+    const jobs = await storage.getPublicJobPosts();
+    res.json(jobs);
+  })
+);
+
 /**
  * @swagger
  * /api/jobs/{id}/fulfill:
