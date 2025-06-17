@@ -2,7 +2,7 @@ import { db } from '../db';
 import { jobPosts } from '@shared/schema';
 import type { JobPost, InsertJobPost } from '@shared/types';
 import { getJobStatus } from '@shared/utils/jobStatus';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export class JobRepository {
   static async getJobPost(id: number): Promise<(JobPost & { status: string }) | undefined> {
@@ -40,7 +40,7 @@ export class JobRepository {
       const jobs = await db
         .select()
         .from(jobPosts)
-        .where(eq(jobPosts.employerId, employerId));
+        .where(and(eq(jobPosts.employerId, employerId), eq(jobPosts.deleted, false)));
       return jobs.map((j: JobPost) => ({ ...j, status: getJobStatus(j) }));
   }
 
@@ -53,7 +53,7 @@ export class JobRepository {
       const jobs = await db
         .select()
         .from(jobPosts)
-        .where(eq(jobPosts.isActive, false));
+        .where(and(eq(jobPosts.isActive, false), eq(jobPosts.deleted, false)));
       return jobs.map((j: JobPost) => ({ ...j, status: getJobStatus(j) }));
   }
 
