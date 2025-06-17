@@ -5,12 +5,14 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { validateQuery } from '../middleware/validation';
 import { z } from 'zod';
 import { AdminRepository } from '../repositories';
+import { JobRepository } from '../repositories/JobRepository';
 import { calculateMatchScore } from '../utils/matchingEngine';
 import { exportToExcel, exportToPDF } from '../utils/exportUtils';
 import { storage } from '../storage';
 import { insertShortlistSchema, insertJobPostSchema } from '@shared/zod';
 import type { InsertJobPost } from '@shared/types';
 import { verifyFirebaseToken } from '../utils/firebase-admin';
+import { validateJobTransition } from '../utils/jobTransitions';
 
 // Validation schemas
 const searchQuerySchema = z.object({
@@ -75,6 +77,20 @@ adminRouter.get('/jobs', authenticateUser, asyncHandler(async (req: any, res) =>
   res.json(jobs);
 }));
 
+adminRouter.post('/jobs', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const jobData = insertJobPostSchema.parse(req.body) as InsertJobPost;
+  const employer = await storage.getEmployer(jobData.employerId);
+  if (!employer || employer.profileStatus !== 'verified') {
+    return res.status(400).json({ message: 'Employer not verified' });
+  }
+  const jobPost = await JobRepository.createJobPost(jobData);
+  res.status(201).json(jobPost);
+}));
+
 /**
  * @swagger
  * /api/admin/jobs/{id}:
@@ -101,7 +117,7 @@ adminRouter.get('/jobs/:id', authenticateUser, asyncHandler(async (req: any, res
     return res.status(403).json({ message: 'Access denied' });
   }
   const jobId = parseInt(req.params.id);
-  const job = await storage.getJobPost(jobId);
+  const job = await storage.getJobPostIncludingDeleted(jobId);
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
   }
@@ -118,6 +134,9 @@ adminRouter.put('/jobs/:id', authenticateUser, asyncHandler(async (req: any, res
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
   }
+  if (job.deleted) {
+    return res.status(400).json({ message: 'Cannot edit a deleted job post' });
+  }
   const updateData = insertJobPostSchema.partial().parse(req.body) as Partial<InsertJobPost>;
   const updatedJob = await storage.updateJobPost(jobId, updateData);
   res.json(updatedJob);
@@ -133,8 +152,39 @@ adminRouter.patch('/jobs/:id/fulfill', authenticateUser, asyncHandler(async (req
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
   }
+  if (job.deleted) {
+    return res.status(400).json({ message: 'Cannot edit a deleted job post' });
+  }
+  const { allowed, message } = validateJobTransition(job, 'fulfill');
+  if (!allowed) {
+    return res.status(400).json({ message });
+  }
   const fulfilledJob = await storage.markJobAsFulfilled(jobId);
   res.json(fulfilledJob);
+}));
+
+adminRouter.post('/jobs/:id/clone', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const jobId = parseInt(req.params.id);
+  const { employerId } = req.body;
+  if (!employerId) {
+    return res.status(400).json({ message: 'Missing employerId' });
+  }
+  const employer = await storage.getEmployer(employerId);
+  if (!employer || employer.profileStatus !== 'verified') {
+    return res.status(400).json({ message: 'Employer not verified' });
+  }
+  const job = await storage.getJobPost(jobId);
+  if (!job) {
+    return res.status(404).json({ message: 'Job not found' });
+  }
+  const jobCode = `JOB-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+  const cloneData = { ...job, title: `Copy of ${job.title}`, employerId: employer.id, jobCode, isActive: false } as InsertJobPost;
+  const clonedJob = await JobRepository.createJobPost(cloneData);
+  res.json(clonedJob);
 }));
 
 /**
@@ -361,8 +411,19 @@ adminRouter.delete('/jobs/:id', authenticateUser, asyncHandler(async (req: any, 
     return res.status(403).json({ message: 'Access denied' });
   }
   const id = parseInt(req.params.id);
-  const job = await storage.softDeleteJobPost(id);
-  res.json(job);
+  const job = await storage.getJobPost(id);
+  if (!job) {
+    return res.status(404).json({ message: 'Job not found' });
+  }
+  if (job.deleted) {
+    return res.status(400).json({ message: 'Cannot edit a deleted job post' });
+  }
+  const { allowed, message } = validateJobTransition(job, 'delete');
+  if (!allowed) {
+    return res.status(400).json({ message });
+  }
+  const deletedJob = await storage.softDeleteJobPost(id);
+  res.json(deletedJob);
 }));
 
 adminRouter.patch('/jobs/:id/approve', authenticateUser, asyncHandler(async (req: any, res) => {
@@ -371,8 +432,19 @@ adminRouter.patch('/jobs/:id/approve', authenticateUser, asyncHandler(async (req
     return res.status(403).json({ message: 'Access denied' });
   }
   const id = parseInt(req.params.id);
-  const job = await storage.approveJob(id);
-  res.json(job);
+  const job = await storage.getJobPost(id);
+  if (!job) {
+    return res.status(404).json({ message: 'Job not found' });
+  }
+  if (job.deleted) {
+    return res.status(400).json({ message: 'Cannot edit a deleted job post' });
+  }
+  const { allowed, message } = validateJobTransition(job, 'approve');
+  if (!allowed) {
+    return res.status(400).json({ message });
+  }
+  const updated = await storage.approveJob(id);
+  res.json(updated);
 }));
 
 adminRouter.patch('/jobs/:id/reject', authenticateUser, asyncHandler(async (req: any, res) => {
@@ -381,8 +453,19 @@ adminRouter.patch('/jobs/:id/reject', authenticateUser, asyncHandler(async (req:
     return res.status(403).json({ message: 'Access denied' });
   }
   const id = parseInt(req.params.id);
-  const job = await storage.softDeleteJobPost(id);
-  res.json(job);
+  const job = await storage.getJobPost(id);
+  if (!job) {
+    return res.status(404).json({ message: 'Job not found' });
+  }
+  if (job.deleted) {
+    return res.status(400).json({ message: 'Cannot edit a deleted job post' });
+  }
+  const { allowed, message } = validateJobTransition(job, 'reject');
+  if (!allowed) {
+    return res.status(400).json({ message });
+  }
+  const deleted = await storage.softDeleteJobPost(id);
+  res.json(deleted);
 }));
 
 adminRouter.patch('/jobs/:id/hold', authenticateUser, asyncHandler(async (req: any, res) => {
@@ -391,8 +474,19 @@ adminRouter.patch('/jobs/:id/hold', authenticateUser, asyncHandler(async (req: a
     return res.status(403).json({ message: 'Access denied' });
   }
   const id = parseInt(req.params.id);
-  const job = await storage.holdJob(id);
-  res.json(job);
+  const job = await storage.getJobPost(id);
+  if (!job) {
+    return res.status(404).json({ message: 'Job not found' });
+  }
+  if (job.deleted) {
+    return res.status(400).json({ message: 'Cannot edit a deleted job post' });
+  }
+  const { allowed, message } = validateJobTransition(job, 'hold');
+  if (!allowed) {
+    return res.status(400).json({ message });
+  }
+  const updated = await storage.holdJob(id);
+  res.json(updated);
 }));
 
 adminRouter.get('/candidates', authenticateUser, asyncHandler(async (req: any, res) => {

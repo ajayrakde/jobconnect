@@ -25,6 +25,7 @@ import {
   Copy,
   CheckCircle,
   RotateCcw,
+  AlertTriangle,
   FileText,
   Clock,
   Mail,
@@ -201,10 +202,25 @@ export const JobDetails: React.FC = () => {
         return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400";
       case 'dormant':
         return "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400";
-      case 'inactive':
-        return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400";
       default:
         return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <CheckCircle className="h-4 w-4" />;
+      case 'pending':
+        return <Clock className="h-4 w-4" />;
+      case 'onHold':
+        return <AlertTriangle className="h-4 w-4" />;
+      case 'dormant':
+        return <Clock className="h-4 w-4" />;
+      case 'fulfilled':
+        return <Briefcase className="h-4 w-4" />;
+      default:
+        return <AlertTriangle className="h-4 w-4" />;
     }
   };
 
@@ -245,8 +261,10 @@ export const JobDetails: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          <Badge className={getStatusColor(status || '')}>
-            {status}
+
+          <Badge className={getStatusColor(getJobStatus(job))}>
+            {getStatusIcon(getJobStatus(job))}
+            <span className="ml-1 capitalize">{getJobStatus(job)}</span>
           </Badge>
           
           <DropdownMenu>

@@ -46,7 +46,8 @@ export const profileStatus = [
 export const jobStatus = [
   "active",
   "inactive",
-  "flagged"
+  "flagged",
+  "onHold"
 ];
 
 export const applicationStatus = [
