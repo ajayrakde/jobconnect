@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { getJobStatus } from "@shared/utils/jobStatus";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -155,8 +156,8 @@ export const AdminJobDetails: React.FC = () => {
           </Button>
         </Link>
         <h1 className="text-3xl font-bold text-foreground">{job.title}</h1>
-        <Badge className={getStatusColor(job.fulfilled ? 'fulfilled' : (job.isActive ? 'active' : 'inactive'))}>
-          {job.fulfilled ? 'Fulfilled' : (job.isActive ? 'Active' : 'Inactive')}
+        <Badge className={getStatusColor(getJobStatus(job))}>
+          {getJobStatus(job)}
         </Badge>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

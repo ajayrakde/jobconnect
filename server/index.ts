@@ -4,6 +4,7 @@ import rateLimit from "express-rate-limit";
 import { registerRoutes } from "./routes/index";
 import { setupVite, serveStatic, log } from "./vite";
 import { errorHandler } from "./middleware/errorHandler";
+import { scheduleDeactivateOldPostsJob } from "./jobs/deactivateOldPosts";
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -58,6 +59,8 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
+
+  scheduleDeactivateOldPostsJob();
 
   app.use(errorHandler);
 

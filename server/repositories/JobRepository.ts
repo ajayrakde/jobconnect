@@ -1,56 +1,62 @@
 import { db } from '../db';
 import { jobPosts } from '@shared/schema';
 import type { JobPost, InsertJobPost } from '@shared/types';
+
+import { getJobStatus } from '@shared/utils/jobStatus';
+
 import { eq, and } from 'drizzle-orm';
 
 export class JobRepository {
-  static async getJobPost(id: number): Promise<JobPost | undefined> {
+  static async getJobPost(id: number): Promise<(JobPost & { status: string }) | undefined> {
     const [jobPost] = await db
       .select()
       .from(jobPosts)
       .where(eq(jobPosts.id, id));
     if (jobPost && jobPost.deleted) return undefined;
-    return jobPost || undefined;
+    return jobPost ? { ...jobPost, status: getJobStatus(jobPost) } : undefined;
   }
 
-  static async createJobPost(insertJobPost: InsertJobPost): Promise<JobPost> {
+  static async createJobPost(insertJobPost: InsertJobPost): Promise<JobPost & { status: string }> {
     const [jobPost] = await db
       .insert(jobPosts)
       .values({
         ...insertJobPost,
-        isActive: true,
+        isActive: false,
         applicationsCount: 0,
       })
       .returning();
-    return jobPost;
+    return { ...jobPost, status: getJobStatus(jobPost) };
   }
 
-  static async updateJobPost(id: number, updates: Partial<JobPost>): Promise<JobPost> {
+  static async updateJobPost(id: number, updates: Partial<JobPost>): Promise<JobPost & { status: string }> {
     const [jobPost] = await db
       .update(jobPosts)
       .set({ ...updates, updatedAt: new Date() })
       .where(eq(jobPosts.id, id))
       .returning();
     if (!jobPost) throw new Error('Job post not found');
-    return jobPost;
+    return { ...jobPost, status: getJobStatus(jobPost) };
   }
 
-  static async getJobPostsByEmployer(employerId: number): Promise<JobPost[]> {
-    return await db
-      .select()
-      .from(jobPosts)
-      .where(eq(jobPosts.employerId, employerId));
+  static async getJobPostsByEmployer(employerId: number): Promise<(JobPost & { status: string })[]> {
+      const jobs = await db
+        .select()
+        .from(jobPosts)
+        .where(and(eq(jobPosts.employerId, employerId), eq(jobPosts.deleted, false)));
+      return jobs.map((j: JobPost) => ({ ...j, status: getJobStatus(j) }));
   }
 
-  static async getAllJobPosts(): Promise<JobPost[]> {
-    return await db.select().from(jobPosts);
+  static async getAllJobPosts(): Promise<(JobPost & { status: string })[]> {
+      const jobs = await db.select().from(jobPosts);
+      return jobs.map((j: JobPost) => ({ ...j, status: getJobStatus(j) }));
   }
 
-  static async getInactiveJobs(): Promise<JobPost[]> {
-    return await db
-      .select()
-      .from(jobPosts)
-      .where(eq(jobPosts.isActive, false));
+  static async getInactiveJobs(): Promise<(JobPost & { status: string })[]> {
+      const jobs = await db
+        .select()
+        .from(jobPosts)
+        .where(and(eq(jobPosts.isActive, false), eq(jobPosts.deleted, false)));
+      return jobs.map((j: JobPost) => ({ ...j, status: getJobStatus(j) }));
   }
 
   static async getPublicJobs(): Promise<JobPost[]> {
@@ -66,13 +72,13 @@ export class JobRepository {
       );
   }
 
-  static async markJobAsFulfilled(jobId: number): Promise<JobPost> {
+  static async markJobAsFulfilled(jobId: number): Promise<JobPost & { status: string }> {
     const [updatedJob] = await db
       .update(jobPosts)
       .set({ fulfilled: true, updatedAt: new Date() })
       .where(eq(jobPosts.id, jobId))
       .returning();
-    return updatedJob;
+    return { ...updatedJob, status: getJobStatus(updatedJob) };
   }
 
   static async approveJob(jobId: number): Promise<JobPost> {
@@ -83,30 +89,30 @@ export class JobRepository {
     return this.deactivateJob(jobId);
   }
 
-  static async activateJob(jobId: number): Promise<JobPost> {
+  static async activateJob(jobId: number): Promise<JobPost & { status: string }> {
     const [updatedJob] = await db
       .update(jobPosts)
       .set({ isActive: true, updatedAt: new Date() })
       .where(eq(jobPosts.id, jobId))
       .returning();
-    return updatedJob;
+    return { ...updatedJob, status: getJobStatus(updatedJob) };
   }
 
-  static async deactivateJob(jobId: number): Promise<JobPost> {
+  static async deactivateJob(jobId: number): Promise<JobPost & { status: string }> {
     const [updatedJob] = await db
       .update(jobPosts)
       .set({ isActive: false, updatedAt: new Date() })
       .where(eq(jobPosts.id, jobId))
       .returning();
-    return updatedJob;
+    return { ...updatedJob, status: getJobStatus(updatedJob) };
   }
 
-  static async softDeleteJobPost(jobId: number): Promise<JobPost> {
+  static async softDeleteJobPost(jobId: number): Promise<JobPost & { status: string }> {
     const [updatedJob] = await db
       .update(jobPosts)
       .set({ deleted: true, updatedAt: new Date() })
       .where(eq(jobPosts.id, jobId))
       .returning();
-    return updatedJob;
+    return { ...updatedJob, status: getJobStatus(updatedJob) };
   }
 }

@@ -3,6 +3,7 @@ import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { getJobStatus } from "@shared/utils/jobStatus";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -238,8 +239,8 @@ export const JobDetails: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          <Badge className={getStatusColor(job.fulfilled ? 'fulfilled' : (job.isActive ? 'active' : 'inactive'))}>
-            {job.fulfilled ? "Fulfilled" : (job.isActive ? "Active" : "Inactive")}
+          <Badge className={getStatusColor(getJobStatus(job))}>
+            {getJobStatus(job)}
           </Badge>
           
           <DropdownMenu>
