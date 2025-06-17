@@ -193,6 +193,10 @@ export const JobDetails: React.FC = () => {
         return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400";
       case 'active':
         return "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400";
+      case 'pending':
+        return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400";
+      case 'onHold':
+        return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400";
       case 'dormant':
         return "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400";
       case 'inactive':
