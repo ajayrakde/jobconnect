@@ -202,6 +202,10 @@ export const EmployerDashboard: React.FC = () => {
     switch (status?.toLowerCase()) {
       case 'active':
         return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400';
+      case 'pending':
+        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400';
+      case 'onhold':
+        return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400';
       case 'dormant':
         return 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400';
       case 'fulfilled':
@@ -215,6 +219,10 @@ export const EmployerDashboard: React.FC = () => {
     switch (status) {
       case 'active':
         return <CheckCircle className="h-4 w-4" />;
+      case 'pending':
+        return <Clock className="h-4 w-4" />;
+      case 'onHold':
+        return <AlertCircle className="h-4 w-4" />;
       case 'dormant':
         return <Clock className="h-4 w-4" />;
       case 'fulfilled':
