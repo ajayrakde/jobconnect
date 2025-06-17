@@ -134,6 +134,9 @@ adminRouter.put('/jobs/:id', authenticateUser, asyncHandler(async (req: any, res
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
   }
+  if (job.deleted) {
+    return res.status(400).json({ message: 'Cannot edit a deleted job post' });
+  }
   const updateData = insertJobPostSchema.partial().parse(req.body) as Partial<InsertJobPost>;
   const updatedJob = await storage.updateJobPost(jobId, updateData);
   res.json(updatedJob);
@@ -148,6 +151,9 @@ adminRouter.patch('/jobs/:id/fulfill', authenticateUser, asyncHandler(async (req
   const job = await storage.getJobPost(jobId);
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
+  }
+  if (job.deleted) {
+    return res.status(400).json({ message: 'Cannot edit a deleted job post' });
   }
   const { allowed, message } = validateJobTransition(job, 'fulfill');
   if (!allowed) {
@@ -409,6 +415,9 @@ adminRouter.delete('/jobs/:id', authenticateUser, asyncHandler(async (req: any, 
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
   }
+  if (job.deleted) {
+    return res.status(400).json({ message: 'Cannot edit a deleted job post' });
+  }
   const { allowed, message } = validateJobTransition(job, 'delete');
   if (!allowed) {
     return res.status(400).json({ message });
@@ -426,6 +435,9 @@ adminRouter.patch('/jobs/:id/approve', authenticateUser, asyncHandler(async (req
   const job = await storage.getJobPost(id);
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
+  }
+  if (job.deleted) {
+    return res.status(400).json({ message: 'Cannot edit a deleted job post' });
   }
   const { allowed, message } = validateJobTransition(job, 'approve');
   if (!allowed) {
@@ -445,6 +457,9 @@ adminRouter.patch('/jobs/:id/reject', authenticateUser, asyncHandler(async (req:
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
   }
+  if (job.deleted) {
+    return res.status(400).json({ message: 'Cannot edit a deleted job post' });
+  }
   const { allowed, message } = validateJobTransition(job, 'reject');
   if (!allowed) {
     return res.status(400).json({ message });
@@ -462,6 +477,9 @@ adminRouter.patch('/jobs/:id/hold', authenticateUser, asyncHandler(async (req: a
   const job = await storage.getJobPost(id);
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
+  }
+  if (job.deleted) {
+    return res.status(400).json({ message: 'Cannot edit a deleted job post' });
   }
   const { allowed, message } = validateJobTransition(job, 'hold');
   if (!allowed) {

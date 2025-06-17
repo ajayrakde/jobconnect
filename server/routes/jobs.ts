@@ -141,6 +141,9 @@ jobsRouter.put(
     if (job.fulfilled) {
       return res.status(403).json({ message: 'Cannot edit fulfilled jobs' });
     }
+    if (job.deleted) {
+      return res.status(400).json({ message: 'Cannot edit a deleted job post' });
+    }
     if ((job as any).employerId !== employer.id) {
       return res.status(403).json({ message: 'Access denied' });
     }
