@@ -36,7 +36,7 @@ export const CandidateJobs: React.FC = () => {
   const { userProfile } = useAuth();
 
   const { data: jobs = [], isLoading } = useQuery({
-    queryKey: ["/api/candidates/recommended-jobs"],
+    queryKey: ["/api/jobs/public"],
     enabled: !!userProfile?.candidate,
   });
 
