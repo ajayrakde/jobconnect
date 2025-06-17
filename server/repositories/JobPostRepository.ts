@@ -22,13 +22,14 @@ export class JobPostRepository {
     const validated = jobPostValidationSchema.parse({
       ...input,
       jobCode: await generateJobCode(),
-      status: 'active',
       createdAt: new Date(),
       updatedAt: new Date()
     });
 
+    const values = { ...validated, isActive: false };
+
     const [jobPost] = await db.insert(jobPosts)
-      .values(validated)
+      .values(values)
       .returning();
 
     return this.mapToResponse(jobPost);
@@ -61,7 +62,7 @@ export class JobPostRepository {
     return db.query.jobPosts.findMany({
       where: and(
         eq(jobPosts.employerId, employerId),
-        eq(jobPosts.status, 'active')
+        eq(jobPosts.isActive, true)
       ),
       orderBy: desc(jobPosts.createdAt)
     });
@@ -99,16 +100,15 @@ export class JobPostRepository {
    * Search job posts with filters and pagination
    */
   static async search(params: JobPostSearchParams) {
-    const {
-      query,
-      location,
-      experienceLevel,
-      employerId,
-      status,
-      sortBy = 'latest',
-      page = 1,
-      limit = 20
-    } = params;
+      const {
+        query,
+        location,
+        experienceLevel,
+        employerId,
+        sortBy = 'latest',
+        page = 1,
+        limit = 20
+      } = params;
 
     let whereClause = sql`true`;
 
@@ -130,9 +130,7 @@ export class JobPostRepository {
       whereClause = sql`${whereClause} AND employer_id = ${employerId}`;
     }
 
-    if (status) {
-      whereClause = sql`${whereClause} AND status = ${status}`;
-    }
+
 
     const offset = (page - 1) * limit;
 
@@ -186,7 +184,6 @@ export class JobPostRepository {
       },
       title: jobPost.title,
       location: jobPost.location,
-      status: jobPost.status,
       createdAt: jobPost.createdAt
     };
   }
