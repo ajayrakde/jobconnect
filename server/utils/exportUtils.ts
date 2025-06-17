@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import { getJobStatus } from "@shared/utils/jobStatus";
 
 export async function exportToExcel(data: any): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
@@ -76,7 +77,7 @@ export async function exportToExcel(data: any): Promise<Buffer> {
     { header: 'Salary Range', key: 'salaryRange', width: 15 },
     { header: 'Location', key: 'location', width: 20 },
     { header: 'Applications Count', key: 'applicationsCount', width: 18 },
-    { header: 'Is Active', key: 'isActive', width: 10 },
+    { header: 'Status', key: 'status', width: 10 },
     { header: 'Created At', key: 'createdAt', width: 20 },
   ];
 
@@ -92,7 +93,7 @@ export async function exportToExcel(data: any): Promise<Buffer> {
       salaryRange: job.salaryRange || 'Not specified',
       location: job.location || 'Not specified',
       applicationsCount: job.applicationsCount || 0,
-      isActive: job.isActive ? 'Yes' : 'No',
+      status: getJobStatus(job),
       createdAt: job.createdAt?.toISOString() || 'Unknown',
     });
   });
@@ -178,7 +179,7 @@ ${index + 1}. ${job.title || 'Unknown Title'} (${job.jobCode || 'No Code'})
    Salary: ${job.salaryRange || 'Not specified'}
    Location: ${job.location || 'Not specified'}
    Applications: ${job.applicationsCount || 0}
-   Status: ${job.isActive ? 'Active' : 'Inactive'}
+   Status: ${getJobStatus(job)}
    Created: ${job.createdAt?.toISOString() || 'Unknown'}
 `).join('')}
 

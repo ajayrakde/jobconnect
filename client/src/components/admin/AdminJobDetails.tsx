@@ -176,7 +176,7 @@ export const AdminJobDetails: React.FC = () => {
                 Edit Job
               </Link>
             </DropdownMenuItem>
-            {!job.fulfilled && (
+            {getJobStatus(job) !== 'fulfilled' && (
               <DropdownMenuItem onClick={() => fulfillMutation.mutate()} disabled={fulfillMutation.isPending}>
                 <CheckCircle className="h-4 w-4 mr-2" />
                 {fulfillMutation.isPending ? 'Marking...' : 'Mark as Fulfilled'}

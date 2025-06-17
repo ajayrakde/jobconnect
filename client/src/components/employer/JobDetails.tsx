@@ -49,6 +49,8 @@ export const JobDetails: React.FC = () => {
     enabled: !!id,
   });
 
+  const status = job ? getJobStatus(job) : undefined;
+
   const { data: applications = [], isLoading: applicationsLoading } = useQuery<Application[]>({
     queryKey: [`/api/jobs/${id}/applications`],
     enabled: !!id,
@@ -243,8 +245,8 @@ export const JobDetails: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          <Badge className={getStatusColor(getJobStatus(job))}>
-            {getJobStatus(job)}
+          <Badge className={getStatusColor(status || '')}>
+            {status}
           </Badge>
           
           <DropdownMenu>
@@ -254,7 +256,7 @@ export const JobDetails: React.FC = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {!job.fulfilled ? (
+              {status !== 'fulfilled' ? (
                 <DropdownMenuItem asChild>
                   <Link href={`/jobs/${job.id}/edit`}>
                     <Edit className="h-4 w-4 mr-2" />
@@ -266,8 +268,8 @@ export const JobDetails: React.FC = () => {
                 <Copy className="h-4 w-4 mr-2" />
                 Clone Job
               </DropdownMenuItem>
-              {job.isActive && !job.fulfilled ? (
-                <DropdownMenuItem 
+              {status === 'active' ? (
+                <DropdownMenuItem
                   onClick={handleFulfillJob}
                   disabled={fulfillJobMutation.isPending}
                 >
@@ -275,8 +277,8 @@ export const JobDetails: React.FC = () => {
                   {fulfillJobMutation.isPending ? "Marking as Fulfilled..." : "Mark as Fulfilled"}
                 </DropdownMenuItem>
               ) : null}
-              {!job.isActive && !job.fulfilled ? (
-                <DropdownMenuItem 
+              {status && status !== 'active' && status !== 'fulfilled' ? (
+                <DropdownMenuItem
                   onClick={handleActivateJob}
                   disabled={activateJobMutation.isPending}
                 >
@@ -396,7 +398,7 @@ export const JobDetails: React.FC = () => {
       </div>
 
       {/* Applications Section - Hidden when job is fulfilled */}
-      {!job?.fulfilled && (
+      {status !== 'fulfilled' && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
