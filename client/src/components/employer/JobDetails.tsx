@@ -46,25 +46,25 @@ export const JobDetails: React.FC = () => {
   const { toast } = useToast();
 
   const { data: job, isLoading: jobLoading } = useQuery<JobPost>({
-    queryKey: [`/api/jobs/${id}`],
+    queryKey: [`/api/employers/jobs/${id}`],
     enabled: !!id,
   });
 
   const status = job ? getJobStatus(job) : undefined;
 
   const { data: applications = [], isLoading: applicationsLoading } = useQuery<Application[]>({
-    queryKey: [`/api/jobs/${id}/applications`],
+    queryKey: [`/api/employers/jobs/${id}/applications`],
     enabled: !!id,
   });
 
   const fulfillJobMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/jobs/${id}/fulfill`, "PATCH");
+      return apiRequest(`/api/employers/jobs/${id}/fulfill`, "PATCH");
     },
     onSuccess: async () => {
       // Invalidate all employer-related queries to ensure dashboard updates
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: [`/api/jobs/${id}`] }),
+        queryClient.invalidateQueries({ queryKey: [`/api/employers/jobs/${id}`] }),
         queryClient.invalidateQueries({ queryKey: ["/api/employers/jobs"] }),
         queryClient.invalidateQueries({ queryKey: ["/api/employers/recent-jobs"] }),
         queryClient.invalidateQueries({ queryKey: ["/api/employers/fulfilled-jobs"] }),
@@ -77,7 +77,7 @@ export const JobDetails: React.FC = () => {
         queryClient.refetchQueries({ queryKey: ["/api/employers/stats"] }),
         queryClient.refetchQueries({ queryKey: ["/api/employers/recent-jobs"] }),
         queryClient.refetchQueries({ queryKey: ["/api/employers/jobs"] }),
-        queryClient.refetchQueries({ queryKey: [`/api/jobs/${id}`] }),
+        queryClient.refetchQueries({ queryKey: [`/api/employers/jobs/${id}`] }),
       ]);
       
       toast({
@@ -96,12 +96,12 @@ export const JobDetails: React.FC = () => {
 
   const activateJobMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/jobs/${id}/activate`, "PATCH");
+      return apiRequest(`/api/employers/jobs/${id}/activate`, "PATCH");
     },
     onSuccess: async () => {
       // Invalidate all employer-related queries to ensure dashboard updates
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: [`/api/jobs/${id}`] }),
+        queryClient.invalidateQueries({ queryKey: [`/api/employers/jobs/${id}`] }),
         queryClient.invalidateQueries({ queryKey: ["/api/employers/jobs"] }),
         queryClient.invalidateQueries({ queryKey: ["/api/employers/recent-jobs"] }),
         queryClient.invalidateQueries({ queryKey: ["/api/employers/fulfilled-jobs"] }),
@@ -114,7 +114,7 @@ export const JobDetails: React.FC = () => {
         queryClient.refetchQueries({ queryKey: ["/api/employers/stats"] }),
         queryClient.refetchQueries({ queryKey: ["/api/employers/recent-jobs"] }),
         queryClient.refetchQueries({ queryKey: ["/api/employers/jobs"] }),
-        queryClient.refetchQueries({ queryKey: [`/api/jobs/${id}`] }),
+        queryClient.refetchQueries({ queryKey: [`/api/employers/jobs/${id}`] }),
       ]);
       
       toast({

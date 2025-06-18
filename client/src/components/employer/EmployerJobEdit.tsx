@@ -45,7 +45,7 @@ export const EmployerJobEdit: React.FC = () => {
   const queryClient = useQueryClient();
 
   const { data: job, isLoading } = useQuery({
-    queryKey: [`/api/jobs/${id}`],
+    queryKey: [`/api/employers/jobs/${id}`],
     enabled: !!id,
   });
 
@@ -83,14 +83,14 @@ export const EmployerJobEdit: React.FC = () => {
 
   const updateJobMutation = useMutation({
     mutationFn: (data: EditJobFormData) =>
-      apiRequest(`/api/jobs/${id}`, "PUT", data),
+      apiRequest(`/api/employers/jobs/${id}`, "PUT", data),
     onSuccess: () => {
       toast({
         title: "Success",
         description: "Job updated successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/employers/jobs"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/jobs/${id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/employers/jobs/${id}`] });
       setLocation(`/jobs/${id}`);
     },
     onError: (error: any) => {

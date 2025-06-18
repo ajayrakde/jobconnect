@@ -79,3 +79,27 @@ candidatesRouter.get(
     res.json(applications);
   })
 );
+
+// Public job listings
+candidatesRouter.get(
+  '/jobs',
+  asyncHandler(async (_req, res) => {
+    const jobs = await storage.getPublicJobPosts();
+    res.json(jobs);
+  })
+);
+
+// Candidate view of a job detail (without employer info or vacancy)
+candidatesRouter.get(
+  '/jobs/:id',
+  ...requireVerifiedRole('candidate'),
+  asyncHandler(async (req: any, res) => {
+    const jobId = parseInt(req.params.id);
+    const job = await storage.getJobPost(jobId);
+    if (!job || job.deleted || job.jobStatus !== 'ACTIVE') {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+    const { employerId, vacancy, ...rest } = job as any;
+    res.json(rest);
+  })
+);
