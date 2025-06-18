@@ -183,12 +183,6 @@ export const AdminVerifications: React.FC = () => {
       </div>
     );
 
-    const submittedInfo = (
-      <div className="flex items-center gap-2">
-        <Clock className="h-4 w-4" />
-        <span>Submitted {formatDate(item.createdAt)}</span>
-      </div>
-    );
 
     if (isCandidate) {
       return (
@@ -223,22 +217,19 @@ export const AdminVerifications: React.FC = () => {
       );
     }
 
-    return (
-      <JobCard
-        key={id}
-        job={{
-          title: name,
-          positions: item.vacancy,
-          qualification: item.minQualification,
-          experience: item.experienceRequired,
-          city: item.location,
-          postedOn: formatDate(item.createdAt),
-        }}
-        actions={actions}
-      >
-        {submittedInfo}
-      </JobCard>
-    );
+      return (
+        <JobCard
+          key={id}
+          job={{
+            title: name,
+            positions: item.vacancy,
+            qualification: item.minQualification,
+            experience: item.experienceRequired,
+            city: item.location,
+          }}
+          actions={actions}
+        />
+      );
   };
 
   return (
