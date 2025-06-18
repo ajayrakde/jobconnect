@@ -80,7 +80,7 @@ export const EmployerJobs: React.FC = () => {
   const markAsFulfilledMutation = useMutation({
     mutationFn: async (jobId: number) => {
       try {
-        const response = await apiRequest(`/api/jobs/${jobId}/fulfill`, "PATCH");
+        const response = await apiRequest(`/api/employers/jobs/${jobId}/fulfill`, "PATCH");
         await throwIfResNotOk(response);
         return response.json();
       } catch (error) {
@@ -123,7 +123,7 @@ export const EmployerJobs: React.FC = () => {
   const activateJobMutation = useMutation({
     mutationFn: async (jobId: number) => {
       try {
-        const response = await apiRequest(`/api/jobs/${jobId}/activate`, "PATCH");
+        const response = await apiRequest(`/api/employers/jobs/${jobId}/activate`, "PATCH");
         await throwIfResNotOk(response);
         return response.json();
       } catch (error) {

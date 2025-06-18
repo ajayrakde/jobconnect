@@ -104,7 +104,7 @@ export const EmployerDashboard: React.FC = () => {
 
   const markAsFulfilledMutation = useMutation({
     mutationFn: async (jobId: number) => {
-      const response = await apiRequest(`/api/jobs/${jobId}/fulfill`, "PATCH");
+      const response = await apiRequest(`/api/employers/jobs/${jobId}/fulfill`, "PATCH");
       await throwIfResNotOk(response);
       return response.json();
     },

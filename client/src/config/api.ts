@@ -18,8 +18,8 @@ export const ENDPOINTS = {
     VERIFICATIONS: '/api/admin/verifications',
   },
   JOBS: {
-    LIST: '/api/jobs',
-    CREATE: '/api/jobs',
+    LIST: '/api/candidates/jobs',
+    CREATE: '/api/employers/jobs',
     SEARCH: '/api/jobs/search',
   },
   EMPLOYERS: {
