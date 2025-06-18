@@ -302,10 +302,10 @@ export const AdminSearchPanel: React.FC = () => {
         <EmployerCard
           key={item.id}
           employer={{
-            organizationName: employer?.organizationName ?? item.companyName,
-            registrationNumber: employer?.registrationNumber ?? item.regNo,
-            industry: employer?.businessType ?? item.industry,
-            city: employer?.address ?? item.city,
+            organizationName: employer?.organizationName ?? item.organizationName,
+            registrationNumber: employer?.registrationNumber ?? item.registrationNumber,
+            industry: employer?.businessType ?? item.businessType,
+            city: employer?.city ?? item.city,
           }}
           actions={actions}
         />
@@ -347,11 +347,11 @@ export const AdminSearchPanel: React.FC = () => {
           key={item.id}
           job={{
             title: job?.title ?? item.title,
+            code: job?.jobCode ?? item.jobCode,
             positions: job?.vacancy ?? item.vacancy,
-            qualification: job?.minQualification ?? item.qualification,
+            qualification: job?.minQualification ?? item.minQualification,
             experience: job?.experienceRequired ?? item.experienceRequired,
-            city: job?.location ?? item.city,
-            postedOn: job?.createdAt ?? item.postedOn,
+            city: job?.city ?? item.city
           }}
           actions={actions}
         />
