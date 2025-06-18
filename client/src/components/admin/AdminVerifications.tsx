@@ -233,10 +233,10 @@ export const AdminVerifications: React.FC = () => {
           experience: item.experienceRequired,
           city: item.location,
           postedOn: formatDate(item.createdAt),
-        },{submittedInfo}}
+        }}
         actions={actions}
       >
-
+        {submittedInfo}
       </JobCard>
     );
   };
