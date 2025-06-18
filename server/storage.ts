@@ -306,6 +306,11 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Candidate not eligible to apply");
     }
 
+    const job = await JobRepository.getJobPost(insertApplication.jobPostId);
+    if (!job || job.jobStatus !== 'ACTIVE') {
+      throw new Error('Job is not accepting applications');
+    }
+
     const [application] = await db
       .insert(applications)
       .values(insertApplication)
@@ -389,7 +394,7 @@ export class DatabaseStorage implements IStorage {
   // Admin operations
   async getAdminStats(): Promise<any> {
     const allCandidates = await db.select().from(candidates);
-    const activeJobs = await db.select().from(jobPosts).where(eq(jobPosts.isActive, true));
+    const activeJobs = await db.select().from(jobPosts).where(eq(jobPosts.jobStatus, 'ACTIVE'));
     const allShortlists = await db.select().from(shortlists);
     const matchRate = allCandidates.length > 0 ? Math.floor((allShortlists.length / allCandidates.length) * 100) : 0;
     

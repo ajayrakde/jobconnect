@@ -12,7 +12,7 @@ import { storage } from '../storage';
 import { insertShortlistSchema, insertJobPostSchema } from '@shared/zod';
 import type { InsertJobPost } from '@shared/types';
 import { verifyFirebaseToken } from '../utils/firebase-admin';
-import { validateJobTransition } from '../utils/jobTransitions';
+import { isValidTransition, canPerformAction } from '@shared/utils/jobStatus';
 
 // Validation schemas
 const searchQuerySchema = z.object({
@@ -117,7 +117,7 @@ adminRouter.get('/jobs/:id', authenticateUser, asyncHandler(async (req: any, res
     return res.status(403).json({ message: 'Access denied' });
   }
   const jobId = parseInt(req.params.id);
-  const job = await storage.getJobPostIncludingDeleted(jobId);
+  const job = await storage.getJobPost(jobId);
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
   }
@@ -134,7 +134,7 @@ adminRouter.put('/jobs/:id', authenticateUser, asyncHandler(async (req: any, res
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
   }
-  if (job.deleted) {
+  if (!canPerformAction('admin', job.jobStatus as any, 'edit', job.deleted)) {
     return res.status(400).json({ message: 'Cannot edit a deleted job post' });
   }
   const updateData = insertJobPostSchema.partial().parse(req.body) as Partial<InsertJobPost>;
@@ -152,12 +152,11 @@ adminRouter.patch('/jobs/:id/fulfill', authenticateUser, asyncHandler(async (req
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
   }
-  if (job.deleted) {
-    return res.status(400).json({ message: 'Cannot edit a deleted job post' });
+  if (!canPerformAction('admin', job.jobStatus as any, 'fulfill', job.deleted)) {
+    return res.status(400).json({ message: 'Invalid status transition' });
   }
-  const { allowed, message } = validateJobTransition(job, 'fulfill');
-  if (!allowed) {
-    return res.status(400).json({ message });
+  if (!isValidTransition(job.jobStatus as any, 'FULFILLED', job.deleted)) {
+    return res.status(400).json({ message: 'Invalid status transition' });
   }
   const fulfilledJob = await storage.markJobAsFulfilled(jobId);
   res.json(fulfilledJob);
@@ -181,8 +180,11 @@ adminRouter.post('/jobs/:id/clone', authenticateUser, asyncHandler(async (req: a
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
   }
+  if (!canPerformAction('admin', job.jobStatus as any, 'clone', job.deleted)) {
+    return res.status(400).json({ message: 'Cannot clone deleted job' });
+  }
   const jobCode = `JOB-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
-  const cloneData = { ...job, title: `Copy of ${job.title}`, employerId: employer.id, jobCode, isActive: false } as InsertJobPost;
+  const cloneData = { ...job, title: `Copy of ${job.title}`, employerId: employer.id, jobCode, jobStatus: 'PENDING' } as InsertJobPost;
   const clonedJob = await JobRepository.createJobPost(cloneData);
   res.json(clonedJob);
 }));
@@ -418,10 +420,6 @@ adminRouter.delete('/jobs/:id', authenticateUser, asyncHandler(async (req: any, 
   if (job.deleted) {
     return res.status(400).json({ message: 'Cannot edit a deleted job post' });
   }
-  const { allowed, message } = validateJobTransition(job, 'delete');
-  if (!allowed) {
-    return res.status(400).json({ message });
-  }
   const deletedJob = await storage.softDeleteJobPost(id);
   res.json(deletedJob);
 }));
@@ -436,12 +434,11 @@ adminRouter.patch('/jobs/:id/approve', authenticateUser, asyncHandler(async (req
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
   }
-  if (job.deleted) {
-    return res.status(400).json({ message: 'Cannot edit a deleted job post' });
+  if (!canPerformAction('admin', job.jobStatus as any, 'activate', job.deleted)) {
+    return res.status(400).json({ message: 'Invalid status transition' });
   }
-  const { allowed, message } = validateJobTransition(job, 'approve');
-  if (!allowed) {
-    return res.status(400).json({ message });
+  if (!isValidTransition(job.jobStatus as any, 'ACTIVE', job.deleted)) {
+    return res.status(400).json({ message: 'Invalid status transition' });
   }
   const updated = await storage.approveJob(id);
   res.json(updated);
@@ -457,12 +454,11 @@ adminRouter.patch('/jobs/:id/reject', authenticateUser, asyncHandler(async (req:
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
   }
-  if (job.deleted) {
-    return res.status(400).json({ message: 'Cannot edit a deleted job post' });
+  if (!canPerformAction('admin', job.jobStatus as any, 'delete', job.deleted)) {
+    return res.status(400).json({ message: 'Invalid status transition' });
   }
-  const { allowed, message } = validateJobTransition(job, 'reject');
-  if (!allowed) {
-    return res.status(400).json({ message });
+  if (!isValidTransition(job.jobStatus as any, 'PENDING', job.deleted)) {
+    return res.status(400).json({ message: 'Invalid status transition' });
   }
   const deleted = await storage.softDeleteJobPost(id);
   res.json(deleted);
@@ -478,12 +474,11 @@ adminRouter.patch('/jobs/:id/hold', authenticateUser, asyncHandler(async (req: a
   if (!job) {
     return res.status(404).json({ message: 'Job not found' });
   }
-  if (job.deleted) {
-    return res.status(400).json({ message: 'Cannot edit a deleted job post' });
+  if (!canPerformAction('admin', job.jobStatus as any, 'hold', job.deleted)) {
+    return res.status(400).json({ message: 'Invalid status transition' });
   }
-  const { allowed, message } = validateJobTransition(job, 'hold');
-  if (!allowed) {
-    return res.status(400).json({ message });
+  if (!isValidTransition(job.jobStatus as any, 'ON_HOLD', job.deleted)) {
+    return res.status(400).json({ message: 'Invalid status transition' });
   }
   const updated = await storage.holdJob(id);
   res.json(updated);

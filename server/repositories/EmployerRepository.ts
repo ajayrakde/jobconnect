@@ -134,7 +134,7 @@ export class EmployerRepository {
         .where(
           and(
             eq(jobPosts.employerId, employerId),
-            eq(jobPosts.isActive, true),
+            eq(jobPosts.jobStatus, 'ACTIVE'),
             eq(jobPosts.deleted, false)
           )
         );
@@ -143,7 +143,12 @@ export class EmployerRepository {
         .select({ count: sql<number>`count(*)` })
         .from(jobPosts)
         .leftJoin(applications, eq(applications.jobPostId, jobPosts.id))
-        .where(eq(jobPosts.employerId, employerId));
+        .where(
+          and(
+            eq(jobPosts.employerId, employerId),
+            eq(jobPosts.deleted, false)
+          )
+        );
 
       return {
         activeJobs: activeJobsCount.count,
@@ -223,7 +228,8 @@ export class EmployerRepository {
       .where(
         and(
           eq(jobPosts.employerId, employerId),
-          eq(jobPosts.fulfilled, true)
+          eq(jobPosts.jobStatus, 'FULFILLED'),
+          eq(jobPosts.deleted, false)
         )
       )
       .orderBy(desc(jobPosts.createdAt));
@@ -237,8 +243,8 @@ export class EmployerRepository {
       .where(
         and(
           eq(jobPosts.employerId, employerId),
-          eq(jobPosts.fulfilled, false),
-          eq(jobPosts.isActive, true)
+          eq(jobPosts.jobStatus, 'ACTIVE'),
+          eq(jobPosts.deleted, false)
         )
       )
       .orderBy(desc(jobPosts.createdAt));
