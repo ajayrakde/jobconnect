@@ -91,7 +91,7 @@ export function canPerformAction(
       PENDING: ['delete', 'clone', 'edit', 'activate', 'hold'],
       ON_HOLD: ['delete', 'clone', 'edit', 'activate'],
       ACTIVE: ['delete', 'clone', 'edit', 'fulfill'],
-      DORMANT: ['delete', 'clone'],
+      DORMANT: ['delete', 'clone', 'activate'],
       FULFILLED: ['delete', 'clone', 'activate'],
     };
     return rules[status]?.includes(action) ?? false;
