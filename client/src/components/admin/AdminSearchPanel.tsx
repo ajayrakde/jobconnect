@@ -62,7 +62,7 @@ interface JobPost {
   employer: string;
   employerId: number;
   city: string;
-  status: 'active' | 'inactive' | 'flagged';
+  status: 'pending' | 'onHold' | 'active' | 'fulfilled' | 'dormant';
   postedOn: string;
   category: string;
   experienceRequired: string;
@@ -206,8 +206,19 @@ export const AdminSearchPanel: React.FC = () => {
   };
 
   // Card renderers
-  const renderCard = (item) => {
+  const getNested = (obj: any, keys: string[]) => {
+    for (const key of keys) {
+      if (obj && obj[key] !== undefined) {
+        return obj[key];
+      }
+    }
+    return undefined;
+  };
+
+  const renderCard = (item: any) => {
     if (item.type === "candidate") {
+      const candidate = getNested(item, ["candidate", "candidates", "candidateData"]);
+      const user = getNested(item, ["user", "users"]);
       const actions = (
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
@@ -241,20 +252,23 @@ export const AdminSearchPanel: React.FC = () => {
         <CandidateCard
           key={item.id}
           candidate={{
-            fullName: item.name,
-            qualification: item.qualification,
+            fullName: user?.name ?? item.name,
+            qualification: candidate?.qualifications?.[0]?.degree ?? item.qualification,
             industry: item.industry,
             experience:
-              typeof item.experience === "object"
+              typeof candidate?.experience?.[0]?.position === "string"
+                ? candidate?.experience?.[0]?.position
+                : typeof item.experience === "object"
                 ? `${item.experience.years} years`
                 : item.experience,
-            city: item.city,
+            city: candidate?.address ?? item.city,
           }}
           actions={actions}
         />
       );
     }
     if (item.type === "employer") {
+      const employer = getNested(item, ["employer", "employers", "employerData"]);
       const actions = (
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
@@ -288,16 +302,17 @@ export const AdminSearchPanel: React.FC = () => {
         <EmployerCard
           key={item.id}
           employer={{
-            organizationName: item.companyName,
-            registrationNumber: item.regNo,
-            industry: item.industry,
-            city: item.city,
+            organizationName: employer?.organizationName ?? item.companyName,
+            registrationNumber: employer?.registrationNumber ?? item.regNo,
+            industry: employer?.businessType ?? item.industry,
+            city: employer?.address ?? item.city,
           }}
           actions={actions}
         />
       );
     }
     if (item.type === "job") {
+      const job = getNested(item, ["job", "jobPost", "jobPosts"]);
       const actions = (
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
@@ -331,12 +346,12 @@ export const AdminSearchPanel: React.FC = () => {
         <JobCard
           key={item.id}
           job={{
-            title: item.title,
-            positions: item.vacancy,
-            qualification: item.qualification,
-            experience: item.experienceRequired,
-            city: item.city,
-            postedOn: item.postedOn,
+            title: job?.title ?? item.title,
+            positions: job?.vacancy ?? item.vacancy,
+            qualification: job?.minQualification ?? item.qualification,
+            experience: job?.experienceRequired ?? item.experienceRequired,
+            city: job?.location ?? item.city,
+            postedOn: job?.createdAt ?? item.postedOn,
           }}
           actions={actions}
         />
@@ -347,7 +362,12 @@ export const AdminSearchPanel: React.FC = () => {
   };
 
   // Mixed list for "all"
-  const renderMixedCard = (item) => {
+  const renderMixedCard = (item: any) => {
+    const candidate = getNested(item, ["candidate", "candidates", "candidateData"]);
+    const user = getNested(item, ["user", "users"]);
+    const employer = getNested(item, ["employer", "employers", "employerData"]);
+    const job = getNested(item, ["job", "jobPost", "jobPosts"]);
+
     let icon = <User className="h-5 w-5 text-primary" />;
     let label = "Candidate";
     if (item.type === "employer") {
@@ -357,20 +377,22 @@ export const AdminSearchPanel: React.FC = () => {
       icon = <FileText className="h-5 w-5 text-primary" />;
       label = "Job Post";
     }
+
     return (
       <Card key={item.id} className="bg-card border-border">
         <CardContent className="p-4 flex justify-between items-center">
           <div>
             <div className="flex items-center gap-2 mb-1">
               {icon}
-              <span className="font-semibold text-foreground">{item.name || item.companyName || item.title}</span>
+              <span className="font-semibold text-foreground">
+                {user?.name || employer?.organizationName || job?.title || item.name || item.companyName || item.title}
+              </span>
               <Badge variant="outline">{label}</Badge>
             </div>
             <div className="text-sm text-muted-foreground">
-              {/* Show summary info based on type */}
-              {item.type === "candidate" && `${item.qualification} • ${item.experience} • ${item.city}`}
-              {item.type === "employer" && `${item.industry} • ${item.size} • ${item.city}`}
-              {item.type === "job" && `${item.employer} • ${item.city} • Posted ${item.postedOn}`}
+              {item.type === "candidate" && `${candidate?.qualifications?.[0]?.degree ?? item.qualification} • ${candidate?.experience?.[0]?.position ?? item.experience} • ${candidate?.address ?? item.city}`}
+              {item.type === "employer" && `${employer?.businessType ?? item.industry} • ${employer?.address ?? item.city}`}
+              {item.type === "job" && `${job?.location ?? item.city} • Posted ${job?.createdAt ?? item.postedOn}`}
             </div>
           </div>
           <div className="flex gap-2">
@@ -380,7 +402,6 @@ export const AdminSearchPanel: React.FC = () => {
                 <Button variant="outline" size="sm"><MoreVertical className="h-4 w-4" /></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {/* Show actions based on type */}
                 {item.type === "candidate" && <DropdownMenuItem><CheckCircle className="h-4 w-4 mr-2" />Verify</DropdownMenuItem>}
                 {item.type === "employer" && <DropdownMenuItem><CheckCircle className="h-4 w-4 mr-2" />Verify</DropdownMenuItem>}
                 {item.type === "job" && <DropdownMenuItem><CheckCircle className="h-4 w-4 mr-2" />Approve</DropdownMenuItem>}

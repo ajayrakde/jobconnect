@@ -3,6 +3,7 @@ import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { getJobStatus, canPerformAction } from "@shared/utils/jobStatus";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -24,6 +25,7 @@ import {
   Copy,
   CheckCircle,
   RotateCcw,
+  AlertTriangle,
   FileText,
   Clock,
   Mail,
@@ -47,6 +49,8 @@ export const JobDetails: React.FC = () => {
     queryKey: [`/api/jobs/${id}`],
     enabled: !!id,
   });
+
+  const status = job ? getJobStatus(job) : undefined;
 
   const { data: applications = [], isLoading: applicationsLoading } = useQuery<Application[]>({
     queryKey: [`/api/jobs/${id}/applications`],
@@ -192,12 +196,31 @@ export const JobDetails: React.FC = () => {
         return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400";
       case 'active':
         return "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400";
+      case 'pending':
+        return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400";
+      case 'onHold':
+        return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400";
       case 'dormant':
         return "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400";
-      case 'inactive':
-        return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400";
       default:
         return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <CheckCircle className="h-4 w-4" />;
+      case 'pending':
+        return <Clock className="h-4 w-4" />;
+      case 'onHold':
+        return <AlertTriangle className="h-4 w-4" />;
+      case 'dormant':
+        return <Clock className="h-4 w-4" />;
+      case 'fulfilled':
+        return <Briefcase className="h-4 w-4" />;
+      default:
+        return <AlertTriangle className="h-4 w-4" />;
     }
   };
 
@@ -238,8 +261,10 @@ export const JobDetails: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          <Badge className={getStatusColor(job.fulfilled ? 'fulfilled' : (job.isActive ? 'active' : 'inactive'))}>
-            {job.fulfilled ? "Fulfilled" : (job.isActive ? "Active" : "Inactive")}
+
+          <Badge className={getStatusColor(getJobStatus(job))}>
+            {getStatusIcon(getJobStatus(job))}
+            <span className="ml-1 capitalize">{getJobStatus(job)}</span>
           </Badge>
           
           <DropdownMenu>
@@ -249,7 +274,7 @@ export const JobDetails: React.FC = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {!job.fulfilled ? (
+              {status !== 'fulfilled' ? (
                 <DropdownMenuItem asChild>
                   <Link href={`/jobs/${job.id}/edit`}>
                     <Edit className="h-4 w-4 mr-2" />
@@ -257,12 +282,14 @@ export const JobDetails: React.FC = () => {
                   </Link>
                 </DropdownMenuItem>
               ) : null}
-              <DropdownMenuItem onClick={handleCloneJob}>
-                <Copy className="h-4 w-4 mr-2" />
-                Clone Job
-              </DropdownMenuItem>
-              {job.isActive && !job.fulfilled ? (
-                <DropdownMenuItem 
+              {canPerformAction('employer', job.jobStatus as any, 'clone', job.deleted) && (
+                <DropdownMenuItem onClick={handleCloneJob}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Clone Job
+                </DropdownMenuItem>
+              )}
+              {canPerformAction('employer', job.jobStatus as any, 'fulfill', job.deleted) ? (
+                <DropdownMenuItem
                   onClick={handleFulfillJob}
                   disabled={fulfillJobMutation.isPending}
                 >
@@ -270,8 +297,8 @@ export const JobDetails: React.FC = () => {
                   {fulfillJobMutation.isPending ? "Marking as Fulfilled..." : "Mark as Fulfilled"}
                 </DropdownMenuItem>
               ) : null}
-              {!job.isActive && !job.fulfilled ? (
-                <DropdownMenuItem 
+              {canPerformAction('employer', job.jobStatus as any, 'activate', job.deleted) ? (
+                <DropdownMenuItem
                   onClick={handleActivateJob}
                   disabled={activateJobMutation.isPending}
                 >
@@ -391,7 +418,7 @@ export const JobDetails: React.FC = () => {
       </div>
 
       {/* Applications Section - Hidden when job is fulfilled */}
-      {!job?.fulfilled && (
+      {status !== 'fulfilled' && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">

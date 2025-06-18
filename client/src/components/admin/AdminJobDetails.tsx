@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { getJobStatus } from "@shared/utils/jobStatus";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -33,6 +34,7 @@ import {
   Edit,
   Trash,
   CheckCircle,
+  AlertTriangle,
   FileText,
   Clock,
   Mail,
@@ -117,12 +119,31 @@ export const AdminJobDetails: React.FC = () => {
         return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400";
       case "active":
         return "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400";
+      case "pending":
+        return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400";
+      case "onHold":
+        return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400";
       case "dormant":
         return "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400";
-      case "inactive":
-        return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400";
       default:
         return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "active":
+        return <CheckCircle className="h-4 w-4" />;
+      case "pending":
+        return <Clock className="h-4 w-4" />;
+      case "onHold":
+        return <AlertTriangle className="h-4 w-4" />;
+      case "dormant":
+        return <Clock className="h-4 w-4" />;
+      case "fulfilled":
+        return <Briefcase className="h-4 w-4" />;
+      default:
+        return <AlertTriangle className="h-4 w-4" />;
     }
   };
 
@@ -155,8 +176,9 @@ export const AdminJobDetails: React.FC = () => {
           </Button>
         </Link>
         <h1 className="text-3xl font-bold text-foreground">{job.title}</h1>
-        <Badge className={getStatusColor(job.fulfilled ? 'fulfilled' : (job.isActive ? 'active' : 'inactive'))}>
-          {job.fulfilled ? 'Fulfilled' : (job.isActive ? 'Active' : 'Inactive')}
+        <Badge className={getStatusColor(getJobStatus(job))}>
+          {getStatusIcon(getJobStatus(job))}
+          <span className="ml-1 capitalize">{getJobStatus(job)}</span>
         </Badge>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -171,7 +193,7 @@ export const AdminJobDetails: React.FC = () => {
                 Edit Job
               </Link>
             </DropdownMenuItem>
-            {!job.fulfilled && (
+            {getJobStatus(job) !== 'fulfilled' && (
               <DropdownMenuItem onClick={() => fulfillMutation.mutate()} disabled={fulfillMutation.isPending}>
                 <CheckCircle className="h-4 w-4 mr-2" />
                 {fulfillMutation.isPending ? 'Marking...' : 'Mark as Fulfilled'}

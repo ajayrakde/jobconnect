@@ -1,7 +1,7 @@
 import { eq, and, or, desc, sql } from 'drizzle-orm';
 import { db } from '../db';
 import { jobPosts } from '@shared/schema';
-import { jobPostValidationSchema } from '@shared/zod';
+import { insertJobPostSchema } from '@shared/zod';
 import type {
   CreateJobPostInput,
   UpdateJobPostInput,
@@ -19,16 +19,20 @@ export class JobPostRepository {
    * Create a new job post
    */
   static async create(input: CreateJobPostInput): Promise<JobPostResponse> {
-    const validated = jobPostValidationSchema.parse({
+    const validated = insertJobPostSchema.parse({
       ...input,
       jobCode: await generateJobCode(),
-      status: 'active',
       createdAt: new Date(),
       updatedAt: new Date()
     });
 
+    const values = {
+      ...validated,
+      onHold: validated.jobStatus === 'ON_HOLD',
+    };
+
     const [jobPost] = await db.insert(jobPosts)
-      .values(validated)
+      .values(values)
       .returning();
 
     return this.mapToResponse(jobPost);
@@ -61,7 +65,8 @@ export class JobPostRepository {
     return db.query.jobPosts.findMany({
       where: and(
         eq(jobPosts.employerId, employerId),
-        eq(jobPosts.status, 'active')
+        eq(jobPosts.jobStatus, 'ACTIVE'),
+        eq(jobPosts.deleted, false)
       ),
       orderBy: desc(jobPosts.createdAt)
     });
@@ -71,13 +76,18 @@ export class JobPostRepository {
    * Update an existing job post
    */
   static async update(id: number, input: UpdateJobPostInput): Promise<JobPostResponse> {
-    const validated = jobPostValidationSchema.partial().parse({
+    const validated = insertJobPostSchema.partial().parse({
       ...input,
       updatedAt: new Date()
     });
 
+    const flags = validated.jobStatus
+      ? {
+          onHold: validated.jobStatus === 'ON_HOLD',
+        }
+      : {};
     const [updated] = await db.update(jobPosts)
-      .set(validated)
+      .set({ ...validated, ...flags })
       .where(eq(jobPosts.id, id))
       .returning();
 
@@ -99,18 +109,17 @@ export class JobPostRepository {
    * Search job posts with filters and pagination
    */
   static async search(params: JobPostSearchParams) {
-    const {
-      query,
-      location,
-      experienceLevel,
-      employerId,
-      status,
-      sortBy = 'latest',
-      page = 1,
-      limit = 20
-    } = params;
+      const {
+        query,
+        location,
+        experienceLevel,
+        employerId,
+        sortBy = 'latest',
+        page = 1,
+        limit = 20
+      } = params;
 
-    let whereClause = sql`true`;
+    let whereClause = sql`deleted = false`;
 
     if (query) {
       whereClause = sql`${whereClause} AND (
@@ -130,9 +139,7 @@ export class JobPostRepository {
       whereClause = sql`${whereClause} AND employer_id = ${employerId}`;
     }
 
-    if (status) {
-      whereClause = sql`${whereClause} AND status = ${status}`;
-    }
+
 
     const offset = (page - 1) * limit;
 
@@ -186,7 +193,8 @@ export class JobPostRepository {
       },
       title: jobPost.title,
       location: jobPost.location,
-      status: jobPost.status,
+      jobStatus: jobPost.jobStatus,
+      deleted: jobPost.deleted,
       createdAt: jobPost.createdAt
     };
   }

@@ -23,6 +23,7 @@ import { qualifications, experienceLevels } from "@shared/constants";
 
 import { debugLog } from "@/lib/logger";
 import { useToast } from "@/hooks/use-toast";
+import { getJobStatus, canPerformAction } from "@shared/utils/jobStatus";
 import { z } from "zod";
 
 const editJobSchema = insertJobPostSchema.extend({
@@ -155,7 +156,7 @@ export const EmployerJobEdit: React.FC = () => {
   }
 
   // Check if job is fulfilled and prevent editing
-  if (job.fulfilled) {
+  if (!canPerformAction('employer', job.jobStatus as any, 'edit', job.deleted)) {
     return (
       <div className="max-w-4xl mx-auto">
         <Card>

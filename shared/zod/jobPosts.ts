@@ -8,6 +8,8 @@ export const insertJobPostSchema = createInsertSchema(jobPosts).omit({
   deleted: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  jobStatus: z.enum(['PENDING', 'ON_HOLD', 'ACTIVE', 'FULFILLED', 'DORMANT']),
 });
 
 export const jobPostValidationSchema = z.object({
@@ -35,8 +37,6 @@ export const jobPostValidationSchema = z.object({
   employerId: z.number()
     .int()
     .positive('Invalid employer ID'),
-  status: z.enum(['draft', 'active', 'inactive', 'fulfilled'])
-    .default('draft'),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional()
 });
@@ -46,7 +46,6 @@ export const jobPostSearchSchema = z.object({
   location: z.string().optional(),
   experienceLevel: z.string().optional(),
   employerId: z.number().optional(),
-  status: z.enum(['draft', 'active', 'inactive', 'fulfilled']).optional(),
   sortBy: z.enum(['latest', 'salary', 'relevance']).optional(),
   page: z.number().int().positive().optional(),
   limit: z.number().int().positive().max(100).optional()

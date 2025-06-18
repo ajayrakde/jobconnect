@@ -63,19 +63,21 @@ export interface IStorage {
   softDeleteEmployer(id: number): Promise<Employer>;
 
   // Job post operations
-  getJobPost(id: number): Promise<JobPost | undefined>;
-  createJobPost(jobPost: InsertJobPost): Promise<JobPost>;
-  updateJobPost(id: number, updates: Partial<JobPost>): Promise<JobPost>;
-  getJobPostsByEmployer(employerId: number): Promise<JobPost[]>;
-  getAllJobPosts(): Promise<JobPost[]>;
-  getInactiveJobPosts(): Promise<JobPost[]>;
-  softDeleteJobPost(id: number): Promise<JobPost>;
+
+  getJobPost(id: number): Promise<(JobPost & { status: string }) | undefined>;
+  getJobPostIncludingDeleted(id: number): Promise<(JobPost & { status: string }) | undefined>;
+  createJobPost(jobPost: InsertJobPost): Promise<JobPost & { status: string }>;
+  updateJobPost(id: number, updates: Partial<JobPost>): Promise<JobPost & { status: string }>;
+  getJobPostsByEmployer(employerId: number): Promise<(JobPost & { status: string })[]>;
+  getAllJobPosts(): Promise<(JobPost & { status: string })[]>;
+  getInactiveJobPosts(): Promise<(JobPost & { status: string })[]>;
+  softDeleteJobPost(id: number): Promise<JobPost & { status: string }>;
   getEmployerStats(employerId: number): Promise<any>;
-  markJobAsFulfilled(jobId: number): Promise<JobPost>;
-  activateJob(jobId: number): Promise<JobPost>;
-  deactivateJob(jobId: number): Promise<JobPost>;
-  approveJob(jobId: number): Promise<JobPost>;
-  holdJob(jobId: number): Promise<JobPost>;
+  markJobAsFulfilled(jobId: number): Promise<JobPost & { status: string }>;
+  activateJob(jobId: number): Promise<JobPost & { status: string }>;
+  deactivateJob(jobId: number): Promise<JobPost & { status: string }>;
+  approveJob(jobId: number): Promise<JobPost & { status: string }>;
+  holdJob(jobId: number): Promise<JobPost & { status: string }>;
   getFulfilledJobsByEmployer(employerId: number): Promise<JobPost[]>;
   getActiveUnfulfilledJobsByEmployer(employerId: number): Promise<JobPost[]>;
 
@@ -224,55 +226,64 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Job post operations
-  async getJobPost(id: number): Promise<JobPost | undefined> {
+  async getJobPost(id: number): Promise<(JobPost & { status: string }) | undefined> {
     return JobRepository.getJobPost(id);
   }
 
-  async createJobPost(insertJobPost: InsertJobPost): Promise<JobPost> {
+  async getJobPostIncludingDeleted(id: number): Promise<(JobPost & { status: string }) | undefined> {
+    return JobRepository.getJobPostIncludingDeleted(id);
+  }
+
+  async createJobPost(insertJobPost: InsertJobPost): Promise<JobPost & { status: string }> {
     return JobRepository.createJobPost(insertJobPost);
   }
 
-  async updateJobPost(id: number, updates: Partial<JobPost>): Promise<JobPost> {
+  async updateJobPost(id: number, updates: Partial<JobPost>): Promise<JobPost & { status: string }> {
     return JobRepository.updateJobPost(id, updates);
   }
 
-  async getJobPostsByEmployer(employerId: number): Promise<JobPost[]> {
+  async getJobPostsByEmployer(employerId: number): Promise<(JobPost & { status: string })[]> {
     return JobRepository.getJobPostsByEmployer(employerId);
   }
 
-  async getAllJobPosts(): Promise<JobPost[]> {
-    return JobRepository.getAllJobPosts();
+  async getAllJobPosts(): Promise<(JobPost & { status: string })[]> {
+    const jobs = await JobRepository.getAllJobPosts();
+    return jobs.filter(job => !job.deleted);
   }
 
-  async getInactiveJobPosts(): Promise<JobPost[]> {
+  async getInactiveJobPosts(): Promise<(JobPost & { status: string })[]> {
     return JobRepository.getInactiveJobs();
+  }
+
+  async getPublicJobPosts(): Promise<JobPost[]> {
+    return JobRepository.getPublicJobs();
   }
 
   async getEmployerStats(employerId: number): Promise<any> {
     return EmployerRepository.getEmployerStats(employerId);
   }
 
-  async markJobAsFulfilled(jobId: number): Promise<JobPost> {
+  async markJobAsFulfilled(jobId: number): Promise<JobPost & { status: string }> {
     return JobRepository.markJobAsFulfilled(jobId);
   }
 
-  async activateJob(jobId: number): Promise<JobPost> {
+  async activateJob(jobId: number): Promise<JobPost & { status: string }> {
     return JobRepository.activateJob(jobId);
   }
 
-  async deactivateJob(jobId: number): Promise<JobPost> {
+  async deactivateJob(jobId: number): Promise<JobPost & { status: string }> {
     return JobRepository.deactivateJob(jobId);
   }
 
-  async approveJob(jobId: number): Promise<JobPost> {
+  async approveJob(jobId: number): Promise<JobPost & { status: string }> {
     return JobRepository.approveJob(jobId);
   }
 
-  async holdJob(jobId: number): Promise<JobPost> {
+  async holdJob(jobId: number): Promise<JobPost & { status: string }> {
     return JobRepository.holdJob(jobId);
   }
 
-  async softDeleteJobPost(jobId: number): Promise<JobPost> {
+  async softDeleteJobPost(jobId: number): Promise<JobPost & { status: string }> {
     return JobRepository.softDeleteJobPost(jobId);
   }
 
@@ -293,6 +304,11 @@ export class DatabaseStorage implements IStorage {
       .where(eq(candidates.id, insertApplication.candidateId));
     if (!candidate || candidate.deleted || candidate.profileStatus !== 'verified') {
       throw new Error("Candidate not eligible to apply");
+    }
+
+    const job = await JobRepository.getJobPost(insertApplication.jobPostId);
+    if (!job || job.jobStatus !== 'ACTIVE') {
+      throw new Error('Job is not accepting applications');
     }
 
     const [application] = await db
@@ -378,7 +394,10 @@ export class DatabaseStorage implements IStorage {
   // Admin operations
   async getAdminStats(): Promise<any> {
     const allCandidates = await db.select().from(candidates);
-    const activeJobs = await db.select().from(jobPosts).where(eq(jobPosts.isActive, true));
+    const activeJobs = await db
+      .select()
+      .from(jobPosts)
+      .where(and(eq(jobPosts.jobStatus, 'ACTIVE'), eq(jobPosts.deleted, false)));
     const allShortlists = await db.select().from(shortlists);
     const matchRate = allCandidates.length > 0 ? Math.floor((allShortlists.length / allCandidates.length) * 100) : 0;
     

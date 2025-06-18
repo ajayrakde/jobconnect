@@ -4,7 +4,7 @@ import { jobPostValidationSchema, jobPostSearchSchema } from '../zod';
 export type JobPostValidation = z.infer<typeof jobPostValidationSchema>;
 export type CreateJobPostInput = Omit<
   JobPostValidation,
-  'id' | 'jobCode' | 'status' | 'createdAt' | 'updatedAt'
+  'id' | 'jobCode' | 'createdAt' | 'updatedAt'
 >;
 export type UpdateJobPostInput = Partial<CreateJobPostInput>;
 export type JobPostSearchParams = z.infer<typeof jobPostSearchSchema>;
@@ -19,7 +19,8 @@ export interface JobPostResponse {
   };
   title: string;
   location: string;
-  status: string;
+  jobStatus: string;
+  deleted: boolean;
   createdAt: Date;
 }
 

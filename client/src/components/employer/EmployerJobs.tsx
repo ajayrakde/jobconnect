@@ -38,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { formatDistanceToNow } from "date-fns";
+import { getJobStatus, canPerformAction } from "@shared/utils/jobStatus";
 
 interface Job {
   id: number;
@@ -51,11 +52,10 @@ interface Job {
   location: string;
   salaryRange: string;
   jobCode: string;
-  isActive: boolean;
   applicationsCount: number;
   createdAt: string;
   updatedAt: string;
-  status?: 'active' | 'dormant' | 'fulfilled';
+  status?: 'active' | 'pending' | 'onHold' | 'dormant' | 'fulfilled' | 'deleted';
   daysSinceCreated?: number;
 }
 
@@ -179,21 +179,15 @@ export const EmployerJobs: React.FC = () => {
     setLocation(`/jobs/create?clone=${encodeURIComponent(JSON.stringify(cloneData))}&from=jobs`);
   };
 
-  const getJobStatus = (job: Job) => {
-    const daysSinceCreated = Math.floor(
-      (new Date().getTime() - new Date(job.createdAt).getTime()) /
-        (1000 * 60 * 60 * 24)
-    );
-
-    if (job.fulfilled) return 'fulfilled';
-    if (!job.isActive || daysSinceCreated > 90) return 'dormant';
-    return 'active';
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
         return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400';
+      case 'pending':
+        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400';
+      case 'onHold':
+        return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400';
       case 'dormant':
         return 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400';
       case 'fulfilled':
@@ -207,6 +201,10 @@ export const EmployerJobs: React.FC = () => {
     switch (status) {
       case 'active':
         return <CheckCircle className="h-4 w-4" />;
+      case 'pending':
+        return <Clock className="h-4 w-4" />;
+      case 'onHold':
+        return <AlertTriangle className="h-4 w-4" />;
       case 'dormant':
         return <Clock className="h-4 w-4" />;
       case 'fulfilled':
@@ -263,7 +261,7 @@ export const EmployerJobs: React.FC = () => {
             let baseClasses = "border-border transition-colors";
             if (status === 'fulfilled') {
               baseClasses += " bg-green-50 dark:bg-green-950/20 hover:bg-green-100 dark:hover:bg-green-950/30";
-            } else if (status === 'dormant') {
+            } else if (status === 'dormant' || status === 'onHold' || status === 'pending') {
               baseClasses += " bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30";
             } else {
               baseClasses += " bg-card hover:bg-accent/50 dark:hover:bg-accent/20";
@@ -297,7 +295,7 @@ export const EmployerJobs: React.FC = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {status !== 'fulfilled' && (
+                        {canPerformAction('employer', job.jobStatus as any, 'edit', job.deleted) && (
                           <DropdownMenuItem asChild>
                             <Link href={`/jobs/${job.id}/edit`}>
                               <Edit className="h-4 w-4 mr-2" />
@@ -309,8 +307,8 @@ export const EmployerJobs: React.FC = () => {
                           <Copy className="h-4 w-4 mr-2" />
                           Clone Job
                         </DropdownMenuItem>
-                        {status !== 'fulfilled' && <DropdownMenuSeparator />}
-                        {status === 'active' && (
+                        {canPerformAction('employer', job.jobStatus as any, 'fulfill', job.deleted) && <DropdownMenuSeparator />}
+                        {canPerformAction('employer', job.jobStatus as any, 'fulfill', job.deleted) && (
                           <DropdownMenuItem
                             onClick={() => {
                               try {
@@ -325,7 +323,7 @@ export const EmployerJobs: React.FC = () => {
                             {markAsFulfilledMutation.isPending ? 'Marking...' : 'Mark as Fulfilled'}
                           </DropdownMenuItem>
                         )}
-                        {status === 'dormant' && (
+                        {canPerformAction('employer', job.jobStatus as any, 'activate', job.deleted) && (
                           <DropdownMenuItem onClick={() => activateJobMutation.mutate(job.id)}>
                             <RotateCcw className="h-4 w-4 mr-2" />
                             Activate Job
@@ -342,7 +340,7 @@ export const EmployerJobs: React.FC = () => {
                   {getStatusIcon(status)}
                   <span className="ml-1 capitalize">{status}</span>
                 </Badge>
-                {status === 'dormant' && (
+                {['dormant', 'pending', 'onHold'].includes(status) && (
                   <Badge variant="outline" className="border-orange-500 text-orange-500">
                     {daysSinceCreated}+ days old
                   </Badge>
@@ -429,6 +427,8 @@ export const EmployerJobs: React.FC = () => {
                 <SelectContent>
                   <SelectItem value="all">All Jobs</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="onHold">On Hold</SelectItem>
                   <SelectItem value="dormant">Dormant</SelectItem>
                   <SelectItem value="fulfilled">Fulfilled</SelectItem>
                 </SelectContent>
@@ -498,6 +498,8 @@ export const EmployerJobs: React.FC = () => {
               </span>
               <div className="flex gap-4">
                 <span>Active: {jobs.filter((j: Job) => getJobStatus(j) === 'active').length || 0}</span>
+                <span>Pending: {jobs.filter((j: Job) => getJobStatus(j) === 'pending').length || 0}</span>
+                <span>On Hold: {jobs.filter((j: Job) => getJobStatus(j) === 'onHold').length || 0}</span>
                 <span>Dormant: {jobs.filter((j: Job) => getJobStatus(j) === 'dormant').length || 0}</span>
                 <span>Fulfilled: {jobs.filter((j: Job) => getJobStatus(j) === 'fulfilled').length || 0}</span>
               </div>

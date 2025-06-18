@@ -31,6 +31,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { apiRequest, throwIfResNotOk } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getJobStatus } from "@shared/utils/jobStatus";
 
 export const EmployerDashboard: React.FC = () => {
   const { userProfile } = useAuth();
@@ -196,18 +197,15 @@ export const EmployerDashboard: React.FC = () => {
     }
   ];
 
-  const getJobStatus = (job: any) => {
-    const daysSinceCreated = Math.floor((new Date().getTime() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (job.fulfilled) return 'fulfilled';
-    if (!job.isActive || daysSinceCreated > 90) return 'dormant';
-    return 'active';
-  };
 
   const getJobStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'active':
         return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400';
+      case 'pending':
+        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400';
+      case 'onhold':
+        return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400';
       case 'dormant':
         return 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400';
       case 'fulfilled':
@@ -221,6 +219,10 @@ export const EmployerDashboard: React.FC = () => {
     switch (status) {
       case 'active':
         return <CheckCircle className="h-4 w-4" />;
+      case 'pending':
+        return <Clock className="h-4 w-4" />;
+      case 'onHold':
+        return <AlertCircle className="h-4 w-4" />;
       case 'dormant':
         return <Clock className="h-4 w-4" />;
       case 'fulfilled':
@@ -232,16 +234,22 @@ export const EmployerDashboard: React.FC = () => {
 
   const getActiveJobs = () => {
     if (!allJobs) return [];
-    return allJobs.filter((job: any) => job.isActive === true && !job.fulfilled).sort((a: any, b: any) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    return allJobs
+      .filter((job: any) => getJobStatus(job) === 'active')
+      .sort(
+        (a: any, b: any) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
   };
 
   const getRecentJobs = () => {
     if (!recentJobs) return [];
-    return recentJobs.filter((job: any) => !job.fulfilled).sort((a: any, b: any) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    return recentJobs
+      .filter((job: any) => getJobStatus(job) !== 'fulfilled')
+      .sort(
+        (a: any, b: any) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
   };
 
   const getCardContent = () => {
@@ -425,7 +433,7 @@ export const EmployerDashboard: React.FC = () => {
                                 {markAsFulfilledMutation.isPending ? "Marking..." : "Mark as Fulfilled"}
                               </DropdownMenuItem>
                             )}
-                            {!job.isActive && (
+                            {status !== 'active' && (
                               <DropdownMenuItem>
                                 <RotateCcw className="h-4 w-4 mr-2" />
                                 Activate Job
