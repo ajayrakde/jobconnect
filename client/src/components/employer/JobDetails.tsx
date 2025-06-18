@@ -3,7 +3,7 @@ import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getJobStatus } from "@shared/utils/jobStatus";
+import { getJobStatus, canPerformAction } from "@shared/utils/jobStatus";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -282,11 +282,13 @@ export const JobDetails: React.FC = () => {
                   </Link>
                 </DropdownMenuItem>
               ) : null}
-              <DropdownMenuItem onClick={handleCloneJob}>
-                <Copy className="h-4 w-4 mr-2" />
-                Clone Job
-              </DropdownMenuItem>
-              {status === 'active' ? (
+              {canPerformAction('employer', job.jobStatus as any, 'clone', job.deleted) && (
+                <DropdownMenuItem onClick={handleCloneJob}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Clone Job
+                </DropdownMenuItem>
+              )}
+              {canPerformAction('employer', job.jobStatus as any, 'fulfill', job.deleted) ? (
                 <DropdownMenuItem
                   onClick={handleFulfillJob}
                   disabled={fulfillJobMutation.isPending}
@@ -295,7 +297,7 @@ export const JobDetails: React.FC = () => {
                   {fulfillJobMutation.isPending ? "Marking as Fulfilled..." : "Mark as Fulfilled"}
                 </DropdownMenuItem>
               ) : null}
-              {status && status !== 'active' && status !== 'fulfilled' ? (
+              {canPerformAction('employer', job.jobStatus as any, 'activate', job.deleted) ? (
                 <DropdownMenuItem
                   onClick={handleActivateJob}
                   disabled={activateJobMutation.isPending}

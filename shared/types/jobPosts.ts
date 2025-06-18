@@ -19,6 +19,8 @@ export interface JobPostResponse {
   };
   title: string;
   location: string;
+  jobStatus: string;
+  deleted: boolean;
   createdAt: Date;
 }
 

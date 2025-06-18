@@ -88,9 +88,10 @@ export class AdminRepository {
       const [jobStats] = await tx
         .select({
           totalJobs: sql<number>`count(*)`,
-          activeJobs: sql<number>`sum(case when is_active = true then 1 else 0 end)`
+          activeJobs: sql<number>`sum(case when job_status = 'ACTIVE' then 1 else 0 end)`
         })
-        .from(jobPosts);
+        .from(jobPosts)
+        .where(eq(jobPosts.deleted, false));
 
       return {
         users: userStats,
@@ -134,7 +135,12 @@ export class AdminRepository {
       const results = await db
         .select()
         .from(jobPosts)
-        .where(sql`to_tsvector('english', title || ' ' || description) @@ plainto_tsquery('english', ${query})`);
+        .where(
+          and(
+            sql`to_tsvector('english', title || ' ' || description) @@ plainto_tsquery('english', ${query})`,
+            eq(jobPosts.deleted, false),
+          ),
+        );
 
       return results.map((r: any) => ({ ...r, type: 'job' }));
     }
