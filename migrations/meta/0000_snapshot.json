@@ -488,20 +488,7 @@
           "notNull": false,
           "default": 1
         },
-        "is_active": {
-          "name": "is_active",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": true
-        },
-        "fulfilled": {
-          "name": "fulfilled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
+        
         "deleted": {
           "name": "deleted",
           "type": "boolean",

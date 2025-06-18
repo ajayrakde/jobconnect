@@ -8,12 +8,11 @@ export function scheduleDeactivateOldPostsJob() {
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
     await db
       .update(jobPosts)
-      .set({ isActive: false, updatedAt: new Date() })
+      .set({ jobStatus: 'DORMANT', updatedAt: new Date() })
       .where(
         and(
           lt(jobPosts.createdAt, ninetyDaysAgo),
-          eq(jobPosts.fulfilled, false),
-          eq(jobPosts.isActive, true),
+          eq(jobPosts.jobStatus, 'ACTIVE'),
           eq(jobPosts.deleted, false)
         )
       );

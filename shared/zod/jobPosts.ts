@@ -8,6 +8,8 @@ export const insertJobPostSchema = createInsertSchema(jobPosts).omit({
   deleted: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  jobStatus: z.enum(['PENDING', 'ON_HOLD', 'ACTIVE', 'FULFILLED', 'DORMANT']),
 });
 
 export const jobPostValidationSchema = z.object({

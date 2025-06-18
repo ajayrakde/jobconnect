@@ -29,7 +29,7 @@ export class JobRepository {
       .insert(jobPosts)
       .values({
         ...insertJobPost,
-        isActive: false,
+        onHold: insertJobPost.jobStatus === 'ON_HOLD',
         applicationsCount: 0,
       })
       .returning();
@@ -37,9 +37,14 @@ export class JobRepository {
   }
 
   static async updateJobPost(id: number, updates: Partial<JobPost>): Promise<JobPost & { status: string }> {
+    const flags = updates.jobStatus
+      ? {
+          onHold: updates.jobStatus === 'ON_HOLD',
+        }
+      : {};
     const [jobPost] = await db
       .update(jobPosts)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({ ...updates, ...flags, updatedAt: new Date() })
       .where(eq(jobPosts.id, id))
       .returning();
     if (!jobPost) throw new Error('Job post not found');
@@ -66,7 +71,7 @@ export class JobRepository {
       const jobs = await db
         .select()
         .from(jobPosts)
-        .where(and(eq(jobPosts.isActive, false), eq(jobPosts.deleted, false)));
+        .where(and(eq(jobPosts.jobStatus, 'PENDING'), eq(jobPosts.deleted, false)));
       return jobs.map((j: JobPost) => ({ ...j, status: getJobStatus(j) }));
   }
 
@@ -76,8 +81,7 @@ export class JobRepository {
       .from(jobPosts)
       .where(
         and(
-          eq(jobPosts.isActive, true),
-          eq(jobPosts.fulfilled, false),
+          eq(jobPosts.jobStatus, 'ACTIVE'),
           eq(jobPosts.deleted, false),
         ),
       );
@@ -86,7 +90,7 @@ export class JobRepository {
   static async markJobAsFulfilled(jobId: number): Promise<JobPost & { status: string }> {
     const [updatedJob] = await db
       .update(jobPosts)
-      .set({ fulfilled: true, updatedAt: new Date() })
+      .set({ jobStatus: 'FULFILLED', updatedAt: new Date() })
       .where(eq(jobPosts.id, jobId))
       .returning();
     return { ...updatedJob, status: getJobStatus(updatedJob) };
@@ -99,7 +103,7 @@ export class JobRepository {
   static async holdJob(jobId: number): Promise<JobPost & { status: string }> {
     const [updatedJob] = await db
       .update(jobPosts)
-      .set({ isActive: false, onHold: true, updatedAt: new Date() })
+      .set({ jobStatus: 'ON_HOLD', onHold: true, updatedAt: new Date() })
       .where(eq(jobPosts.id, jobId))
       .returning();
     return { ...updatedJob, status: getJobStatus(updatedJob) };
@@ -108,7 +112,7 @@ export class JobRepository {
   static async activateJob(jobId: number): Promise<JobPost & { status: string }> {
     const [updatedJob] = await db
       .update(jobPosts)
-      .set({ isActive: true, onHold: false, updatedAt: new Date() })
+      .set({ jobStatus: 'ACTIVE', onHold: false, updatedAt: new Date() })
       .where(eq(jobPosts.id, jobId))
       .returning();
     return { ...updatedJob, status: getJobStatus(updatedJob) };
@@ -117,7 +121,7 @@ export class JobRepository {
   static async deactivateJob(jobId: number): Promise<JobPost & { status: string }> {
     const [updatedJob] = await db
       .update(jobPosts)
-      .set({ isActive: false, onHold: false, updatedAt: new Date() })
+      .set({ jobStatus: 'PENDING', onHold: false, updatedAt: new Date() })
       .where(eq(jobPosts.id, jobId))
       .returning();
     return { ...updatedJob, status: getJobStatus(updatedJob) };

@@ -7,9 +7,9 @@ var callIndex = 0;
 vi.mock('../../db', () => {
 
   const data = [
-    { id: 1, employerId: 1, isActive: false, deleted: false },
-    { id: 2, employerId: 1, isActive: false, deleted: true },
-    { id: 3, employerId: 2, isActive: false, deleted: false },
+    { id: 1, employerId: 1, jobStatus: 'PENDING', deleted: false },
+    { id: 2, employerId: 1, jobStatus: 'PENDING', deleted: true },
+    { id: 3, employerId: 2, jobStatus: 'PENDING', deleted: false },
   ];
   whereMock = vi.fn(() => {
     const current = callIndex++;
@@ -18,7 +18,7 @@ vi.mock('../../db', () => {
     if (current === 0) {
       result = data.filter((j) => j.employerId === 1 && !j.deleted);
     } else if (current === 1) {
-      result = data.filter((j) => !j.isActive && !j.deleted);
+      result = data.filter((j) => j.jobStatus === 'PENDING' && !j.deleted);
     } else {
       result = data.filter((j) => !j.deleted);
     }

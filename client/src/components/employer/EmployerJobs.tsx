@@ -38,7 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { formatDistanceToNow } from "date-fns";
-import { getJobStatus } from "@shared/utils/jobStatus";
+import { getJobStatus, canPerformAction } from "@shared/utils/jobStatus";
 
 interface Job {
   id: number;
@@ -52,7 +52,6 @@ interface Job {
   location: string;
   salaryRange: string;
   jobCode: string;
-  isActive: boolean;
   applicationsCount: number;
   createdAt: string;
   updatedAt: string;
@@ -296,7 +295,7 @@ export const EmployerJobs: React.FC = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {status !== 'fulfilled' && (
+                        {canPerformAction('employer', job.jobStatus as any, 'edit', job.deleted) && (
                           <DropdownMenuItem asChild>
                             <Link href={`/jobs/${job.id}/edit`}>
                               <Edit className="h-4 w-4 mr-2" />
@@ -308,8 +307,8 @@ export const EmployerJobs: React.FC = () => {
                           <Copy className="h-4 w-4 mr-2" />
                           Clone Job
                         </DropdownMenuItem>
-                        {status !== 'fulfilled' && <DropdownMenuSeparator />}
-                        {status === 'active' && (
+                        {canPerformAction('employer', job.jobStatus as any, 'fulfill', job.deleted) && <DropdownMenuSeparator />}
+                        {canPerformAction('employer', job.jobStatus as any, 'fulfill', job.deleted) && (
                           <DropdownMenuItem
                             onClick={() => {
                               try {
@@ -324,7 +323,7 @@ export const EmployerJobs: React.FC = () => {
                             {markAsFulfilledMutation.isPending ? 'Marking...' : 'Mark as Fulfilled'}
                           </DropdownMenuItem>
                         )}
-                        {['dormant', 'pending', 'onHold'].includes(status) && (
+                        {canPerformAction('employer', job.jobStatus as any, 'activate', job.deleted) && (
                           <DropdownMenuItem onClick={() => activateJobMutation.mutate(job.id)}>
                             <RotateCcw className="h-4 w-4 mr-2" />
                             Activate Job
