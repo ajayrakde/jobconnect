@@ -44,10 +44,11 @@ export const profileStatus = [
 ];
 
 export const jobStatus = [
+  "pending",
+  "onHold",
   "active",
-  "inactive",
-  "flagged",
-  "onHold"
+  "fulfilled",
+  "dormant"
 ];
 
 export const applicationStatus = [
