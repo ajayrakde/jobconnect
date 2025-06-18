@@ -72,6 +72,9 @@ jobsRouter.patch(
     if (!job || (job as any).employerId !== employer.id) {
       return res.status(404).json({ message: 'Job not found' });
     }
+    if (!canPerformAction('employer', job.jobStatus as any, 'activate', job.deleted)) {
+      return res.status(400).json({ message: 'Invalid status transition' });
+    }
     if (!isValidTransition(job.jobStatus as any, 'ACTIVE', job.deleted)) {
       return res.status(400).json({ message: 'Invalid status transition' });
     }

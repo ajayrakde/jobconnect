@@ -394,7 +394,10 @@ export class DatabaseStorage implements IStorage {
   // Admin operations
   async getAdminStats(): Promise<any> {
     const allCandidates = await db.select().from(candidates);
-    const activeJobs = await db.select().from(jobPosts).where(eq(jobPosts.jobStatus, 'ACTIVE'));
+    const activeJobs = await db
+      .select()
+      .from(jobPosts)
+      .where(and(eq(jobPosts.jobStatus, 'ACTIVE'), eq(jobPosts.deleted, false)));
     const allShortlists = await db.select().from(shortlists);
     const matchRate = allCandidates.length > 0 ? Math.floor((allShortlists.length / allCandidates.length) * 100) : 0;
     

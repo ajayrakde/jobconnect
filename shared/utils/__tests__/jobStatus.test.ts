@@ -21,4 +21,14 @@ describe('canPerformAction role rules', () => {
   it('candidate cannot apply to dormant job', () => {
     expect(canPerformAction('candidate', 'DORMANT', 'apply')).toBe(false);
   });
+
+  it('admin can activate dormant job', () => {
+    expect(canPerformAction('admin', 'DORMANT', 'activate')).toBe(true);
+  });
+
+  it('employer cannot activate pending or on hold job', () => {
+    expect(canPerformAction('employer', 'PENDING', 'activate')).toBe(false);
+    expect(canPerformAction('employer', 'ON_HOLD', 'activate')).toBe(false);
+    expect(canPerformAction('employer', 'DORMANT', 'activate')).toBe(true);
+  });
 });
