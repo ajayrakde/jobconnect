@@ -110,14 +110,24 @@ export const Navbar: React.FC = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                {userProfile?.role !== "admin" && (
-                  <Link href={userProfile?.role === "employer" ? "/employer/profile" : "/profile"}>
-                    <DropdownMenuItem>
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </DropdownMenuItem>
-                  </Link>
-                )}
+                {userProfile?.role === "candidate" &&
+                  userProfile.candidate?.profileStatus === "verified" && (
+                    <Link href="/candidate/profile">
+                      <DropdownMenuItem>
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                      </DropdownMenuItem>
+                    </Link>
+                  )}
+                {userProfile?.role === "employer" &&
+                  userProfile.employer?.profileStatus === "verified" && (
+                    <Link href="/employer/profile">
+                      <DropdownMenuItem>
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                      </DropdownMenuItem>
+                    </Link>
+                  )}
                 {userProfile?.role !== "admin" && <DropdownMenuSeparator />}
                 <DropdownMenuItem onClick={signOut}>
                   <LogOut className="mr-2 h-4 w-4" />
