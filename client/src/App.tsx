@@ -30,8 +30,14 @@ import { AdminTools } from "./components/admin/AdminTools";
 import { AdminEmployerDetails } from "./components/admin/AdminEmployerDetails";
 import NotFound from "./pages/not-found";
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+function ProtectedRoute({
+  children,
+  roles,
+}: {
+  children: React.ReactNode;
+  roles?: string[];
+}) {
+  const { user, userProfile, loading } = useAuth();
 
   if (loading) {
     return (
@@ -43,6 +49,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return <Landing />;
+  }
+
+  if (roles && userProfile && !roles.includes(userProfile.role)) {
+    return <NotFound />;
   }
 
   return <>{children}</>;
@@ -99,7 +109,7 @@ function Router() {
           {user && userProfile?.role === "admin" ? <AdminDashboard /> : <Admin />}
         </Route>
         <Route path="/admin/dashboard">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["admin"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <AdminDashboard />
@@ -108,7 +118,7 @@ function Router() {
           </ProtectedRoute>
         </Route>
         <Route path="/admin/search">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["admin"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <AdminSearchPanel />
@@ -117,7 +127,7 @@ function Router() {
           </ProtectedRoute>
         </Route>
         <Route path="/admin/verifications">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["admin"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <AdminVerifications />
@@ -126,7 +136,7 @@ function Router() {
           </ProtectedRoute>
         </Route>
         <Route path="/admin/tools">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["admin"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <AdminTools />
@@ -135,7 +145,7 @@ function Router() {
           </ProtectedRoute>
         </Route>
         <Route path="/admin/jobs/:id/edit">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["admin"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <AdminJobEdit />
@@ -144,7 +154,7 @@ function Router() {
           </ProtectedRoute>
         </Route>
         <Route path="/admin/jobs/:id">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["admin"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <AdminJobDetails />
@@ -153,7 +163,7 @@ function Router() {
           </ProtectedRoute>
         </Route>
         <Route path="/admin/candidates/:id">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["admin"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <AdminCandidateDetails />
@@ -162,7 +172,7 @@ function Router() {
           </ProtectedRoute>
         </Route>
         <Route path="/admin/employers/:id">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["admin"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <AdminEmployerDetails />
@@ -173,17 +183,17 @@ function Router() {
 
         {/* Candidate Routes */}
         <Route path="/candidate">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["candidate"]}>
             <Dashboard />
           </ProtectedRoute>
         </Route>
         <Route path="/candidate/jobs">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["candidate"]}>
             <Dashboard />
           </ProtectedRoute>
         </Route>
         <Route path="/applications">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["candidate"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <CandidateApplications />
@@ -192,12 +202,12 @@ function Router() {
           </ProtectedRoute>
         </Route>
         <Route path="/profile">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["candidate","employer","admin"]}>
             <Dashboard />
           </ProtectedRoute>
         </Route>
         <Route path="/candidate/profile/edit">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["candidate"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <CandidateProfileEdit />
@@ -206,14 +216,14 @@ function Router() {
           </ProtectedRoute>
         </Route>
         <Route path="/dashboard">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["candidate","employer","admin"]}>
             <Dashboard />
           </ProtectedRoute>
         </Route>
 
         {/* Employer Routes */}
         <Route path="/employer/">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["employer"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <EmployerDashboard />
@@ -222,7 +232,7 @@ function Router() {
           </ProtectedRoute>
         </Route>
         <Route path="/employer/dashboard">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["employer"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <EmployerDashboard />
@@ -233,12 +243,12 @@ function Router() {
 
         {/* Additional Employer Routes */}
         <Route path="/employer/register">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["employer"]}>
             <EmployerRegistration />
           </ProtectedRoute>
         </Route>
         <Route path="/jobs">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["employer"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <EmployerJobs />
@@ -248,7 +258,7 @@ function Router() {
         </Route>
 
         <Route path="/jobs/create">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["employer"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <EmployerJobCreate />
@@ -257,7 +267,7 @@ function Router() {
           </ProtectedRoute>
         </Route>
         <Route path="/jobs/:id/edit">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["employer"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <EmployerJobEdit />
@@ -266,7 +276,7 @@ function Router() {
           </ProtectedRoute>
         </Route>
         <Route path="/jobs/:id">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["employer","admin"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <JobDetails />
@@ -275,7 +285,7 @@ function Router() {
           </ProtectedRoute>
         </Route>
         <Route path="/candidates/:id">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["admin"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <AdminCandidateDetails />
@@ -284,7 +294,7 @@ function Router() {
           </ProtectedRoute>
         </Route>
         <Route path="/employer/profile">
-          <ProtectedRoute>
+          <ProtectedRoute roles={["employer"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <EmployerProfile />
