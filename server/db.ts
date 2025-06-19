@@ -1,24 +1,20 @@
+import dns from "node:dns";
+dns.setDefaultResultOrder("ipv4first");
+
 import { config } from 'dotenv';
 config();
 
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import pg from 'pg';
+const { Pool } = pg;
+
+import { drizzle } from 'drizzle-orm/node-postgres'; // ✅ Use Supabase-compatible Drizzle adapter
 import * as schema from "@shared/schema";
 
-neonConfig.webSocketConstructor = ws;
-// Configure Neon connection settings
-neonConfig.fetchConnectionCache = true;
-neonConfig.wsProxy = (url) => url;
-neonConfig.pipelineConnect = false;
-
 if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+  throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
 }
 
-// Configure pool with timeout settings
+// ✅ Configure the pg pool (works with Supabase)
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   connectionTimeoutMillis: 10000,
@@ -26,10 +22,11 @@ export const pool = new Pool({
   idleTimeoutMillis: 30000
 });
 
-// Add error handling for the pool
+// Optional: handle unexpected pool errors
 pool.on('error', (err) => {
   console.error('Unexpected error on idle database client', err);
   process.exit(-1);
 });
 
-export const db = drizzle({ client: pool, schema });
+// ✅ Supabase-compatible Drizzle DB instance
+export const db = drizzle(pool, { schema });
