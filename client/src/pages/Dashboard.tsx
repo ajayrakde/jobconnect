@@ -4,7 +4,6 @@ import { CandidateDashboard } from "@/components/candidate/CandidateDashboard";
 import { CandidateJobs } from "@/components/candidate/CandidateJobs";
 import { EmployerDashboard } from "@/components/employer/EmployerDashboard";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
-import { CandidateRegistration } from "@/components/candidate/CandidateRegistration";
 import { EmployerRegistration } from "@/components/employer/EmployerRegistration";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
@@ -39,23 +38,14 @@ export const Dashboard: React.FC = () => {
     );
   }
 
-  // Check if profile needs completion
-  const needsProfileCompletion = () => {
-    if (userProfile.role === "candidate") {
-      return userProfile.candidate?.profileStatus !== "verified";
-    }
-    if (userProfile.role === "employer") {
-      return userProfile.employer?.profileStatus !== "verified";
-    }
-    return false;
-  };
-
-  // Render registration forms if profile is incomplete
-  if (needsProfileCompletion()) {
+  // Show employer registration if incomplete
+  if (
+    userProfile.role === "employer" &&
+    userProfile.employer?.profileStatus !== "verified"
+  ) {
     return (
       <div className="min-h-screen bg-background">
-        {userProfile.role === "candidate" && <CandidateRegistration />}
-        {userProfile.role === "employer" && <EmployerRegistration />}
+        <EmployerRegistration />
       </div>
     );
   }

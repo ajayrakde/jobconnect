@@ -13,6 +13,8 @@ import { Dashboard } from "./pages/Dashboard";
 import { Admin } from "./pages/Admin";
 import { CandidateApplications } from "./components/candidate/CandidateApplications";
 import { CandidateProfileEdit } from "./components/candidate/CandidateProfileEdit";
+import { CandidateRegistration } from "./components/candidate/CandidateRegistration";
+import { CandidateProfile } from "./components/candidate/CandidateProfile";
 import { EmployerRegistration } from "./components/employer/EmployerRegistration";
 import { EmployerDashboard } from "./components/employer/EmployerDashboard";
 import { EmployerJobs } from "./components/employer/EmployerJobs";
@@ -66,6 +68,20 @@ function Router() {
     if (loading) return;
 
     if (user && userProfile) {
+      if (userProfile.role === "candidate") {
+        const verified = userProfile.candidate?.profileStatus === "verified";
+        if (!verified &&
+            location !== "/candidate/register" &&
+            location !== "/candidate/jobs") {
+          setLocation("/candidate/register");
+          return;
+        }
+        if (verified && ["/", "/dashboard"].includes(location)) {
+          setLocation("/candidate/jobs");
+          return;
+        }
+      }
+
       const publicRoutes = ["/", "/admin"];
 
       if (publicRoutes.includes(location)) {
@@ -190,6 +206,20 @@ function Router() {
         <Route path="/candidate/jobs">
           <ProtectedRoute roles={["candidate"]}>
             <Dashboard />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/candidate/register">
+          <ProtectedRoute roles={["candidate"]}>
+            <CandidateRegistration />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/candidate/profile">
+          <ProtectedRoute roles={["candidate"]}>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <CandidateProfile />
+              </div>
+            </div>
           </ProtectedRoute>
         </Route>
         <Route path="/applications">

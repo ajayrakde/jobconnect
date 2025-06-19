@@ -24,6 +24,7 @@ candidatesRouter.patch(
   '/:id',
   authenticateUser,
   requireRole('candidate'),
+  validateBody(insertCandidateSchema.partial()),
   asyncHandler(async (req: any, res) => {
     const user = req.dbUser;
     const candidate = await CandidateRepository.findByUserId(user.id);
@@ -39,12 +40,13 @@ candidatesRouter.post(
   '/',
   authenticateUser,
   requireRole('candidate'),
+  validateBody(insertCandidateSchema),
   asyncHandler(async (req: any, res) => {
     const user = req.dbUser;
-    const candidateData: InsertCandidate = insertCandidateSchema.parse({
+    const candidateData: InsertCandidate = {
       ...req.body,
       userId: user.id,
-    });
+    } as InsertCandidate;
     const candidate = await storage.createCandidate(candidateData);
     res.json(candidate);
   })

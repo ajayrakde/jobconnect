@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useLocation } from "wouter";
 
 import { genders, maritalStatuses, allowedFileTypes } from "@shared/constants";
 
@@ -60,6 +61,7 @@ export const CandidateRegistration: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const { user, refreshProfile } = useAuth();
+  const [, setLocation] = useLocation();
   const { uploadFile, uploading } = useFileUpload();
   const { toast } = useToast();
 
@@ -178,8 +180,9 @@ export const CandidateRegistration: React.FC = () => {
         description: "Profile created successfully!",
       });
       
-      // Refresh the user profile to trigger dashboard redirect
+      // Refresh profile and navigate to jobs page
       refreshProfile();
+      setLocation("/candidate/jobs");
     } catch (error) {
       toast({
         title: "Error",
