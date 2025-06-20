@@ -11,7 +11,7 @@ export const employers = pgTable('employers', {
   contactEmail: text('contact_email').notNull(),
   contactPhone: text('contact_phone').notNull(),
   documents: jsonb('documents'),
-  profileStatus: text('profile_status').default('pending').notNull(),
+  profileStatus: text('profile_status').default('incomplete').notNull(),
   deleted: boolean('deleted').default(false),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),

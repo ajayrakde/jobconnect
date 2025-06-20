@@ -15,6 +15,15 @@ import { Link, useLocation } from "wouter";
 
 export const Navbar: React.FC = () => {
   const { user, userProfile, signOut } = useAuth();
+  const profileStatus =
+    userProfile?.role === "candidate"
+      ? userProfile.candidate?.profileStatus ?? "incomplete"
+      : userProfile?.role === "employer"
+      ? userProfile.employer?.profileStatus ?? "incomplete"
+      : null;
+  const isIncomplete =
+    (userProfile?.role === "candidate" || userProfile?.role === "employer") &&
+    profileStatus === "incomplete";
   const { theme, setTheme } = useTheme();
   const [location] = useLocation();
 
@@ -25,7 +34,7 @@ export const Navbar: React.FC = () => {
   const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   const getNavItems = () => {
-    if (!userProfile) return [];
+    if (!userProfile || isIncomplete) return [];
     
     switch (userProfile.role) {
       case "candidate":
@@ -111,8 +120,7 @@ export const Navbar: React.FC = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                {userProfile?.role === "candidate" &&
-                  userProfile.candidate?.profileStatus === "verified" && (
+                {userProfile?.role === "candidate" && userProfile.candidate && (
                     <Link href="/candidate/profile">
                       <DropdownMenuItem>
                         <User className="mr-2 h-4 w-4" />
@@ -120,8 +128,7 @@ export const Navbar: React.FC = () => {
                       </DropdownMenuItem>
                     </Link>
                   )}
-                {userProfile?.role === "employer" &&
-                  userProfile.employer?.profileStatus === "verified" && (
+                {userProfile?.role === "employer" && userProfile.employer && (
                     <Link href="/employer/profile">
                       <DropdownMenuItem>
                         <User className="mr-2 h-4 w-4" />
