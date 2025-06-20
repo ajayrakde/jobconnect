@@ -10,7 +10,7 @@ export const CandidateProfile: React.FC = () => {
   const { userProfile } = useAuth();
   const { data, isLoading } = useQuery({
     queryKey: ["/api/candidates/profile"],
-    enabled: userProfile?.candidate?.profileStatus === "verified",
+    enabled: !!userProfile?.id,
   });
   const [section, setSection] = useState("personal");
 

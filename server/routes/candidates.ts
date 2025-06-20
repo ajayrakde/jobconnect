@@ -13,9 +13,14 @@ export const candidatesRouter = Router();
 
 candidatesRouter.get(
   '/profile',
-  ...requireVerifiedRole('candidate'),
+  authenticateUser,
+  requireRole('candidate'),
   asyncHandler(async (req: any, res) => {
-    const candidate = req.candidate;
+    const user = req.dbUser;
+    const candidate = await storage.getCandidateByUserId(user.id);
+    if (!candidate || candidate.deleted) {
+      return res.status(404).json({ message: 'Candidate profile not found' });
+    }
     res.json(candidate);
   })
 );
