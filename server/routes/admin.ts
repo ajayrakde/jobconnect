@@ -6,6 +6,7 @@ import { validateQuery } from '../middleware/validation';
 import { z } from 'zod';
 import { AdminRepository } from '../repositories';
 import { JobRepository } from '../repositories/JobRepository';
+import { generateJobCode } from '../utils/jobCodeGenerator';
 import { calculateMatchScore } from '../utils/matchingEngine';
 import { exportToExcel, exportToPDF } from '../utils/exportUtils';
 import { storage } from '../storage';
@@ -82,7 +83,11 @@ adminRouter.post('/jobs', authenticateUser, asyncHandler(async (req: any, res) =
   if (!user || user.role !== 'admin') {
     return res.status(403).json({ message: 'Access denied' });
   }
-  const jobData = insertJobPostSchema.parse(req.body) as InsertJobPost;
+  const jobData = insertJobPostSchema.parse({
+    ...req.body,
+    jobCode: generateJobCode(),
+    jobStatus: req.body.jobStatus ?? 'PENDING',
+  }) as InsertJobPost;
   const employer = await storage.getEmployer(jobData.employerId);
   if (!employer || employer.profileStatus !== 'verified') {
     return res.status(400).json({ message: 'Employer not verified' });

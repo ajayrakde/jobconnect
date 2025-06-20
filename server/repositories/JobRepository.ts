@@ -2,6 +2,8 @@ import { db } from '../db';
 import { jobPosts } from '@shared/schema';
 import type { JobPost, InsertJobPost } from '@shared/types';
 
+import { generateJobCode } from '../utils/jobCodeGenerator';
+
 import { getJobStatus } from '@shared/utils/jobStatus';
 
 import { eq, and } from 'drizzle-orm';
@@ -25,11 +27,16 @@ export class JobRepository {
   }
 
   static async createJobPost(insertJobPost: InsertJobPost): Promise<JobPost & { status: string }> {
+    const jobStatus = insertJobPost.jobStatus ?? 'PENDING';
+    const jobCode = insertJobPost.jobCode ?? generateJobCode();
+
     const [jobPost] = await db
       .insert(jobPosts)
       .values({
         ...insertJobPost,
-        onHold: insertJobPost.jobStatus === 'ON_HOLD',
+        jobStatus,
+        jobCode,
+        onHold: jobStatus === 'ON_HOLD',
         applicationsCount: 0,
       })
       .returning();
