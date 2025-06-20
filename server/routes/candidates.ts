@@ -37,7 +37,7 @@ candidatesRouter.patch(
       return res.status(403).json({ message: 'Access denied' });
     }
     if (candidate.profileStatus === 'pending') {
-      return res.status(400).json({ message: 'Profile is pending review and cannot be edited' });
+      return res.status(403).json({ message: 'Profile is pending review and cannot be edited' });
     }
     const updates = { ...req.body };
     if (candidate.profileStatus === 'verified') {
