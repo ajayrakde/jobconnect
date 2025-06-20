@@ -58,11 +58,13 @@ export const CandidateProfile: React.FC = () => {
                 {item.label}
               </Button>
             ))}
-            <Link href="/candidate/profile/edit">
-              <Button variant="outline" className="w-full mt-4">
-                Edit Profile
-              </Button>
-            </Link>
+            {candidate.profileStatus !== "pending" && (
+              <Link href="/candidate/profile/edit">
+                <Button variant="outline" className="w-full mt-4">
+                  Edit Profile
+                </Button>
+              </Link>
+            )}
           </div>
         </ScrollArea>
       </div>
