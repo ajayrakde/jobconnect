@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { insertEmployerSchema, insertJobPostSchema } from '@shared/zod';
+import { generateJobCode } from '../utils/jobCodeGenerator';
 import type { InsertEmployer, InsertJobPost } from '@shared/types';
 import { authenticateUser } from '../middleware/authenticate';
 import { requireRole } from '../middleware/authorization';
@@ -84,7 +85,12 @@ employersRouter.post(
   ...requireVerifiedRole('employer'),
   asyncHandler(async (req: any, res: any) => {
     const employer = req.employer;
-    const jobData = insertJobPostSchema.parse({ ...req.body, employerId: employer.id, createdAt: new Date(), updatedAt: new Date() }) as InsertJobPost;
+    const jobData = insertJobPostSchema.parse({
+      ...req.body,
+      employerId: employer.id,
+      jobCode: generateJobCode(),
+      jobStatus: 'PENDING',
+    }) as InsertJobPost;
     const jobPost = await storage.createJobPost(jobData);
     res.status(201).json({ success: true, data: jobPost });
   })
@@ -130,7 +136,12 @@ employersRouter.post(
     if (!employer) {
       return res.status(404).json({ message: 'Employer profile not found' });
     }
-    const jobData: InsertJobPost = insertJobPostSchema.parse({ ...req.body, employerId: employer.id });
+    const jobData: InsertJobPost = insertJobPostSchema.parse({
+      ...req.body,
+      employerId: employer.id,
+      jobCode: generateJobCode(),
+      jobStatus: 'PENDING',
+    });
     const jobPost = await storage.createJobPost(jobData);
     res.json(jobPost);
   })
