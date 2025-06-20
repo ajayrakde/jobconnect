@@ -551,7 +551,7 @@ export const EmployerDashboard: React.FC = () => {
                     <p className="font-medium text-yellow-800 dark:text-yellow-400">New Applications</p>
                     <p className="text-sm text-yellow-700 dark:text-yellow-300">{stats.pendingReviews} applications need review</p>
                   </div>
-                  <Link href="/applications">
+                  <Link href="/employer/applications">
                     <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700 text-white">
                       Review
                     </Button>

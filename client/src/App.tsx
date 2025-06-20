@@ -222,7 +222,7 @@ function Router() {
             </div>
           </ProtectedRoute>
         </Route>
-        <Route path="/applications">
+        <Route path="/candidate/applications">
           <ProtectedRoute roles={["candidate"]}>
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -231,7 +231,7 @@ function Router() {
             </div>
           </ProtectedRoute>
         </Route>
-        <Route path="/profile">
+        <Route path="/candidate/dashboard">
           <ProtectedRoute roles={["candidate","employer","admin"]}>
             <Dashboard />
           </ProtectedRoute>
