@@ -253,13 +253,13 @@ export const EmployerRegistration: React.FC = () => {
               </div>
 
               <div>
-                <Label htmlFor="businessType">Business Type *</Label>
-                <Select 
-                  value={formData.businessType} 
+                <Label htmlFor="businessType">Industry *</Label>
+                <Select
+                  value={formData.businessType}
                   onValueChange={(value) => setFormData({ ...formData, businessType: value })}
                 >
                   <SelectTrigger className="bg-background border-border">
-                    <SelectValue placeholder="Select business type" />
+                    <SelectValue placeholder="Select industry" />
                   </SelectTrigger>
                   <SelectContent>
                     {industries.map((type) => (
