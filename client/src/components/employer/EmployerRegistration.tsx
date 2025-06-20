@@ -11,6 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { debugLog } from "@/lib/logger";
 import { useLocation } from "wouter";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { industries } from "@shared/constants";
 
 interface EmployerFormData {
@@ -34,6 +35,7 @@ interface UploadedFile {
 
 export const EmployerRegistration: React.FC = () => {
   const [, setLocation] = useLocation();
+  const { refreshProfile } = useAuth();
   const { toast } = useToast();
   const [formData, setFormData] = useState<EmployerFormData>({
     organizationName: "",
@@ -53,7 +55,7 @@ export const EmployerRegistration: React.FC = () => {
 
   useEffect(() => {
     if (existingProfile && !checkingProfile) {
-      setLocation("/employer/profile");
+      setLocation("/employer/dashboard");
     }
   }, [existingProfile, checkingProfile, setLocation]);
 
@@ -74,7 +76,8 @@ export const EmployerRegistration: React.FC = () => {
             title: "Profile already exists",
             description: "Redirecting to your existing profile",
           });
-          setLocation("/employer/profile");
+          refreshProfile();
+          setLocation("/employer/dashboard");
           return;
         }
         throw error;
@@ -86,7 +89,8 @@ export const EmployerRegistration: React.FC = () => {
         title: "Registration successful",
         description: "Your employer profile has been created successfully",
       });
-      setLocation("/employer/profile");
+      refreshProfile();
+      setLocation("/employer/dashboard");
     },
     onError: (error: any) => {
       console.error("Registration mutation error:", error);
@@ -97,7 +101,8 @@ export const EmployerRegistration: React.FC = () => {
           title: "Profile already exists",
           description: "Redirecting to your existing profile",
         });
-        setLocation("/employer/profile");
+        refreshProfile();
+        setLocation("/employer/dashboard");
         return;
       }
       
