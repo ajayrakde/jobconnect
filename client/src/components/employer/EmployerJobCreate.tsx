@@ -30,7 +30,7 @@ type JobPostFormData = z.infer<typeof jobPostValidationSchema>;
 export const EmployerJobCreate: React.FC = () => {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { userProfile } = useAuth();
   const queryClient = useQueryClient();
   const [skillsList, setSkillsList] = useState<string[]>([""]);
   const [responsibilitiesList, setResponsibilitiesList] = useState<string[]>([""]);
@@ -42,6 +42,7 @@ export const EmployerJobCreate: React.FC = () => {
   
   let defaultValues: Partial<JobPostFormData> = {
     vacancy: 1,
+    employerId: userProfile?.employer?.id,
   };
 
   if (cloneData) {
@@ -50,6 +51,7 @@ export const EmployerJobCreate: React.FC = () => {
       defaultValues = {
         ...parsedCloneData,
         vacancy: parsedCloneData.vacancy || 1,
+        employerId: userProfile?.employer?.id,
       };
     } catch (error) {
       console.warn('Failed to parse clone data:', error);
@@ -67,6 +69,12 @@ export const EmployerJobCreate: React.FC = () => {
     resolver: zodResolver(jobPostValidationSchema),
     defaultValues,
   });
+
+  useEffect(() => {
+    if (userProfile?.employer?.id) {
+      setValue('employerId', userProfile.employer.id);
+    }
+  }, [userProfile, setValue]);
 
   // Initialize form with clone data if present
   useEffect(() => {
@@ -96,7 +104,11 @@ export const EmployerJobCreate: React.FC = () => {
 
   const createJobMutation = useMutation({
     mutationFn: async (jobData: JobPostFormData) => {
-      const response = await apiRequest("/api/employers/jobs", "POST", jobData);
+      const response = await apiRequest(
+        "/api/employers/jobs",
+        "POST",
+        jobData
+      );
       return response.json();
     },
     onSuccess: () => {
@@ -161,7 +173,11 @@ export const EmployerJobCreate: React.FC = () => {
 
   const onSubmit = (data: JobPostFormData) => {
     try {
-      createJobMutation.mutate(data);
+      const payload = {
+        ...data,
+        employerId: userProfile?.employer?.id,
+      } as JobPostFormData;
+      createJobMutation.mutate(payload);
     } catch (error) {
       console.error("Error submitting job:", error);
       toast({
