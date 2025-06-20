@@ -207,13 +207,13 @@ export const EmployerProfile: React.FC = () => {
               </div>
               
               <div>
-                <Label htmlFor="businessType">Business Type</Label>
-                <Select 
-                  value={editData.businessType || ""} 
+                <Label htmlFor="businessType">Industry</Label>
+                <Select
+                  value={editData.businessType || ""}
                   onValueChange={(value) => setEditData({ ...editData, businessType: value })}
                 >
                   <SelectTrigger className="bg-background border-border">
-                    <SelectValue placeholder="Select business type" />
+                    <SelectValue placeholder="Select industry" />
                   </SelectTrigger>
                   <SelectContent>
                     {industries.map((type) => (
@@ -257,7 +257,7 @@ export const EmployerProfile: React.FC = () => {
                   <p className="font-medium text-foreground">{data.registrationNumber}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Business Type</p>
+                  <p className="text-sm text-muted-foreground">Industry</p>
                   <p className="font-medium text-foreground">{data.businessType}</p>
                 </div>
                 <div>

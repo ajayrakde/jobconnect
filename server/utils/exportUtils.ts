@@ -42,7 +42,7 @@ export async function exportToExcel(data: any): Promise<Buffer> {
     { header: 'ID', key: 'id', width: 10 },
     { header: 'Organization Name', key: 'organizationName', width: 30 },
     { header: 'Registration Number', key: 'registrationNumber', width: 20 },
-    { header: 'Business Type', key: 'businessType', width: 20 },
+    { header: 'Industry', key: 'businessType', width: 20 },
     { header: 'Contact Email', key: 'contactEmail', width: 30 },
     { header: 'Contact Phone', key: 'contactPhone', width: 15 },
     { header: 'Address', key: 'address', width: 40 },
@@ -164,7 +164,7 @@ EMPLOYERS
 ${data.employers.map((employer: any, index: number) => `
 ${index + 1}. ${employer.organizationName || 'Unknown Organization'}
    Registration: ${employer.registrationNumber || 'Not specified'}
-   Business Type: ${employer.businessType || 'Not specified'}
+   Industry: ${employer.businessType || 'Not specified'}
    Profile Status: ${employer.profileStatus}
    Created: ${employer.createdAt?.toISOString() || 'Unknown'}
 `).join('')}

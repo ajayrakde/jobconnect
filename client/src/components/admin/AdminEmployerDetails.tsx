@@ -75,7 +75,7 @@ export const AdminEmployerDetails: React.FC = () => {
               <span className="font-medium">{employer.registrationNumber}</span>
             </div>
             <div>
-              <span className="text-muted-foreground">Business Type:</span>{" "}
+              <span className="text-muted-foreground">Industry:</span>{" "}
               <span className="font-medium">{employer.businessType}</span>
             </div>
             <div>
