@@ -216,10 +216,10 @@ export const CandidateProfileEdit: React.FC = () => {
     <div className="max-w-4xl mx-auto">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <Link href="/profile">
+          <Link href="/candidate/dashboard">
             <Button variant="ghost" size="sm" className="hover:bg-accent">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Profile
+              Go to Dashboard
             </Button>
           </Link>
           <div>

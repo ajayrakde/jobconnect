@@ -30,8 +30,9 @@ export const Navbar: React.FC = () => {
     switch (userProfile.role) {
       case "candidate":
         return [
+          { label: "Dashboard", href: "/candidate/dashboard" },
           { label: "Jobs", href: "/candidate" },
-          { label: "Applications", href: "/applications" },
+          { label: "Applications", href: "/candidate/applications" },
         ];
       case "employer":
         return [

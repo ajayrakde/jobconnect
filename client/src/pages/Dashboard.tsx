@@ -53,8 +53,8 @@ export const Dashboard: React.FC = () => {
   // Render appropriate dashboard based on role and route
   const renderContent = () => {
     if (userProfile.role === "candidate") {
-      // For candidates: /profile shows dashboard, /candidate and /candidate/jobs show jobs
-      if (location === "/profile") {
+      // For candidates: /candidate/dashboard shows dashboard, /candidate and /candidate/jobs show jobs
+      if (location === "/candidate/dashboard") {
         return <CandidateDashboard />;
       } else if (location === "/candidate" || location === "/candidate/jobs" || location === "/") {
         return <CandidateJobs />;
