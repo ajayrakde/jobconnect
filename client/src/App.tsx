@@ -40,6 +40,7 @@ function ProtectedRoute({
   roles?: string[];
 }) {
   const { user, userProfile, loading } = useAuth();
+  const [, setLocation] = useLocation();
 
   if (loading) {
     return (
@@ -50,11 +51,19 @@ function ProtectedRoute({
   }
 
   if (!user) {
-    return <Landing />;
+    setLocation("/");
+    return null;
   }
 
   if (roles && userProfile && !roles.includes(userProfile.role)) {
-    return <NotFound />;
+    const redirect =
+      userProfile.role === "admin"
+        ? "/admin/dashboard"
+        : userProfile.role === "employer"
+        ? "/employer/dashboard"
+        : "/candidate/jobs";
+    setLocation(redirect);
+    return null;
   }
 
   return <>{children}</>;
@@ -66,39 +75,87 @@ function Router() {
 
   useEffect(() => {
     if (loading) return;
-
-    if (user && userProfile) {
-      if (userProfile.role === "candidate") {
-        const verified = userProfile.candidate?.profileStatus === "verified";
-        if (!verified &&
-            location !== "/candidate/register" &&
-            location !== "/candidate/jobs") {
-          setLocation("/candidate/register");
-          return;
-        }
-        if (verified && ["/", "/dashboard"].includes(location)) {
-          setLocation("/candidate/jobs");
-          return;
-        }
-      }
-
-      const publicRoutes = ["/", "/admin"];
-
-      if (publicRoutes.includes(location)) {
-        if (userProfile.role === "admin") {
-          setLocation("/admin/dashboard");
-        } else if (userProfile.role === "employer") {
-          setLocation("/employer/dashboard");
-        } else {
-          setLocation("/dashboard");
-        }
-        return;
-      }
-
-      if (location.startsWith("/admin/") && userProfile.role !== "admin") {
+    if (!user) {
+      if (
+        location.startsWith("/candidate") ||
+        location.startsWith("/employer") ||
+        (location.startsWith("/admin") && location !== "/admin")
+      ) {
         setLocation("/");
+      }
+      return;
+    }
+
+    if (!userProfile) return;
+
+    const role = userProfile.role;
+    const candidateStatus = userProfile.candidate?.profileStatus;
+    const employerStatus = userProfile.employer?.profileStatus;
+    const hasCandidate = !!userProfile.candidate;
+    const hasEmployer = !!userProfile.employer;
+
+    const redirectToDefault = () => {
+      if (role === "admin") setLocation("/admin/dashboard");
+      else if (role === "employer") setLocation("/employer/dashboard");
+      else setLocation("/candidate/jobs");
+    };
+
+    if (role === "candidate") {
+      if (!hasCandidate) {
+        if (location !== "/candidate/register") setLocation("/candidate/register");
         return;
       }
+      if (
+        candidateStatus === "pending" &&
+        ["/", "/dashboard", "/candidate/register"].includes(location)
+      ) {
+        setLocation("/candidate/jobs");
+        return;
+      }
+      if (
+        candidateStatus === "verified" &&
+        ["/", "/dashboard"].includes(location)
+      ) {
+        setLocation("/candidate/jobs");
+        return;
+      }
+    } else if (role === "employer") {
+      if (!hasEmployer) {
+        if (location !== "/employer/register") setLocation("/employer/register");
+        return;
+      }
+      if (
+        employerStatus === "pending" &&
+        ["/", "/dashboard", "/employer/register"].includes(location)
+      ) {
+        setLocation("/employer/dashboard");
+        return;
+      }
+      if (
+        employerStatus === "verified" &&
+        ["/", "/dashboard"].includes(location)
+      ) {
+        setLocation("/employer/dashboard");
+        return;
+      }
+    } else if (role === "admin") {
+      if (["/", "/admin"].includes(location)) {
+        setLocation("/admin/dashboard");
+        return;
+      }
+    }
+
+    if (location.startsWith("/admin") && role !== "admin") {
+      redirectToDefault();
+      return;
+    }
+    if (location.startsWith("/candidate") && role !== "candidate") {
+      redirectToDefault();
+      return;
+    }
+    if ((location.startsWith("/employer") || location.startsWith("/jobs")) && role !== "employer") {
+      redirectToDefault();
+      return;
     }
   }, [user, userProfile, location, loading, setLocation]);
 

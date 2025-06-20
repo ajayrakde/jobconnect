@@ -17,7 +17,7 @@ export const candidates = pgTable('candidates', {
   expectedSalary: integer('expected_salary'),
   jobCodes: jsonb('job_codes'),
   documents: jsonb('documents'),
-  profileStatus: text('profile_status').default('pending').notNull(),
+  profileStatus: text('profile_status').default('incomplete').notNull(),
   deleted: boolean('deleted').default(false),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),

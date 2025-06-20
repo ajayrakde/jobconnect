@@ -38,6 +38,7 @@ export const maritalStatuses = [
 ];
 
 export const profileStatus = [
+  "incomplete",
   "verified",
   "pending",
   "rejected"

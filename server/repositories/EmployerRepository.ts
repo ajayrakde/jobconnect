@@ -31,7 +31,7 @@ export class EmployerRepository {
   static async create(data: InsertEmployer) {
     const [employer] = await db
       .insert(employers)
-      .values(data)
+      .values({ ...data, profileStatus: 'pending' } as any)
       .returning();
     
     return employer;

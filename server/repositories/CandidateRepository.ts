@@ -31,7 +31,7 @@ export class CandidateRepository {
   static async create(data: InsertCandidate) {
     const [candidate] = await db
       .insert(candidates)
-      .values(data)
+      .values({ ...data, profileStatus: 'pending' } as any)
       .returning();
     
     return candidate;
