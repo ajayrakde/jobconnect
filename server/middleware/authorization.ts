@@ -40,16 +40,13 @@ export function ensureProfileVerified(type: 'candidate' | 'employer') {
         if (candidate.profileStatus === 'incomplete') {
           return res.status(403).json({ message: 'Candidate profile incomplete' });
         }
-        if (candidate.profileStatus !== 'verified') {
-          return res.status(403).json({ message: 'Candidate not verified' });
-        }
         (req as any).candidate = candidate;
       } else {
         const employer = await storage.getEmployerByUserId(user.id);
         if (!employer || employer.deleted) {
           return res.status(404).json({ message: 'Employer profile not found' });
         }
-        if (employer.profileStatus !== 'verified') {
+        if (employer.profileStatus === 'incomplete') {
           return res.status(403).json({ message: 'Employer not verified' });
         }
         (req as any).employer = employer;
