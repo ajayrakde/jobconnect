@@ -37,8 +37,8 @@ export function ensureProfileVerified(type: 'candidate' | 'employer') {
         if (!candidate || candidate.deleted) {
           return res.status(404).json({ message: 'Candidate profile not found' });
         }
-        if (candidate.profileStatus !== 'verified') {
-          return res.status(403).json({ message: 'Candidate not verified' });
+        if (candidate.profileStatus === 'incomplete') {
+          return res.status(403).json({ message: 'Candidate profile incomplete' });
         }
         (req as any).candidate = candidate;
       } else {
@@ -46,7 +46,7 @@ export function ensureProfileVerified(type: 'candidate' | 'employer') {
         if (!employer || employer.deleted) {
           return res.status(404).json({ message: 'Employer profile not found' });
         }
-        if (employer.profileStatus !== 'verified') {
+        if (employer.profileStatus === 'incomplete') {
           return res.status(403).json({ message: 'Employer not verified' });
         }
         (req as any).employer = employer;
