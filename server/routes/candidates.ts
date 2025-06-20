@@ -36,7 +36,11 @@ candidatesRouter.patch(
     if (!candidate || candidate.id !== parseInt(req.params.id)) {
       return res.status(403).json({ message: 'Access denied' });
     }
-    const updatedCandidate = await CandidateRepository.update(candidate.id, req.body);
+    const updates = { ...req.body };
+    if (candidate.profileStatus === 'verified') {
+      (updates as any).profileStatus = 'pending';
+    }
+    const updatedCandidate = await CandidateRepository.update(candidate.id, updates);
     res.json(updatedCandidate);
   })
 );

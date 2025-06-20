@@ -37,6 +37,9 @@ export function ensureProfileVerified(type: 'candidate' | 'employer') {
         if (!candidate || candidate.deleted) {
           return res.status(404).json({ message: 'Candidate profile not found' });
         }
+        if (candidate.profileStatus === 'incomplete') {
+          return res.status(403).json({ message: 'Candidate profile incomplete' });
+        }
         if (candidate.profileStatus !== 'verified') {
           return res.status(403).json({ message: 'Candidate not verified' });
         }
