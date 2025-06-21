@@ -169,7 +169,6 @@ export const CandidateDashboard: React.FC = () => {
                         <h3 className="font-semibold text-lg text-foreground">
                           {job.title}
                         </h3>
-                        <p className="text-muted-foreground">{job.company}</p>
                       </div>
                     </div>
 
@@ -243,7 +242,6 @@ export const CandidateDashboard: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-medium text-foreground">{app.jobTitle}</h4>
-                    <p className="text-sm text-muted-foreground">{app.company}</p>
                   </div>
                 </div>
                 <div className="text-right">

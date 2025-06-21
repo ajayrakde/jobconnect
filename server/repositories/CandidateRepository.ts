@@ -1,6 +1,6 @@
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '../db';
-import { candidates, users, applications, jobPosts, employers } from '@shared/schema';
+import { candidates, users, applications, jobPosts } from '@shared/schema';
 import type { InsertCandidate } from '@shared/types';
 
 /**
@@ -210,14 +210,12 @@ export class CandidateRepository {
         status: applications.status,
         appliedAt: applications.appliedAt,
         jobTitle: jobPosts.title,
-        company: employers.organizationName,
         location: jobPosts.location,
         salaryRange: jobPosts.salaryRange,
         jobCode: jobPosts.jobCode,
       })
       .from(applications)
       .innerJoin(jobPosts, eq(jobPosts.id, applications.jobPostId))
-      .innerJoin(employers, eq(jobPosts.employerId, employers.id))
       .where(eq(applications.candidateId, candidateId))
       .orderBy(desc(applications.appliedAt));
   }

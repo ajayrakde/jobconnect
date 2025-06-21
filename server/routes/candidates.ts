@@ -99,7 +99,8 @@ candidatesRouter.get(
   '/jobs',
   asyncHandler(async (_req, res) => {
     const jobs = await storage.getPublicJobPosts();
-    res.json(jobs);
+    const sanitizedJobs = jobs.map(({ employerId, ...rest }: any) => rest);
+    res.json(sanitizedJobs);
   })
 );
 
