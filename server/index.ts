@@ -5,6 +5,9 @@ import { registerRoutes } from "./routes/index";
 import { setupVite, serveStatic, log } from "./vite";
 import { errorHandler } from "./middleware/errorHandler";
 import { scheduleDeactivateOldPostsJob } from "./jobs/deactivateOldPosts";
+import { config } from "dotenv";
+config(); // loads .env into process.env
+
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
