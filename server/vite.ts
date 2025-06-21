@@ -68,18 +68,19 @@ export async function setupVite(app: Express, server: Server) {
   });
 }
 
-export function serveStatic(app: Express) {
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-  const distPath = path.resolve(__dirname, "..", "client", "dist");
+export function serveStatic(app: Express) {
+  const distPath = path.resolve(__dirname, "..", "client", "dist");  // ✅ Correct relative path
 
   if (!fs.existsSync(distPath)) {
     throw new Error(
-      `Could not find the frontend build directory: ${distPath}. Make sure to run 'vite build'`
+      `Could not find the frontend build directory: ${distPath}. Make sure to run 'vite build' in /client.`
     );
   }
 
   app.use(express.static(distPath));
+
   app.use("*", (_req, res) => {
     res.sendFile(path.resolve(distPath, "index.html"));
   });
