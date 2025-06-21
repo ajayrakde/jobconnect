@@ -22,9 +22,6 @@ interface Job {
   salaryRange: string;
   location: string;
   createdAt: string;
-  employer: {
-    organizationName: string;
-  };
   compatibilityScore?: number;
   matchFactors?: {
     skillsScore: number;

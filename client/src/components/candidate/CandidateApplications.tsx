@@ -14,7 +14,6 @@ interface Application {
   status: string;
   appliedAt: string;
   jobTitle: string;
-  company: string;
   location: string;
   salaryRange: string;
   jobCode: string;
