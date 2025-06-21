@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, DollarSign, Calendar, ArrowLeft } from "lucide-react";
+import { MapPin, Calendar, ArrowLeft, IndianRupee } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -74,25 +74,37 @@ export const CandidateJobDetails: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>{job.title}</span>
-            {job.jobCode && (
-              <Badge variant="outline" className="border-border text-xs">
-                {job.jobCode}
-              </Badge>
-            )}
-          </CardTitle>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle>{job.title}</CardTitle>
+              {job.jobCode && (
+                <Badge
+                  variant="outline"
+                  className="border-border text-xs mt-2"
+                >
+                  {job.jobCode}
+                </Badge>
+              )}
+            </div>
+            <Button
+              onClick={handleApply}
+              disabled={applyMutation.isLoading}
+              className="bg-primary hover:bg-primary-dark text-primary-foreground"
+            >
+              Apply
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="flex flex-wrap items-center gap-4 text-sm">
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-muted-foreground" />
               <span className="font-medium">{job.location}</span>
             </div>
             <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <IndianRupee className="h-4 w-4 text-muted-foreground" />
               <span className="text-green-600 dark:text-green-400 font-medium">
-                {job.salaryRange}
+                Monthly salary (₹) {job.salaryRange}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -110,15 +122,28 @@ export const CandidateJobDetails: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex justify-end">
-            <Button
-              onClick={handleApply}
-              disabled={applyMutation.isLoading}
-              className="bg-primary hover:bg-primary-dark text-primary-foreground"
-            >
-              Apply
-            </Button>
-          </div>
+          {job.responsibilities && (
+            <div>
+              <h3 className="font-semibold mb-2">Responsibilities</h3>
+              <p className="text-muted-foreground whitespace-pre-line">
+                {job.responsibilities}
+              </p>
+            </div>
+          )}
+
+          {job.skills && (
+            <div>
+              <h3 className="font-semibold mb-2">Skills Required</h3>
+              <div className="flex flex-wrap gap-2">
+                {job.skills.split(',').map((skill: string, index: number) => (
+                  <Badge key={index} variant="secondary">
+                    {skill.trim()}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
         </CardContent>
       </Card>
     </div>
