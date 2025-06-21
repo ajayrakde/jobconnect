@@ -29,7 +29,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 
 # ✅ Copy frontend build output
-COPY --from=builder /app/client/dist ./client/dist
+COPY --from=builder /app/dist/public ./client/dist
 
 ENV NODE_ENV=production
 EXPOSE 5000
