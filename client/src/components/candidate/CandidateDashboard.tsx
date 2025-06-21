@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Eye, Send, Calendar, Trophy, MapPin, DollarSign, Clock, Building } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useQuery } from "@tanstack/react-query";
+import { subDays, isAfter } from "date-fns";
 import { Link } from "wouter";
 
 export const CandidateDashboard: React.FC = () => {
@@ -14,13 +15,47 @@ export const CandidateDashboard: React.FC = () => {
     queryKey: ["/api/candidates/stats"],
   });
 
-  const { data: recommendedJobs } = useQuery({
-    queryKey: ["/api/candidates/recommended-jobs"],
+  const { data: allJobs = [] } = useQuery({
+    queryKey: ["/api/candidates/jobs"],
+    enabled: !!userProfile?.candidate,
   });
 
-  const { data: applications } = useQuery({
+  const { data: applications = [] } = useQuery({
     queryKey: ["/api/candidates/applications"],
+    enabled: !!userProfile?.candidate,
   });
+
+  const appliedJobIds = new Set(
+    Array.isArray(applications) ? applications.map((a: any) => a.jobPostId) : []
+  );
+
+  const candidateDegrees =
+    userProfile?.candidate?.qualifications?.map((q: any) =>
+      q.degree?.toLowerCase()
+    ) || [];
+
+  const recommendedJobs = Array.isArray(allJobs)
+    ? allJobs
+        .filter(
+          (job: any) =>
+            !appliedJobIds.has(job.id) &&
+            (candidateDegrees.length === 0 ||
+              candidateDegrees.some((d: string) =>
+                job.minQualification?.toLowerCase().includes(d)
+              )),
+        )
+        .sort(
+          (a: any, b: any) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+        .slice(0, 10)
+    : [];
+
+  const recentApplications = Array.isArray(applications)
+    ? applications.filter((app: any) =>
+        isAfter(new Date(app.appliedAt), subDays(new Date(), 30))
+      )
+    : [];
 
   if (!userProfile) return null;
 
@@ -119,7 +154,7 @@ export const CandidateDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {recommendedJobs?.map((job: any) => (
+            {recommendedJobs.map((job: any) => (
               <div
                 key={job.id}
                 className="border border-border bg-card rounded-lg p-6 hover:bg-accent/50 dark:hover:bg-accent/20 transition-colors"
@@ -180,7 +215,7 @@ export const CandidateDashboard: React.FC = () => {
               </div>
             ))}
 
-            {(!recommendedJobs || recommendedJobs.length === 0) && (
+            {recommendedJobs.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <Building className="h-12 w-12 mx-auto mb-4 text-muted" />
                 <p>No recommended jobs yet. Complete your profile to get personalized recommendations.</p>
@@ -197,7 +232,7 @@ export const CandidateDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {applications?.map((app: any) => (
+            {recentApplications.map((app: any) => (
               <div
                 key={app.id}
                 className="flex items-center justify-between p-4 border border-border bg-card rounded-lg hover:bg-accent/50 dark:hover:bg-accent/20 transition-colors"
@@ -224,12 +259,12 @@ export const CandidateDashboard: React.FC = () => {
                   >
                     {app.status}
                   </Badge>
-                  <p className="text-xs text-muted-foreground mt-1">{app.appliedDate}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{app.appliedAt}</p>
                 </div>
               </div>
             ))}
 
-            {(!applications || applications.length === 0) && (
+            {recentApplications.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <Send className="h-12 w-12 mx-auto mb-4 text-muted" />
                 <p>No applications yet. Start applying to jobs!</p>

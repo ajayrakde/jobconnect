@@ -53,12 +53,12 @@ export const jobStatus = [
 ];
 
 export const applicationStatus = [
-  "pending",
-  "reviewed",
+  "applied",
   "shortlisted",
   "interviewed",
-  "hired",
-  "rejected"
+  "selected",
+  "rejected",
+  "expired"
 ];
 
 export const businessSizes = [

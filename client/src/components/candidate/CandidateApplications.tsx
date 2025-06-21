@@ -1,11 +1,12 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Building, Clock, Calendar, FileText } from "lucide-react";
+import { Eye, FileText } from "lucide-react";
+import { JobCard } from "@/components/common";
+import { Link } from "wouter";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useQuery } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
 
 interface Application {
   id: number;
@@ -26,6 +27,13 @@ export const CandidateApplications: React.FC = () => {
     queryKey: ["/api/candidates/applications"],
     enabled: !!userProfile?.candidate,
   });
+
+  const sortedApps = Array.isArray(applications)
+    ? [...applications].sort(
+        (a: any, b: any) =>
+          new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime(),
+      )
+    : [];
 
   if (isLoading) {
     return (
@@ -58,21 +66,6 @@ export const CandidateApplications: React.FC = () => {
     );
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400';
-      case 'reviewed':
-        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400';
-      case 'shortlisted':
-        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400';
-      case 'rejected':
-        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400';
-      default:
-        return 'bg-muted text-muted-foreground';
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -83,59 +76,28 @@ export const CandidateApplications: React.FC = () => {
           </p>
         </div>
         <Badge variant="outline" className="text-sm border-border">
-          {Array.isArray(applications) ? applications.length : 0} application{Array.isArray(applications) && applications.length !== 1 ? 's' : ''}
+          {sortedApps.length} application{sortedApps.length !== 1 ? 's' : ''}
         </Badge>
       </div>
 
       <div className="space-y-4">
-        {Array.isArray(applications) && applications.map((application: Application) => (
-          <Card key={application.id} className="bg-card border-border hover:bg-accent/50 dark:hover:bg-accent/20 transition-colors">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CardTitle className="text-xl text-foreground">{application.jobTitle}</CardTitle>
-                    <Badge className={getStatusColor(application.status)}>
-                      {application.status}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Building className="h-4 w-4" />
-                      {application.company}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      {application.location || "Location not specified"}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      Applied {formatDistanceToNow(new Date(application.appliedAt), { addSuffix: true })}
-                    </div>
-                  </div>
-                </div>
-                <Badge variant="outline" className="ml-4 border-border">
-                  {application.jobCode}
-                </Badge>
-              </div>
-            </CardHeader>
-            
-            <CardContent className="pt-0">
-              <div className="flex justify-between items-center">
-                <div className="text-green-600 dark:text-green-400 font-medium">
-                  {application.salaryRange || "Salary not disclosed"}
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="border-border hover:bg-accent">
-                    View Details
-                  </Button>
-                  <Button variant="outline" size="sm" className="border-border hover:bg-accent text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">
-                    Withdraw
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {sortedApps.map((application: Application) => (
+          <JobCard
+            key={application.id}
+            job={{
+              title: application.jobTitle,
+              city: application.location,
+              jobCode: application.jobCode,
+            }}
+            actions={
+              <Link href={`/candidate/jobs/${application.jobPostId}`}>
+                <Button variant="outline" size="sm" className="flex items-center gap-1">
+                  <Eye className="h-4 w-4" />
+                  View
+                </Button>
+              </Link>
+            }
+          />
         ))}
       </div>
     </div>
