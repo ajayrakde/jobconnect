@@ -23,15 +23,11 @@ FROM node:18-alpine AS runner
 
 WORKDIR /app
 
-# Copy backend build + dependencies
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-
-# Copy frontend build output
-COPY --from=builder /app/dist/public ./dist/public
+# Copy the entire built app
+COPY --from=builder /app .
 
 ENV NODE_ENV=production
-EXPOSE 5000
+# Render provides a PORT environment variable (usually 10000).
+# EXPOSE is not required for most platforms, so omit it to avoid confusion.
 
 CMD ["node", "dist/index.js"]
