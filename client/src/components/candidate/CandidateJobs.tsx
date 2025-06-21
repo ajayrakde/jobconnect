@@ -2,8 +2,9 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { JobCard } from "@/components/common";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { MapPin, DollarSign, Clock, Building, Star, Calendar } from "lucide-react";
+import { Button } from "../ui/button";
+import { MapPin, DollarSign, Clock, Building, Star, Calendar, Eye} from "lucide-react";
+import { Link } from "wouter";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
@@ -105,92 +106,29 @@ export const CandidateJobs: React.FC = () => {
             key={job.id}
             job={{
               title: job.title,
+              code: job.jobCode,
               positions: job.vacancy,
               qualification: job.minQualification,
               experience: job.experienceRequired,
               city: job.location,
-              postedOn: formatDistanceToNow(new Date(job.createdAt), { addSuffix: true }),
+              jobCode: job.jobCode,
             }}
-            actions={<Badge variant="outline" className="border-border">{job.jobCode}</Badge>}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              {job.compatibilityScore && (
-                <Badge className={getCompatibilityColor(job.compatibilityScore)}>
-                  <Star className="h-3 w-3 mr-1" />
-                  {job.compatibilityScore}% {getCompatibilityLabel(job.compatibilityScore)}
-                </Badge>
-              )}
-            </div>
-
-            <p className="text-foreground mb-4 line-clamp-3">{job.description}</p>
-
-            <div className="grid md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <h4 className="font-medium text-sm text-foreground mb-1">Experience Required</h4>
-                <p className="text-sm text-muted-foreground">{job.experienceRequired}</p>
-              </div>
-              <div>
-                <h4 className="font-medium text-sm text-foreground mb-1">Minimum Qualification</h4>
-                <p className="text-sm text-muted-foreground">{job.minQualification}</p>
-              </div>
-
-              {job.skills && (
-                <div className="mb-4">
-                  <h4 className="font-medium text-sm text-foreground mb-2">Required Skills</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {job.skills.split(',').slice(0, 5).map((skill, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs bg-secondary text-secondary-foreground">
-                        {skill.trim()}
-                      </Badge>
-                    ))}
-                    {job.skills.split(',').length > 5 && (
-                      <Badge variant="outline" className="text-xs border-border">
-                        +{job.skills.split(',').length - 5} more
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {job.matchFactors && (
-                <div className="mb-4 p-3 bg-muted rounded-lg">
-                  <h4 className="font-medium text-sm text-foreground mb-2">Match Breakdown</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
-                    <div className="text-center">
-                      <div className="font-medium text-foreground">{job.matchFactors.skillsScore}%</div>
-                      <div className="text-muted-foreground">Skills</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-medium text-foreground">{job.matchFactors.experienceScore}%</div>
-                      <div className="text-muted-foreground">Experience</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-medium text-foreground">{job.matchFactors.salaryScore}%</div>
-                      <div className="text-muted-foreground">Salary</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-medium text-foreground">{job.matchFactors.locationScore}%</div>
-                      <div className="text-muted-foreground">Location</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-medium text-foreground">{job.matchFactors.qualificationScore}%</div>
-                      <div className="text-muted-foreground">Education</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              </div>
-
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                  <DollarSign className="h-4 w-4" />
-                  <span className="font-medium">{job.salaryRange}</span>
-                </div>
-                <Button className="bg-primary hover:bg-primary-dark text-primary-foreground">
-                  Apply Now
+            actions={
+              <div className="flex items-center gap-2">
+                <Link href={`/candidate/jobs/${job.id}`}>
+                  <Button variant="outline" size="sm" className="flex items-center gap-1">
+                    <Eye className="h-4 w-4" />
+                    View
+                  </Button>
+                </Link>
+                <Button
+                  size="sm"
+                  className="bg-primary hover:bg-primary-dark text-primary-foreground flex items-center gap-1"
+                >
+                  Apply
                 </Button>
-              </div>
+              </div>}
+          >
           </JobCard>
         ))}
       </div>
