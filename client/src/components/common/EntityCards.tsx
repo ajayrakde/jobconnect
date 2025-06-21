@@ -1,5 +1,6 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "../ui/badge";
 
 export interface EmployerInfo {
   organizationName: string;
@@ -74,7 +75,7 @@ export interface JobInfo {
   qualification?: string;
   experience?: string;
   city?: string;
-  postedOn?: string;
+  jobCode?: string;
 }
 
 export const JobCard: React.FC<{
@@ -82,13 +83,13 @@ export const JobCard: React.FC<{
   actions?: React.ReactNode;
   children?: React.ReactNode;
 }> = ({ job, actions, children }) => {
-  const { title, positions, qualification, experience, city, postedOn } = job;
+  const { title, positions, qualification, experience, city, jobCode } = job;
   const details = [
     positions !== undefined ? `Positions: ${positions}` : undefined,
     qualification,
     experience,
     city,
-    postedOn,
+    jobCode,
   ]
     .filter(Boolean)
     .join(" • ");
@@ -97,12 +98,18 @@ export const JobCard: React.FC<{
     <Card className="bg-card border-border">
       <div className="flex items-start justify-between">
         <CardHeader className="p-4">
+          {job.jobCode && (
+    <div className="mb-2">
+      <Badge variant="outline" className="border-border text-xs">
+        {job.jobCode}
+      </Badge>
+    </div>
+  )}
           <CardTitle className="text-base font-semibold">{title}</CardTitle>
           <CardDescription>{details}</CardDescription>
         </CardHeader>
-        {actions && <div className="pr-4 pt-4">{actions}</div>}
+        {actions && <div className="flex items-end pr-4 pt-10">{actions}</div>}
       </div>
-      {children && <div className="px-4 pb-4">{children}</div>}
     </Card>
   );
 };
