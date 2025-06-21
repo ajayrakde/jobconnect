@@ -117,3 +117,18 @@ candidatesRouter.get(
     res.json(rest);
   })
 );
+
+// Submit application for a job
+candidatesRouter.post(
+  '/jobs/:id/apply',
+  ...requireVerifiedRole('candidate'),
+  asyncHandler(async (req: any, res) => {
+    const jobId = parseInt(req.params.id);
+    const candidate = req.candidate;
+    const application = await storage.createApplication({
+      jobPostId: jobId,
+      candidateId: candidate.id,
+    });
+    res.json(application);
+  })
+);
