@@ -57,6 +57,11 @@ app.use((req, res, next) => {
   next();
 });
 
+
+// Normalize NODE_ENV to avoid casing issues
+const NODE_ENV = process.env.NODE_ENV?.toLowerCase() ?? 'development';
+app.set('env', NODE_ENV);
+
 (async () => {
   const server = await registerRoutes(app);
 
@@ -67,7 +72,7 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  if (NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);

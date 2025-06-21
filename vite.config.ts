@@ -9,8 +9,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 export default defineConfig(async () => {
+  const env = process.env.NODE_ENV?.toLowerCase();
   const cartographerPlugins =
-    process.env.NODE_ENV !== "production" && process.env.REPL_ID
+    env !== "production" && process.env.REPL_ID
       ? [(await import("@replit/vite-plugin-cartographer")).cartographer()]
       : [];
 
@@ -30,6 +31,7 @@ export default defineConfig(async () => {
     },
     envPrefix: "VITE_",
     server: {
+      host: true,
       fs: {
         strict: true,
         deny: ["**/.*"],
