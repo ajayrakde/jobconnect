@@ -1,5 +1,8 @@
+import { config } from "dotenv";
+config();
+
 export const debugLog = (...args: unknown[]) => {
-  if (import.meta.env.DEV) {
+  if (process.env.DEV) {
     console.log(...args);
   }
 };
