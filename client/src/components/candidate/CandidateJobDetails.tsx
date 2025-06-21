@@ -40,9 +40,12 @@ export const CandidateJobDetails: React.FC = () => {
       return apiRequest(`/api/candidates/jobs/${id}/apply`, "POST");
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["/api/candidates/applications"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/candidates/applications"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/candidates/jobs"] }),
+      ]);
       setApplied(true);
-      toast({ title: "Application submitted" });
+      toast({ title: "Job applied successfully" });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
