@@ -19,12 +19,29 @@ export const CandidateJobDetails: React.FC = () => {
     enabled: !!id,
   });
 
+  const { data: applications = [] } = useQuery({
+    queryKey: ["/api/candidates/applications"],
+  });
+
+  const [applied, setApplied] = React.useState<boolean>(() =>
+    Array.isArray(applications)
+      ? applications.some((a: any) => a.jobPostId === Number(id))
+      : false,
+  );
+
+  React.useEffect(() => {
+    if (Array.isArray(applications)) {
+      setApplied(applications.some((a: any) => a.jobPostId === Number(id)));
+    }
+  }, [applications, id]);
+
   const applyMutation = useMutation({
     mutationFn: async () => {
       return apiRequest(`/api/candidates/jobs/${id}/apply`, "POST");
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["/api/candidates/applications"] });
+      setApplied(true);
       toast({ title: "Application submitted" });
     },
     onError: (error: any) => {
@@ -88,10 +105,10 @@ export const CandidateJobDetails: React.FC = () => {
             </div>
             <Button
               onClick={handleApply}
-              disabled={applyMutation.isLoading}
+              disabled={applyMutation.isLoading || applied}
               className="bg-primary hover:bg-primary-dark text-primary-foreground"
             >
-              Apply
+              {applied ? "Applied" : "Apply"}
             </Button>
           </div>
         </CardHeader>

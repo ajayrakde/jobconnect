@@ -58,6 +58,21 @@ export const CandidateJobs: React.FC = () => {
     enabled: !!userProfile?.candidate,
   });
 
+  const { data: applications = [] } = useQuery({
+    queryKey: ["/api/candidates/applications"],
+    enabled: !!userProfile?.candidate,
+  });
+
+  const appliedJobIds = new Set(
+    Array.isArray(applications)
+      ? applications.map((a: any) => a.jobPostId)
+      : [],
+  );
+
+  const availableJobs = Array.isArray(jobs)
+    ? jobs.filter((job: any) => !appliedJobIds.has(job.id))
+    : [];
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -113,12 +128,12 @@ export const CandidateJobs: React.FC = () => {
           </p>
         </div>
         <Badge variant="outline" className="text-sm border-border">
-          {Array.isArray(jobs) ? jobs.length : 0} job{Array.isArray(jobs) && jobs.length !== 1 ? 's' : ''} available
+          {availableJobs.length} job{availableJobs.length !== 1 ? 's' : ''} available
         </Badge>
       </div>
 
       <div className="space-y-4">
-        {jobs.map((job: Job) => (
+        {availableJobs.map((job: Job) => (
           <JobCard
             key={job.id}
             job={{
