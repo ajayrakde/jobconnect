@@ -121,7 +121,7 @@ export const CandidateJobDetails: React.FC = () => {
             <div className="flex items-center gap-2">
               <IndianRupee className="h-4 w-4 text-muted-foreground" />
               <span className="text-green-600 dark:text-green-400 font-medium">
-                Monthly salary (₹) {job.salaryRange}
+                {job.salaryRange} per month
               </span>
             </div>
             <div className="flex items-center gap-2">
