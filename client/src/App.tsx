@@ -30,6 +30,7 @@ import { AdminSearchPanel } from "./components/admin/AdminSearchPanel";
 import { AdminVerifications } from "./components/admin/AdminVerifications";
 import { AdminTools } from "./components/admin/AdminTools";
 import { AdminEmployerDetails } from "./components/admin/AdminEmployerDetails";
+import { CandidateJobDetails } from "./components/candidate/CandidateJobDetails";
 import NotFound from "./pages/not-found";
 
 function ProtectedRoute({
@@ -263,6 +264,15 @@ function Router() {
         <Route path="/candidate/jobs">
           <ProtectedRoute roles={["candidate"]}>
             <Dashboard />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/candidate/jobs/:id">
+          <ProtectedRoute roles={["candidate"]}>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <CandidateJobDetails />
+              </div>
+            </div>
           </ProtectedRoute>
         </Route>
         <Route path="/candidate/register">

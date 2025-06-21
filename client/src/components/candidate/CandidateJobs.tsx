@@ -3,10 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { JobCard } from "@/components/common";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "../ui/button";
-import { MapPin, DollarSign, Clock, Building, Star, Calendar, Eye} from "lucide-react";
+import { MapPin, DollarSign, Clock, Building, Star, Calendar, Eye } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 
 interface Job {
@@ -35,6 +37,21 @@ interface Job {
 
 export const CandidateJobs: React.FC = () => {
   const { userProfile } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const applyMutation = useMutation({
+    mutationFn: async (jobId: number) => {
+      return apiRequest(`/api/candidates/jobs/${jobId}/apply`, "POST");
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["/api/candidates/applications"] });
+      toast({ title: "Application submitted" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
 
   const { data: jobs = [], isLoading } = useQuery({
     queryKey: ["/api/candidates/jobs"],
@@ -124,6 +141,8 @@ export const CandidateJobs: React.FC = () => {
                 <Button
                   size="sm"
                   className="bg-primary hover:bg-primary-dark text-primary-foreground flex items-center gap-1"
+                  onClick={() => applyMutation.mutate(job.id)}
+                  disabled={applyMutation.isLoading}
                 >
                   Apply
                 </Button>
