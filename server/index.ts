@@ -57,6 +57,12 @@ app.use((req, res, next) => {
   next();
 });
 
+
+// Normalize NODE_ENV to avoid casing issues and make it globally consistent
+const NODE_ENV = process.env.NODE_ENV?.toLowerCase() ?? 'development';
+process.env.NODE_ENV = NODE_ENV;
+app.set('env', NODE_ENV);
+
 (async () => {
   const server = await registerRoutes(app);
 
@@ -67,16 +73,15 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  if (NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  // Use PORT from the environment when available (Render etc.)
+  // Default to 5000 for Replit and local development.
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
   server.listen({
     port,
     host: "0.0.0.0",
