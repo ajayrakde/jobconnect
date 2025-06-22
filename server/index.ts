@@ -58,9 +58,11 @@ app.use((req, res, next) => {
 });
 
 
+
 // Normalize NODE_ENV to avoid casing issues and make it globally consistent
 const NODE_ENV = process.env.NODE_ENV?.toLowerCase() ?? 'development';
 process.env.NODE_ENV = NODE_ENV;
+
 app.set('env', NODE_ENV);
 
 (async () => {

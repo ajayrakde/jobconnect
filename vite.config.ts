@@ -10,7 +10,8 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 export default defineConfig(async () => {
   const env = process.env.NODE_ENV?.toLowerCase();
-  process.env.NODE_ENV = env ?? 'development';
+process.env.NODE_ENV = env ?? 'development';
+
   const cartographerPlugins =
     env !== "production" && process.env.REPL_ID
       ? [(await import("@replit/vite-plugin-cartographer")).cartographer()]
