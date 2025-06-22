@@ -22,8 +22,9 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
   }
 
   // Default error response
+  const env = process.env.NODE_ENV?.toLowerCase();
   res.status(500).json({
     error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'An unexpected error occurred'
+    message: env === 'development' ? err.message : 'An unexpected error occurred'
   });
 }

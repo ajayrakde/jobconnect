@@ -524,7 +524,7 @@ export const AdminSearchPanel: React.FC = () => {
                   : error.message
                 : 'Please try again'}
             </div>
-            {process.env.NODE_ENV === 'development' && error instanceof Error && (
+            {import.meta.env.DEV && error instanceof Error && (
               <pre className="mt-4 text-xs text-left bg-muted/30 p-4 rounded overflow-auto">
                 {error.message}
               </pre>
