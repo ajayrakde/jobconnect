@@ -1,4 +1,4 @@
-name: Deploy Azure Container App with Key Vault
+name: Deploy Azure Container App with Key Vault (Proper Naming)
 
 on:
   push:
@@ -17,7 +17,7 @@ jobs:
       ACR_SERVER: acrltin.azurecr.io
       IMAGE_NAME: acrltin.azurecr.io/lokaltalentin:latest
 
-      # Explicitly map each GitHub secret to env here:
+      # GitHub secrets explicitly mapped here:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
       REDIS_HOST: ${{ secrets.REDIS_HOST }}
@@ -70,24 +70,27 @@ jobs:
           az keyvault show --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP || \
             az keyvault create --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP --location $LOCATION
 
-      - name: Upload secrets to Azure Key Vault
+      - name: Upload secrets to Azure Key Vault (lowercase, hyphenated names)
         run: |
           secrets="DATABASE_URL SESSION_SECRET REDIS_HOST REDIS_PASSWORD REDIS_PORT FIREBASE_CLIENT_EMAIL FIREBASE_PRIVATE_KEY GOOGLE_API_KEY VITE_FIREBASE_API_KEY VITE_FIREBASE_APP_ID VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_MESSAGING_SENDER_ID VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_STORAGE_BUCKET CACHE_CANDIDATES_ENABLED CACHE_CANDIDATES_MIN_RECORDS CACHE_CANDIDATES_TTL CACHE_EMPLOYERS_ENABLED CACHE_EMPLOYERS_MIN_RECORDS CACHE_EMPLOYERS_TTL CACHE_ENABLED CACHE_JOBS_ENABLED CACHE_JOBS_MIN_RECORDS CACHE_JOBS_TTL CACHE_MIN_RECORDS CACHE_TTL"
           for secret in $secrets; do
+            secretname=$(echo "$secret" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
             val="${!secret}"
-            echo "Uploading $secret to Key Vault"
-            az keyvault secret set --vault-name $KEYVAULT_NAME --name "$secret" --value "$val"
+            echo "Uploading $secret as $secretname to Key Vault"
+            az keyvault secret set --vault-name $KEYVAULT_NAME --name "$secretname" --value "$val"
           done
 
-      - name: Create or update Azure Container App
+      - name: Create or update Azure Container App with Key Vault secrets
         run: |
+          secrets="DATABASE_URL SESSION_SECRET REDIS_HOST REDIS_PASSWORD REDIS_PORT FIREBASE_CLIENT_EMAIL FIREBASE_PRIVATE_KEY GOOGLE_API_KEY VITE_FIREBASE_API_KEY VITE_FIREBASE_APP_ID VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_MESSAGING_SENDER_ID VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_STORAGE_BUCKET CACHE_CANDIDATES_ENABLED CACHE_CANDIDATES_MIN_RECORDS CACHE_CANDIDATES_TTL CACHE_EMPLOYERS_ENABLED CACHE_EMPLOYERS_MIN_RECORDS CACHE_EMPLOYERS_TTL CACHE_ENABLED CACHE_JOBS_ENABLED CACHE_JOBS_MIN_RECORDS CACHE_JOBS_TTL CACHE_MIN_RECORDS CACHE_TTL"
+
           if az containerapp show --name $CONTAINERAPP_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
             echo "Updating container app..."
             az containerapp update \
               --name $CONTAINERAPP_NAME \
               --resource-group $RESOURCE_GROUP \
               --image $IMAGE_NAME \
-              --set-secrets $(echo $secrets | xargs -n1 -I{} echo {}=kvref:$KEYVAULT_NAME:{}) \
+              --set-secrets $(echo $secrets | xargs -n1 -I{} echo {}=kvref:$KEYVAULT_NAME:$(echo {} | tr '[:upper:]' '[:lower:]' | tr '_' '-')) \
               --set-env-vars $(echo $secrets | xargs -n1 -I{} echo {}=secretref:{})
           else
             echo "Creating container app..."
@@ -101,6 +104,6 @@ jobs:
               --registry-server $ACR_SERVER \
               --registry-username ${{ secrets.ACR_USERNAME }} \
               --registry-password ${{ secrets.ACR_PASSWORD }} \
-              --set-secrets $(echo $secrets | xargs -n1 -I{} echo {}=kvref:$KEYVAULT_NAME:{}) \
+              --set-secrets $(echo $secrets | xargs -n1 -I{} echo {}=kvref:$KEYVAULT_NAME:$(echo {} | tr '[:upper:]' '[:lower:]' | tr '_' '-')) \
               --set-env-vars $(echo $secrets | xargs -n1 -I{} echo {}=secretref:{})
           fi
