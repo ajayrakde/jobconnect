@@ -7,10 +7,9 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    # Auto-populate from secrets (clean!)
+
     env:
       NODE_ENV: production
-      # Cache config
       CACHE_CANDIDATES_ENABLED: ${{ secrets.CACHE_CANDIDATES_ENABLED }}
       CACHE_CANDIDATES_MIN_RECORDS: ${{ secrets.CACHE_CANDIDATES_MIN_RECORDS }}
       CACHE_CANDIDATES_TTL: ${{ secrets.CACHE_CANDIDATES_TTL }}
@@ -23,12 +22,9 @@ jobs:
       CACHE_JOBS_TTL: ${{ secrets.CACHE_JOBS_TTL }}
       CACHE_MIN_RECORDS: ${{ secrets.CACHE_MIN_RECORDS }}
       CACHE_TTL: ${{ secrets.CACHE_TTL }}
-      # Database
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      # Firebase admin
       FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
       FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
-      # Google/Firebase config
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
       VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
@@ -36,15 +32,12 @@ jobs:
       VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
       VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
       VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
-      # Redis
       REDIS_HOST: ${{ secrets.REDIS_HOST }}
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
       REDIS_PORT: ${{ secrets.REDIS_PORT }}
-      # Session
       SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
 
-
-    steps:    
+    steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -61,17 +54,34 @@ jobs:
           docker build -t acrltin.azurecr.io/lokaltalentin:latest .
           docker push acrltin.azurecr.io/lokaltalentin:latest
 
+      - name: Generate Azure env var string
+        id: buildenv
+        run: |
+          KEYS="NODE_ENV CACHE_CANDIDATES_ENABLED CACHE_CANDIDATES_MIN_RECORDS CACHE_CANDIDATES_TTL \
+          CACHE_EMPLOYERS_ENABLED CACHE_EMPLOYERS_MIN_RECORDS CACHE_EMPLOYERS_TTL CACHE_ENABLED \
+          CACHE_JOBS_ENABLED CACHE_JOBS_MIN_RECORDS CACHE_JOBS_TTL CACHE_MIN_RECORDS CACHE_TTL \
+          DATABASE_URL FIREBASE_CLIENT_EMAIL FIREBASE_PRIVATE_KEY GOOGLE_API_KEY \
+          VITE_FIREBASE_API_KEY VITE_FIREBASE_APP_ID VITE_FIREBASE_AUTH_DOMAIN \
+          VITE_FIREBASE_MESSAGING_SENDER_ID VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_STORAGE_BUCKET \
+          REDIS_HOST REDIS_PASSWORD REDIS_PORT SESSION_SECRET"
+
+          ENV_STRING=""
+          for KEY in $KEYS; do
+            eval VAL="\$$KEY"
+            ENV_STRING="$ENV_STRING --set-env-vars $KEY=$VAL"
+          done
+
+          echo "ENV_STRING=$ENV_STRING" >> $GITHUB_OUTPUT
+
       - name: Create or Update Azure Container App
         run: |
-          set -e
-          # Check if app exists
           if az containerapp show --name sbxlokaltalentin --resource-group rg-sbx-ltin &> /dev/null; then
             echo "🔁 Updating existing container app..."
             az containerapp update \
               --name sbxlokaltalentin \
               --resource-group rg-sbx-ltin \
               --image acrltin.azurecr.io/lokaltalentin:latest \
-              --set-env-vars NODE_ENV=production
+              ${{ steps.buildenv.outputs.ENV_STRING }}
           else
             echo "🚀 Creating new container app..."
             az containerapp create \
@@ -84,5 +94,5 @@ jobs:
               --registry-server acrltin.azurecr.io \
               --registry-username ${{ secrets.ACR_USERNAME }} \
               --registry-password ${{ secrets.ACR_PASSWORD }} \
-              --env-vars NODE_ENV=production
+              ${{ steps.buildenv.outputs.ENV_STRING }}
           fi
