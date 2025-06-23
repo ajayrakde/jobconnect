@@ -72,9 +72,7 @@ jobs:
             az containerapp env create --name $CONTAINERAPP_ENV --resource-group $RESOURCE_GROUP --location $LOCATION
           az keyvault show --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP || \
             az keyvault create --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP --location $LOCATION
-            SP_OBJECT_ID=$(az ad sp show --id $AZURE_CLIENT_ID --query objectId -o tsv)
-            az keyvault set-policy --name $KEYVAULT_NAME --object-id $SP_OBJECT_ID --secret-permissions get list set delete
-
+            
       - name: Upload secrets to Azure Key Vault (lowercase, hyphenated names)
         run: |
           secrets="DATABASE_URL SESSION_SECRET REDIS_HOST REDIS_PASSWORD REDIS_PORT FIREBASE_CLIENT_EMAIL FIREBASE_PRIVATE_KEY GOOGLE_API_KEY VITE_FIREBASE_API_KEY VITE_FIREBASE_APP_ID VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_MESSAGING_SENDER_ID VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_STORAGE_BUCKET CACHE_CANDIDATES_ENABLED CACHE_CANDIDATES_MIN_RECORDS CACHE_CANDIDATES_TTL CACHE_EMPLOYERS_ENABLED CACHE_EMPLOYERS_MIN_RECORDS CACHE_EMPLOYERS_TTL CACHE_ENABLED CACHE_JOBS_ENABLED CACHE_JOBS_MIN_RECORDS CACHE_JOBS_TTL CACHE_MIN_RECORDS CACHE_TTL"
