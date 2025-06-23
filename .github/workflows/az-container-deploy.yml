@@ -94,3 +94,4 @@ jobs:
               --registry-username ${{ secrets.ACR_USERNAME }} \
               --registry-password ${{ secrets.ACR_PASSWORD }} \
               ${{ steps.buildenv.outputs.ENV_STRING }}
+          fi
