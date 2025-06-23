@@ -1,83 +1,104 @@
-name: CI/CD to Azure Container App with Key Vault
+name: Deploy to Azure Container Apps
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
+
     env:
-      AZURE_KEYVAULT_NAME: kv-lokaltalentin
-      AZURE_CONTAINERAPP_NAME: sbxlokaltalentin
-      AZURE_RG: rg-sbx-ltin
-      AZURE_ENV: sbx
-      ACR_SERVER: acrltin.azurecr.io
-      ACR_IMAGE: acrltin.azurecr.io/lokaltalentin:latest
+      RESOURCE_GROUP: rg-sbx-ltin
+      CONTAINERAPP_NAME: sbxlokaltalentin
+      CONTAINERAPP_ENV: sbx
+      ACR_NAME: acrltin
+      ACR_LOGIN_SERVER: acrltin.azurecr.io
+      IMAGE_NAME: acrltin.azurecr.io/lokaltalentin:latest
+      KEYVAULT_NAME: kv-lokaltalentin
+      LOCATION: centralindia
+
+      # List of secrets keys to upload to Key Vault
+      SECRETS_LIST: |
+        DATABASE_URL
+        SESSION_SECRET
+        REDIS_HOST
+        REDIS_PASSWORD
+        REDIS_PORT
+        FIREBASE_CLIENT_EMAIL
+        FIREBASE_PRIVATE_KEY
+        GOOGLE_API_KEY
+        VITE_FIREBASE_API_KEY
+        VITE_FIREBASE_APP_ID
+        VITE_FIREBASE_AUTH_DOMAIN
+        VITE_FIREBASE_MESSAGING_SENDER_ID
+        VITE_FIREBASE_PROJECT_ID
+        VITE_FIREBASE_STORAGE_BUCKET
+        CACHE_CANDIDATES_ENABLED
+        CACHE_CANDIDATES_MIN_RECORDS
+        CACHE_CANDIDATES_TTL
+        CACHE_EMPLOYERS_ENABLED
+        CACHE_EMPLOYERS_MIN_RECORDS
+        CACHE_EMPLOYERS_TTL
+        CACHE_ENABLED
+        CACHE_JOBS_ENABLED
+        CACHE_JOBS_MIN_RECORDS
+        CACHE_JOBS_TTL
+        CACHE_MIN_RECORDS
+        CACHE_TTL
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Azure login
+      - name: Azure Login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Docker login to ACR
-        run: echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ env.ACR_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
+        run: echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ env.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
 
-      - name: Build and Push Docker image
+      - name: Build and push Docker image
         run: |
-          docker build -t $ACR_IMAGE .
-          docker push $ACR_IMAGE
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
 
-      - name: Ensure Azure Key Vault exists
+      - name: Ensure Azure resources exist
         run: |
-          az keyvault show --name $AZURE_KEYVAULT_NAME --resource-group $AZURE_RG || \
-          az keyvault create --name $AZURE_KEYVAULT_NAME --resource-group $AZURE_RG --location eastus
+          az group create --name $RESOURCE_GROUP --location $LOCATION
+          az containerapp env show --name $CONTAINERAPP_ENV --resource-group $RESOURCE_GROUP || az containerapp env create --name $CONTAINERAPP_ENV --resource-group $RESOURCE_GROUP --location $LOCATION
+          az keyvault show --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP || az keyvault create --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP --location $LOCATION
 
-      - name: Upload all GitHub secrets to Azure Key Vault
+      - name: Upload GitHub secrets to Azure Key Vault
         run: |
-          for secret in $(env | grep '^\(CACHE_\|DATABASE_URL\|FIREBASE_\|GOOGLE_API_KEY\|REDIS_\|SESSION_SECRET\|VITE_FIREBASE_\)' | cut -d= -f1); do
-            az keyvault secret set \
-              --vault-name $AZURE_KEYVAULT_NAME \
-              --name "$secret" \
-              --value "${{ secrets[secret] }}"
-          done
+          while IFS= read -r secret; do
+            echo "Uploading secret $secret"
+            az keyvault secret set --vault-name $KEYVAULT_NAME --name "$secret" --value "${{ secrets[secret] }}"
+          done <<< "$SECRETS_LIST"
 
-      - name: Create or Update Azure Container App
+      - name: Create or update Azure Container App
         run: |
-          EXISTS=$(az containerapp show --name $AZURE_CONTAINERAPP_NAME --resource-group $AZURE_RG --query "name" -o tsv || echo "")
-          
-          SECRET_KEYS=$(az keyvault secret list --vault-name $AZURE_KEYVAULT_NAME --query "[].name" -o tsv)
-          SET_SECRETS=""
-          SET_ENVVARS=""
-          for key in $SECRET_KEYS; do
-            SET_SECRETS+="$key=kvref:$AZURE_KEYVAULT_NAME:$key "
-            SET_ENVVARS+="$key=secretref:$key "
-          done
-
-          if [ -z "$EXISTS" ]; then
-            echo "Creating new container app..."
+          if az containerapp show --name $CONTAINERAPP_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
+            echo "Updating container app..."
+            az containerapp update \
+              --name $CONTAINERAPP_NAME \
+              --resource-group $RESOURCE_GROUP \
+              --image $IMAGE_NAME \
+              --set-secrets $(echo $SECRETS_LIST | xargs -n1 -I{} echo {}=kvref:$KEYVAULT_NAME:{}) \
+              --set-env-vars $(echo $SECRETS_LIST | xargs -n1 -I{} echo {}=secretref:{})
+          else
+            echo "Creating container app..."
             az containerapp create \
-              --name $AZURE_CONTAINERAPP_NAME \
-              --resource-group $AZURE_RG \
-              --environment $AZURE_ENV \
-              --image $ACR_IMAGE \
+              --name $CONTAINERAPP_NAME \
+              --resource-group $RESOURCE_GROUP \
+              --environment $CONTAINERAPP_ENV \
+              --image $IMAGE_NAME \
               --target-port 5000 \
               --ingress external \
-              --registry-server $ACR_SERVER \
+              --registry-server $ACR_LOGIN_SERVER \
               --registry-username ${{ secrets.ACR_USERNAME }} \
               --registry-password ${{ secrets.ACR_PASSWORD }} \
-              $(echo $SET_SECRETS | sed 's/\([^ ]\+\)/--set-secrets \1/g') \
-              $(echo $SET_ENVVARS | sed 's/\([^ ]\+\)/--set-env-vars \1/g')
-          else
-            echo "Updating existing container app..."
-            az containerapp update \
-              --name $AZURE_CONTAINERAPP_NAME \
-              --resource-group $AZURE_RG \
-              --image $ACR_IMAGE \
-              $(echo $SET_SECRETS | sed 's/\([^ ]\+\)/--set-secrets \1/g') \
-              $(echo $SET_ENVVARS | sed 's/\([^ ]\+\)/--set-env-vars \1/g')
+              --set-secrets $(echo $SECRETS_LIST | xargs -n1 -I{} echo {}=kvref:$KEYVAULT_NAME:{}) \
+              --set-env-vars $(echo $SECRETS_LIST | xargs -n1 -I{} echo {}=secretref:{})
           fi
