@@ -1,4 +1,4 @@
-name: CI/CD to Azure Container App
+name: CI/CD to Azure Container App with Key Vault
 
 on:
   push:
@@ -7,91 +7,77 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      AZURE_KEYVAULT_NAME: kv-lokaltalentin
+      AZURE_CONTAINERAPP_NAME: sbxlokaltalentin
+      AZURE_RG: rg-sbx-ltin
+      AZURE_ENV: sbx
+      ACR_SERVER: acrltin.azurecr.io
+      ACR_IMAGE: acrltin.azurecr.io/lokaltalentin:latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Login to Azure
+      - name: Azure login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Docker login to ACR
-        run: echo "${{ secrets.ACR_PASSWORD }}" | docker login acrltin.azurecr.io -u ${{ secrets.ACR_USERNAME }} --password-stdin
+        run: echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ env.ACR_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
 
       - name: Build and Push Docker image
         run: |
-          docker build -t acrltin.azurecr.io/lokaltalentin:latest .
-          docker push acrltin.azurecr.io/lokaltalentin:latest
+          docker build -t $ACR_IMAGE .
+          docker push $ACR_IMAGE
 
-      - name: Generate Azure env var string
-        id: buildenv
-        env:
-          NODE_ENV: production
-          CACHE_CANDIDATES_ENABLED: ${{ secrets.CACHE_CANDIDATES_ENABLED }}
-          CACHE_CANDIDATES_MIN_RECORDS: ${{ secrets.CACHE_CANDIDATES_MIN_RECORDS }}
-          CACHE_CANDIDATES_TTL: ${{ secrets.CACHE_CANDIDATES_TTL }}
-          CACHE_EMPLOYERS_ENABLED: ${{ secrets.CACHE_EMPLOYERS_ENABLED }}
-          CACHE_EMPLOYERS_MIN_RECORDS: ${{ secrets.CACHE_EMPLOYERS_MIN_RECORDS }}
-          CACHE_EMPLOYERS_TTL: ${{ secrets.CACHE_EMPLOYERS_TTL }}
-          CACHE_ENABLED: ${{ secrets.CACHE_ENABLED }}
-          CACHE_JOBS_ENABLED: ${{ secrets.CACHE_JOBS_ENABLED }}
-          CACHE_JOBS_MIN_RECORDS: ${{ secrets.CACHE_JOBS_MIN_RECORDS }}
-          CACHE_JOBS_TTL: ${{ secrets.CACHE_JOBS_TTL }}
-          CACHE_MIN_RECORDS: ${{ secrets.CACHE_MIN_RECORDS }}
-          CACHE_TTL: ${{ secrets.CACHE_TTL }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
-          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
-          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
-          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
-          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
-          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
-          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
-          REDIS_HOST: ${{ secrets.REDIS_HOST }}
-          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-          REDIS_PORT: ${{ secrets.REDIS_PORT }}
-          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+      - name: Ensure Azure Key Vault exists
         run: |
-          KEYS="NODE_ENV CACHE_CANDIDATES_ENABLED CACHE_CANDIDATES_MIN_RECORDS CACHE_CANDIDATES_TTL \
-          CACHE_EMPLOYERS_ENABLED CACHE_EMPLOYERS_MIN_RECORDS CACHE_EMPLOYERS_TTL CACHE_ENABLED \
-          CACHE_JOBS_ENABLED CACHE_JOBS_MIN_RECORDS CACHE_JOBS_TTL CACHE_MIN_RECORDS CACHE_TTL \
-          DATABASE_URL FIREBASE_CLIENT_EMAIL FIREBASE_PRIVATE_KEY GOOGLE_API_KEY \
-          VITE_FIREBASE_API_KEY VITE_FIREBASE_APP_ID VITE_FIREBASE_AUTH_DOMAIN \
-          VITE_FIREBASE_MESSAGING_SENDER_ID VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_STORAGE_BUCKET \
-          REDIS_HOST REDIS_PASSWORD REDIS_PORT SESSION_SECRET"
-          
-          ENV_STRING=""
-          for KEY in $KEYS; do
-            VAL="${!KEY}"
-            ENV_STRING="$ENV_STRING --set-env-vars $KEY=$VAL"
-          done
+          az keyvault show --name $AZURE_KEYVAULT_NAME --resource-group $AZURE_RG || \
+          az keyvault create --name $AZURE_KEYVAULT_NAME --resource-group $AZURE_RG --location eastus
 
-          echo "ENV_STRING=$ENV_STRING" >> $GITHUB_OUTPUT
+      - name: Upload all GitHub secrets to Azure Key Vault
+        run: |
+          for secret in $(env | grep '^\(CACHE_\|DATABASE_URL\|FIREBASE_\|GOOGLE_API_KEY\|REDIS_\|SESSION_SECRET\|VITE_FIREBASE_\)' | cut -d= -f1); do
+            az keyvault secret set \
+              --vault-name $AZURE_KEYVAULT_NAME \
+              --name "$secret" \
+              --value "${{ secrets[secret] }}"
+          done
 
       - name: Create or Update Azure Container App
         run: |
-          if az containerapp show --name sbxlokaltalentin --resource-group rg-sbx-ltin &> /dev/null; then
-            echo "🔁 Updating existing container app..."
-            az containerapp update \
-              --name sbxlokaltalentin \
-              --resource-group rg-sbx-ltin \
-              --image acrltin.azurecr.io/lokaltalentin:latest \
-              ${{ steps.buildenv.outputs.ENV_STRING }}
-          else
-            echo "🚀 Creating new container app..."
+          EXISTS=$(az containerapp show --name $AZURE_CONTAINERAPP_NAME --resource-group $AZURE_RG --query "name" -o tsv || echo "")
+          
+          SECRET_KEYS=$(az keyvault secret list --vault-name $AZURE_KEYVAULT_NAME --query "[].name" -o tsv)
+          SET_SECRETS=""
+          SET_ENVVARS=""
+          for key in $SECRET_KEYS; do
+            SET_SECRETS+="$key=kvref:$AZURE_KEYVAULT_NAME:$key "
+            SET_ENVVARS+="$key=secretref:$key "
+          done
+
+          if [ -z "$EXISTS" ]; then
+            echo "Creating new container app..."
             az containerapp create \
-              --name sbxlokaltalentin \
-              --resource-group rg-sbx-ltin \
-              --environment sbx \
-              --image acrltin.azurecr.io/lokaltalentin:latest \
+              --name $AZURE_CONTAINERAPP_NAME \
+              --resource-group $AZURE_RG \
+              --environment $AZURE_ENV \
+              --image $ACR_IMAGE \
               --target-port 5000 \
               --ingress external \
-              --registry-server acrltin.azurecr.io \
+              --registry-server $ACR_SERVER \
               --registry-username ${{ secrets.ACR_USERNAME }} \
               --registry-password ${{ secrets.ACR_PASSWORD }} \
-              ${{ steps.buildenv.outputs.ENV_STRING }}
+              $(echo $SET_SECRETS | sed 's/\([^ ]\+\)/--set-secrets \1/g') \
+              $(echo $SET_ENVVARS | sed 's/\([^ ]\+\)/--set-env-vars \1/g')
+          else
+            echo "Updating existing container app..."
+            az containerapp update \
+              --name $AZURE_CONTAINERAPP_NAME \
+              --resource-group $AZURE_RG \
+              --image $ACR_IMAGE \
+              $(echo $SET_SECRETS | sed 's/\([^ ]\+\)/--set-secrets \1/g') \
+              $(echo $SET_ENVVARS | sed 's/\([^ ]\+\)/--set-env-vars \1/g')
           fi
