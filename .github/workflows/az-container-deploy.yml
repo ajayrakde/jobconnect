@@ -1,0 +1,52 @@
+name: CI/CD to Azure Container App
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Docker login to ACR
+        run: echo "${{ secrets.ACR_PASSWORD }}" | docker login acrltin.azurecr.io -u ${{ secrets.ACR_USERNAME }} --password-stdin
+
+      - name: Build and Push Docker image
+        run: |
+          docker build -t acrltin.azurecr.io/lokaltalentin:latest .
+          docker push acrltin.azurecr.io/lokaltalentin:latest
+
+      - name: Create or Update Azure Container App
+        run: |
+          set -e
+          # Check if app exists
+          if az containerapp show --name sbxlokaltalentin --resource-group rg-sbx-ltin &> /dev/null; then
+            echo "🔁 Updating existing container app..."
+            az containerapp update \
+              --name sbxlokaltalentin \
+              --resource-group rg-sbx-ltin \
+              --image acrltin.azurecr.io/lokaltalentin:latest \
+              --set-env-vars NODE_ENV=production
+          else
+            echo "🚀 Creating new container app..."
+            az containerapp create \
+              --name sbxlokaltalentin \
+              --resource-group rg-sbx-ltin \
+              --environment sbx \
+              --image acrltin.azurecr.io/lokaltalentin:latest \
+              --target-port 5000 \
+              --ingress external \
+              --registry-server acrltin.azurecr.io \
+              --registry-username ${{ secrets.ACR_USERNAME }} \
+              --registry-password ${{ secrets.ACR_PASSWORD }} \
+              --env-vars NODE_ENV=production
+          fi
