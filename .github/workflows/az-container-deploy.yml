@@ -63,12 +63,17 @@ jobs:
           docker push $IMAGE_NAME
 
       - name: Ensure Azure resources exist
+        env:
+          KEYVAULT_NAME: kv-lokaltalentin
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}  # Your SP's appId/clientId
         run: |
           az group create --name $RESOURCE_GROUP --location $LOCATION
           az containerapp env show --name $CONTAINERAPP_ENV --resource-group $RESOURCE_GROUP || \
             az containerapp env create --name $CONTAINERAPP_ENV --resource-group $RESOURCE_GROUP --location $LOCATION
           az keyvault show --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP || \
             az keyvault create --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP --location $LOCATION
+            SP_OBJECT_ID=$(az ad sp show --id $AZURE_CLIENT_ID --query objectId -o tsv)
+            az keyvault set-policy --name $KEYVAULT_NAME --object-id $SP_OBJECT_ID --secret-permissions get list set delete
 
       - name: Upload secrets to Azure Key Vault (lowercase, hyphenated names)
         run: |
