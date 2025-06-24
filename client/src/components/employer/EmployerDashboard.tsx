@@ -367,7 +367,7 @@ export const EmployerDashboard: React.FC = () => {
                   <div key={application.id} className="flex items-center justify-between p-4 border border-border rounded-lg bg-muted/20">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-foreground">{application.candidateName || 'Anonymous Candidate'}</h3>
+                        <h3 className="font-semibold text-foreground">{`Candidate #${application.candidateId}`}</h3>
                         <Badge className={getJobStatusColor(application.status)}>
                           {application.status || 'pending'}
                         </Badge>
@@ -459,7 +459,7 @@ export const EmployerDashboard: React.FC = () => {
                       actions={actions}
                     >
                       <div className="flex items-center gap-3 mb-2">
-                        <Badge className={getStatusColor(status)}>
+                        <Badge className={getJobStatusColor(status)}>
                           {getStatusIcon(status)}
                           <span className="ml-1 capitalize">{status}</span>
                         </Badge>

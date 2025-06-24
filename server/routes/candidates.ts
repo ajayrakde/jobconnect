@@ -126,6 +126,14 @@ candidatesRouter.post(
   asyncHandler(async (req: any, res) => {
     const jobId = parseInt(req.params.id);
     const candidate = req.candidate;
+    const existing = await storage.getApplicationForCandidateJob(
+      candidate.id,
+      jobId
+    );
+    if (existing) {
+      return res.status(400).json({ message: 'Already applied' });
+    }
+
     const application = await storage.createApplication({
       jobPostId: jobId,
       candidateId: candidate.id,
