@@ -1,4 +1,4 @@
-name: Deploy Azure Container App with Key Vault (Proper Naming)
+name: Az-ContainerApp-Deployment-with-KV
 
 on:
   push:
@@ -87,39 +87,47 @@ jobs:
             az keyvault secret set --vault-name $KEYVAULT_NAME --name "$secretname" --value "$val"
           done
 
-      - name: Create or update Azure Container App with Key Vault secrets
+      - name: Create or update Azure Container App with Key Vault secrets (official pattern)
         run: |
           secrets="DATABASE_URL SESSION_SECRET REDIS_HOST REDIS_PASSWORD REDIS_PORT FIREBASE_CLIENT_EMAIL FIREBASE_PRIVATE_KEY GOOGLE_API_KEY VITE_FIREBASE_API_KEY VITE_FIREBASE_APP_ID VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_MESSAGING_SENDER_ID VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_STORAGE_BUCKET CACHE_CANDIDATES_ENABLED CACHE_CANDIDATES_MIN_RECORDS CACHE_CANDIDATES_TTL CACHE_EMPLOYERS_ENABLED CACHE_EMPLOYERS_MIN_RECORDS CACHE_EMPLOYERS_TTL CACHE_ENABLED CACHE_JOBS_ENABLED CACHE_JOBS_MIN_RECORDS CACHE_JOBS_TTL CACHE_MIN_RECORDS CACHE_TTL"
-
-          set_secrets_args=""
-          set_env_vars_args=""
-
+          
+          vault_name="$KEYVAULT_NAME"
+          vault_uri="https://$vault_name.vault.azure.net/secrets"
+          
+          secrets_arg=""
           for secret in $secrets; do
             secret_lower=$(echo "$secret" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
-            set_secrets_args+=" $secret=kvref:$KEYVAULT_NAME:$secret_lower"
-            set_env_vars_args+=" $secret=secretref:$secret"
+            if [[ -n "$secrets_arg" ]]; then
+              secrets_arg+=","
+            fi
+            secrets_arg+="${secret}=keyvaultref:${vault_uri}/${secret_lower}"
           done
-
-          if az containerapp show --name $CONTAINERAPP_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
+          
+          env_vars_args=""
+          for secret in $secrets; do
+            env_vars_args+="$secret=secretref:$secret "
+          done
+          
+          if az containerapp show --name "$CONTAINERAPP_NAME" --resource-group "$RESOURCE_GROUP" &> /dev/null; then
             echo "Updating container app..."
             az containerapp update \
-              --name $CONTAINERAPP_NAME \
-              --resource-group $RESOURCE_GROUP \
-              --image $IMAGE_NAME \
-              --set-secrets $set_secrets_args \
-              --set-env-vars $set_env_vars_args
+              --name "$CONTAINERAPP_NAME" \
+              --resource-group "$RESOURCE_GROUP" \
+              --image "$IMAGE_NAME" \
+              --secrets "$secrets_arg" \
+              --env-vars $env_vars_args
           else
             echo "Creating container app..."
             az containerapp create \
-              --name $CONTAINERAPP_NAME \
-              --resource-group $RESOURCE_GROUP \
-              --environment $CONTAINERAPP_ENV \
-              --image $IMAGE_NAME \
+              --name "$CONTAINERAPP_NAME" \
+              --resource-group "$RESOURCE_GROUP" \
+              --environment "$CONTAINERAPP_ENV" \
+              --image "$IMAGE_NAME" \
               --target-port 5000 \
               --ingress external \
-              --registry-server $ACR_SERVER \
-              --registry-username ${{ secrets.ACR_USERNAME }} \
-              --registry-password ${{ secrets.ACR_PASSWORD }} \
-              --set-secrets $set_secrets_args \
-              --set-env-vars $set_env_vars_args
+              --registry-server "$ACR_SERVER" \
+              --registry-username "${{ secrets.ACR_USERNAME }}" \
+              --registry-password "${{ secrets.ACR_PASSWORD }}" \
+              --secrets "$secrets_arg" \
+              --env-vars $env_vars_args
           fi
