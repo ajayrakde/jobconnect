@@ -118,8 +118,7 @@ jobs:
             az containerapp update \
               --name "$CONTAINERAPP_NAME" \
               --resource-group "$RESOURCE_GROUP" \
-              --image "$IMAGE_NAME:$GIT_SHA" \
-              "${env_vars_args[@]}"
+              --image "$IMAGE_NAME:$GIT_SHA"
           else
             echo "Creating container app..."
             az containerapp create \
