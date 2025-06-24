@@ -14,14 +14,22 @@ export const CandidateJobDetails: React.FC = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: job, isLoading } = useQuery({
+  const {
+    data: job,
+    isLoading: jobLoading,
+  } = useQuery({
     queryKey: [`/api/candidates/jobs/${id}`],
     enabled: !!id,
   });
 
-  const { data: applications = [] } = useQuery({
+  const {
+    data: applications = [],
+    isLoading: appsLoading,
+  } = useQuery({
     queryKey: ["/api/candidates/applications"],
   });
+
+  const isLoading = jobLoading || appsLoading;
 
   const [applied, setApplied] = React.useState<boolean>(() =>
     Array.isArray(applications)
@@ -108,7 +116,9 @@ export const CandidateJobDetails: React.FC = () => {
             </div>
             <Button
               onClick={handleApply}
-              disabled={applyMutation.isLoading || applied}
+              disabled={
+                applyMutation.isLoading || appsLoading || jobLoading || applied
+              }
               className="bg-primary hover:bg-primary-dark text-primary-foreground"
             >
               {applied ? "Applied" : "Apply"}

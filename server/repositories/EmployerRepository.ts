@@ -249,4 +249,36 @@ export class EmployerRepository {
       )
       .orderBy(desc(jobPosts.createdAt));
   }
+
+  /** Retrieve applications across all jobs for employer */
+  static async getApplicationsByEmployer(employerId: number) {
+    return db
+      .select({
+        id: applications.id,
+        jobPostId: applications.jobPostId,
+        candidateId: applications.candidateId,
+        status: applications.status,
+        appliedAt: applications.appliedAt,
+        jobTitle: jobPosts.title,
+      })
+      .from(applications)
+      .innerJoin(jobPosts, eq(jobPosts.id, applications.jobPostId))
+      .where(eq(jobPosts.employerId, employerId))
+      .orderBy(desc(applications.appliedAt));
+  }
+
+  /** Retrieve applications for a specific job without personal details */
+  static async getApplicationsByJobForEmployer(jobPostId: number) {
+    return db
+      .select({
+        id: applications.id,
+        jobPostId: applications.jobPostId,
+        candidateId: applications.candidateId,
+        status: applications.status,
+        appliedAt: applications.appliedAt,
+      })
+      .from(applications)
+      .where(eq(applications.jobPostId, jobPostId))
+      .orderBy(desc(applications.appliedAt));
+  }
 }

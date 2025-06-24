@@ -102,7 +102,25 @@ export class ApplicationRepository {
       .innerJoin(jobPosts, eq(jobPosts.id, applications.jobPostId))
       .where(eq(applications.candidateId, candidateId))
       .orderBy(desc(applications.appliedAt));
-    
+
     return results;
+  }
+
+  /**
+   * Find an application for a candidate and job
+   */
+  static async findByCandidateAndJob(candidateId: number, jobPostId: number) {
+    const [result] = await db
+      .select()
+      .from(applications)
+      .where(
+        and(
+          eq(applications.candidateId, candidateId),
+          eq(applications.jobPostId, jobPostId)
+        )
+      )
+      .limit(1);
+
+    return result;
   }
 }

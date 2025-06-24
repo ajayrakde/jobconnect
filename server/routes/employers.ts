@@ -252,7 +252,17 @@ employersRouter.get(
     if (!job || (job as any).employerId !== employer.id) {
       return res.status(404).json({ message: 'Job not found' });
     }
-    const applications = await storage.getApplicationsByJob(jobId);
+    const applications = await storage.getApplicationsByJobForEmployer(jobId);
+    res.json(applications);
+  })
+);
+
+employersRouter.get(
+  '/applications',
+  ...requireVerifiedRole('employer'),
+  asyncHandler(async (req: any, res) => {
+    const employer = req.employer;
+    const applications = await storage.getApplicationsByEmployer(employer.id);
     res.json(applications);
   })
 );

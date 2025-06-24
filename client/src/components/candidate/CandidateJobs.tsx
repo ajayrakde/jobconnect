@@ -53,15 +53,23 @@ export const CandidateJobs: React.FC = () => {
     },
   });
 
-  const { data: jobs = [], isLoading } = useQuery({
+  const {
+    data: jobs = [],
+    isLoading: jobsLoading,
+  } = useQuery({
     queryKey: ["/api/candidates/jobs"],
     enabled: !!userProfile?.candidate,
   });
 
-  const { data: applications = [] } = useQuery({
+  const {
+    data: applications = [],
+    isLoading: appsLoading,
+  } = useQuery({
     queryKey: ["/api/candidates/applications"],
     enabled: !!userProfile?.candidate,
   });
+
+  const isLoading = jobsLoading || appsLoading;
 
   const appliedJobIds = new Set(
     Array.isArray(applications)
@@ -157,9 +165,11 @@ export const CandidateJobs: React.FC = () => {
                   size="sm"
                   className="bg-primary hover:bg-primary-dark text-primary-foreground flex items-center gap-1"
                   onClick={() => applyMutation.mutate(job.id)}
-                  disabled={applyMutation.isLoading}
+                  disabled={
+                    applyMutation.isLoading || appsLoading || appliedJobIds.has(job.id)
+                  }
                 >
-                  Apply
+                  {appliedJobIds.has(job.id) ? 'Applied' : 'Apply'}
                 </Button>
               </div>}
           >

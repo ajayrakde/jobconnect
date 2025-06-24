@@ -442,28 +442,17 @@ export const JobDetails: React.FC = () => {
                   <div className="flex items-center gap-4">
                     <Avatar>
                       <AvatarFallback>
-                        {application.candidateName?.charAt(0) || 'A'}
+                        {`#${application.candidateId}`}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="font-semibold">{application.candidateName || 'Anonymous Candidate'}</h3>
+                      <h3 className="font-semibold">{`Candidate #${application.candidateId}`}</h3>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
                           Applied {formatDistanceToNow(new Date(application.appliedAt), { addSuffix: true })}
                         </div>
-                        {application.candidateEmail && (
-                          <div className="flex items-center gap-1">
-                            <Mail className="h-4 w-4" />
-                            {application.candidateEmail}
-                          </div>
-                        )}
-                        {application.candidatePhone && (
-                          <div className="flex items-center gap-1">
-                            <Phone className="h-4 w-4" />
-                            {application.candidatePhone}
-                          </div>
-                        )}
+                        {/* Personal contact details hidden for employers */}
                       </div>
                     </div>
                   </div>
@@ -483,10 +472,6 @@ export const JobDetails: React.FC = () => {
                         <DropdownMenuItem>
                           <Eye className="h-4 w-4 mr-2" />
                           View Profile
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Download className="h-4 w-4 mr-2" />
-                          Download Resume
                         </DropdownMenuItem>
                         <DropdownMenuItem>
                           <CheckCircle className="h-4 w-4 mr-2" />

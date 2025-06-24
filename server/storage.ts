@@ -27,6 +27,7 @@ import { eq, ne, desc, and, gte, sql } from "drizzle-orm";
 import { CandidateRepository } from './repositories/CandidateRepository';
 import { EmployerRepository } from './repositories/EmployerRepository';
 import { JobRepository } from './repositories/JobRepository';
+import { ApplicationRepository } from './repositories/ApplicationRepository';
 
 export interface IStorage {
   // User operations
@@ -85,6 +86,12 @@ export interface IStorage {
   createApplication(application: InsertApplication): Promise<Application>;
   getApplicationsByCandidate(candidateId: number): Promise<Application[]>;
   getApplicationsByJob(jobPostId: number): Promise<Application[]>;
+  getApplicationsByEmployer(employerId: number): Promise<any[]>;
+  getApplicationsByJobForEmployer(jobPostId: number): Promise<any[]>;
+  getApplicationForCandidateJob(
+    candidateId: number,
+    jobPostId: number
+  ): Promise<Application | undefined>;
 
   // Shortlist operations
   createShortlist(shortlist: InsertShortlist): Promise<Shortlist>;
@@ -352,8 +359,23 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(candidates.userId, users.id))
       .where(eq(applications.jobPostId, jobPostId))
       .orderBy(desc(applications.appliedAt));
-    
+
     return result;
+  }
+
+  async getApplicationsByEmployer(employerId: number): Promise<any[]> {
+    return EmployerRepository.getApplicationsByEmployer(employerId);
+  }
+
+  async getApplicationsByJobForEmployer(jobPostId: number): Promise<any[]> {
+    return EmployerRepository.getApplicationsByJobForEmployer(jobPostId);
+  }
+
+  async getApplicationForCandidateJob(
+    candidateId: number,
+    jobPostId: number
+  ): Promise<Application | undefined> {
+    return ApplicationRepository.findByCandidateAndJob(candidateId, jobPostId);
   }
 
   // Shortlist operations

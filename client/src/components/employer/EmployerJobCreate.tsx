@@ -23,6 +23,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, Briefcase, Plus, Minus } from "lucide-react";
 import { jobPostValidationSchema } from "@shared/zod";
+import { z } from "zod";
 
 
 type JobPostFormData = z.infer<typeof jobPostValidationSchema>;
@@ -111,7 +112,7 @@ export const EmployerJobCreate: React.FC = () => {
       );
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (result: any) => {
       toast({
         title: "Success",
         description: "Job post created successfully!",
@@ -119,7 +120,13 @@ export const EmployerJobCreate: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employers/jobs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/employers/recent-jobs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/employers/stats"] });
-      
+
+      const newJobId = result?.data?.id;
+      if (cloneData && newJobId) {
+        setLocation(`/jobs/${newJobId}`);
+        return;
+      }
+
       // Navigate back to the referring page
       const targetPage = referrer === 'jobs' ? '/jobs' : '/employer/dashboard';
       setLocation(targetPage);
