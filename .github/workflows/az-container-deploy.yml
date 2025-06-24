@@ -9,13 +9,14 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      GIT_SHA: ${{ github.sha }}
       RESOURCE_GROUP: rg-sbx-ltin
       LOCATION: centralindia
       CONTAINERAPP_ENV: sbx
       CONTAINERAPP_NAME: sbxlokaltalentin
       KEYVAULT_NAME: kv-lokaltalentin
       ACR_SERVER: acrltin.azurecr.io
-      IMAGE_NAME: acrltin.azurecr.io/lokaltalentin:latest
+      IMAGE_NAME: acrltin.azurecr.io/lokaltalentin:$GIT_SHA
 
       # GitHub secrets mapped here
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
