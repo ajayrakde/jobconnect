@@ -96,13 +96,18 @@ jobs:
           vault_name="$KEYVAULT_NAME"
           vault_uri="https://$vault_name.vault.azure.net/secrets"
 
-          declare -a secrets_array
-          declare -a env_vars_array
-
+          secrets_arg=""
           for secret in $secrets; do
             secret_lower=$(echo "$secret" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
-            secrets_array+=("$secret_lower=keyvaultref:${vault_uri}/${secret_lower}")
-            env_vars_array+=("$secret=$secret_lower")
+            if [[ -n "$secrets_arg" ]]; then
+              secrets_arg+=","
+            fi
+            secrets_arg+="${secret_lower}=keyvaultref:${vault_uri}/${secret_lower}"
+          done
+
+          env_vars_args=""
+          for secret in $secrets; do
+            env_vars_args+="$secret=$(echo "$secret" | tr '[:upper:]' '[:lower:]' | tr '_' '-') "
           done
 
           if az containerapp show --name "$CONTAINERAPP_NAME" --resource-group "$RESOURCE_GROUP" &> /dev/null; then
@@ -111,8 +116,8 @@ jobs:
               --name "$CONTAINERAPP_NAME" \
               --resource-group "$RESOURCE_GROUP" \
               --image "$IMAGE_NAME:$GIT_SHA" \
-              --secrets "${secrets_array[@]}" \
-              --env-vars "${env_vars_array[@]}"
+              --secrets "$secrets_arg" \
+              --env-vars $env_vars_args
           else
             echo "Creating container app..."
             az containerapp create \
@@ -125,6 +130,6 @@ jobs:
               --registry-server "$ACR_SERVER" \
               --registry-username "${{ secrets.ACR_USERNAME }}" \
               --registry-password "${{ secrets.ACR_PASSWORD }}" \
-              --secrets "${secrets_array[@]}" \
-              --env-vars "${env_vars_array[@]}"
+              --secrets "$secrets_arg" \
+              --env-vars $env_vars_args
           fi
