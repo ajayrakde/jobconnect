@@ -89,26 +89,20 @@ jobs:
           done
 
       - name: Create or update Azure Container App with Key Vault secrets (official pattern)
+        shell: bash
         run: |
           secrets="DATABASE_URL SESSION_SECRET REDIS_HOST REDIS_PASSWORD REDIS_PORT FIREBASE_CLIENT_EMAIL FIREBASE_PRIVATE_KEY GOOGLE_API_KEY VITE_FIREBASE_API_KEY VITE_FIREBASE_APP_ID VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_MESSAGING_SENDER_ID VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_STORAGE_BUCKET CACHE_CANDIDATES_ENABLED CACHE_CANDIDATES_MIN_RECORDS CACHE_CANDIDATES_TTL CACHE_EMPLOYERS_ENABLED CACHE_EMPLOYERS_MIN_RECORDS CACHE_EMPLOYERS_TTL CACHE_ENABLED CACHE_JOBS_ENABLED CACHE_JOBS_MIN_RECORDS CACHE_JOBS_TTL CACHE_MIN_RECORDS CACHE_TTL"
 
           vault_name="$KEYVAULT_NAME"
           vault_uri="https://$vault_name.vault.azure.net/secrets"
 
-          secrets_arg=""
-          env_vars_args=""
+          declare -a secrets_array
+          declare -a env_vars_array
 
           for secret in $secrets; do
             secret_lower=$(echo "$secret" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
-
-            # Build secrets_arg with lowercase secret names (valid KV names)
-            if [[ -n "$secrets_arg" ]]; then
-              secrets_arg+=","
-            fi
-            secrets_arg+="${secret_lower}=keyvaultref:${vault_uri}/${secret_lower}"
-
-            # Map env var uppercase to lowercase secret names in env-vars
-            env_vars_args+="$secret=$secret_lower "
+            secrets_array+=("$secret_lower=keyvaultref:${vault_uri}/${secret_lower}")
+            env_vars_array+=("$secret=$secret_lower")
           done
 
           if az containerapp show --name "$CONTAINERAPP_NAME" --resource-group "$RESOURCE_GROUP" &> /dev/null; then
@@ -117,8 +111,8 @@ jobs:
               --name "$CONTAINERAPP_NAME" \
               --resource-group "$RESOURCE_GROUP" \
               --image "$IMAGE_NAME:$GIT_SHA" \
-              --secrets "$secrets_arg" \
-              --env-vars $env_vars_args
+              --secrets "${secrets_array[@]}" \
+              --env-vars "${env_vars_array[@]}"
           else
             echo "Creating container app..."
             az containerapp create \
@@ -131,6 +125,6 @@ jobs:
               --registry-server "$ACR_SERVER" \
               --registry-username "${{ secrets.ACR_USERNAME }}" \
               --registry-password "${{ secrets.ACR_PASSWORD }}" \
-              --secrets "$secrets_arg" \
-              --env-vars $env_vars_args
+              --secrets "${secrets_array[@]}" \
+              --env-vars "${env_vars_array[@]}"
           fi
