@@ -16,7 +16,7 @@ jobs:
       CONTAINERAPP_NAME: sbxlokaltalentin
       KEYVAULT_NAME: kv-lokaltalentin
       ACR_SERVER: acrltin.azurecr.io
-      IMAGE_NAME: acrltin.azurecr.io/lokaltalentin:$GIT_SHA
+      IMAGE_NAME: acrltin.azurecr.io/lokaltalentin
 
       # GitHub secrets mapped here
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -67,8 +67,8 @@ jobs:
             --build-arg VITE_FIREBASE_STORAGE_BUCKET=$VITE_FIREBASE_STORAGE_BUCKET \
             --build-arg VITE_FIREBASE_MESSAGING_SENDER_ID=$VITE_FIREBASE_MESSAGING_SENDER_ID \
             --build-arg VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID \
-            -t $IMAGE_NAME .
-          docker push $IMAGE_NAME
+            -t $IMAGE_NAME:$GIT_SHA .
+          docker push $IMAGE_NAME:$GIT_SHA
 
       - name: Ensure Azure resources exist
         run: |
@@ -116,7 +116,7 @@ jobs:
             az containerapp update \
               --name "$CONTAINERAPP_NAME" \
               --resource-group "$RESOURCE_GROUP" \
-              --image "$IMAGE_NAME" \
+              --image "$IMAGE_NAME:$GIT_SHA" \
               --secrets "$secrets_arg" \
               --env-vars $env_vars_args
           else
@@ -125,7 +125,7 @@ jobs:
               --name "$CONTAINERAPP_NAME" \
               --resource-group "$RESOURCE_GROUP" \
               --environment "$CONTAINERAPP_ENV" \
-              --image "$IMAGE_NAME" \
+              --image "$IMAGE_NAME:$GIT_SHA" \
               --target-port 5000 \
               --ingress external \
               --registry-server "$ACR_SERVER" \
