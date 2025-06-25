@@ -1,136 +1,122 @@
-name: Az-ContainerApp-with-KeyVault
+name: Secure Azure Container App Deployment
 
 on:
   push:
     branches: [main]
 
+env:
+  RESOURCE_GROUP: rg-sbx-ltin
+  CONTAINER_APP_NAME: ca-sbx-ltin
+  CONTAINER_REGISTRY: acrltin.azurecr.io
+  IMAGE_NAME: acrltin.azurecr.io/your-app:${{ github.sha }}
+  KEY_VAULT: kv-lokaltalentin
+
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
-    env:
-      GIT_SHA: ${{ github.sha }}
-      RESOURCE_GROUP: rg-sbx-ltin
-      LOCATION: centralindia
-      CONTAINERAPP_ENV: sbx
-      CONTAINERAPP_NAME: sbxlokaltalentin
-      KEYVAULT_NAME: kv-lokaltalentin
-      ACR_SERVER: acrltin.azurecr.io
-      IMAGE_NAME: acrltin.azurecr.io/lokaltalentin
-
-      # GitHub secrets mapped here
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
-      REDIS_HOST: ${{ secrets.REDIS_HOST }}
-      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-      REDIS_PORT: ${{ secrets.REDIS_PORT }}
-      FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
-      FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
-      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-      VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
-      VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
-      VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
-      VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
-      VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
-      VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
-      CACHE_CANDIDATES_ENABLED: ${{ secrets.CACHE_CANDIDATES_ENABLED }}
-      CACHE_CANDIDATES_MIN_RECORDS: ${{ secrets.CACHE_CANDIDATES_MIN_RECORDS }}
-      CACHE_CANDIDATES_TTL: ${{ secrets.CACHE_CANDIDATES_TTL }}
-      CACHE_EMPLOYERS_ENABLED: ${{ secrets.CACHE_EMPLOYERS_ENABLED }}
-      CACHE_EMPLOYERS_MIN_RECORDS: ${{ secrets.CACHE_EMPLOYERS_MIN_RECORDS }}
-      CACHE_EMPLOYERS_TTL: ${{ secrets.CACHE_EMPLOYERS_TTL }}
-      CACHE_ENABLED: ${{ secrets.CACHE_ENABLED }}
-      CACHE_JOBS_ENABLED: ${{ secrets.CACHE_JOBS_ENABLED }}
-      CACHE_JOBS_MIN_RECORDS: ${{ secrets.CACHE_JOBS_MIN_RECORDS }}
-      CACHE_JOBS_TTL: ${{ secrets.CACHE_JOBS_TTL }}
-      CACHE_MIN_RECORDS: ${{ secrets.CACHE_MIN_RECORDS }}
-      CACHE_TTL: ${{ secrets.CACHE_TTL }}
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Azure login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+    # ----------------- 1. Azure CLI Login (SP is KeyVault secret officer) -----------------
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Docker login to ACR
-        run: echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ env.ACR_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
+    # ----------------- 2. Docker login to ACR using username/password -----------------
+    - name: Docker login to ACR
+      run: echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ env.CONTAINER_REGISTRY }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
 
-      - name: Build and push Docker image
-        run: |
-          docker build \
-            --build-arg VITE_FIREBASE_API_KEY=$VITE_FIREBASE_API_KEY \
-            --build-arg VITE_FIREBASE_AUTH_DOMAIN=$VITE_FIREBASE_AUTH_DOMAIN \
-            --build-arg VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID \
-            --build-arg VITE_FIREBASE_STORAGE_BUCKET=$VITE_FIREBASE_STORAGE_BUCKET \
-            --build-arg VITE_FIREBASE_MESSAGING_SENDER_ID=$VITE_FIREBASE_MESSAGING_SENDER_ID \
-            --build-arg VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID \
-            -t $IMAGE_NAME:$GIT_SHA .
-          docker push $IMAGE_NAME:$GIT_SHA
+    # ----------------- 3. Push all secrets to Azure Key Vault (in-memory, lowercase-dashed) -----------------
+    - name: Push all secrets to Azure Key Vault (in-memory)
+      env:
+        ALL_SECRETS: ${{ toJson(secrets) }}
+        KEY_VAULT: ${{ env.KEY_VAULT }}
+      run: |
+        for key in $(echo $ALL_SECRETS | jq -r 'to_entries[] | select(.key != "AZURE_CREDENTIALS" and .key != "ACR_USERNAME" and .key != "ACR_PASSWORD") | .key'); do
+          kv_key=$(echo "$key" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+          val=$(echo $ALL_SECRETS | jq -r --arg k "$key" '.[$k]')
+          az keyvault secret set --vault-name $KEY_VAULT --name $kv_key --value "$val"
+        done
 
-      - name: Ensure Azure resources exist
-        run: |
-          az group create --name $RESOURCE_GROUP --location $LOCATION
-          az containerapp env show --name $CONTAINERAPP_ENV --resource-group $RESOURCE_GROUP || \
-            az containerapp env create --name $CONTAINERAPP_ENV --resource-group $RESOURCE_GROUP --location $LOCATION
-          az keyvault show --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP || \
-            az keyvault create --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP --location $LOCATION
+    # ----------------- 4. Add all Key Vault secrets as Container App secret references (in-memory) -----------------
+    - name: Add Key Vault secret references to Container App (in-memory)
+      env:
+        ALL_SECRETS: ${{ toJson(secrets) }}
+        KEY_VAULT: ${{ env.KEY_VAULT }}
+        CONTAINER_APP_NAME: ${{ env.CONTAINER_APP_NAME }}
+        RESOURCE_GROUP: ${{ env.RESOURCE_GROUP }}
+      run: |
+        set_cmd="az containerapp secret set --name $CONTAINER_APP_NAME --resource-group $RESOURCE_GROUP"
+        for key in $(echo $ALL_SECRETS | jq -r 'to_entries[] | select(.key != "AZURE_CREDENTIALS" and .key != "ACR_USERNAME" and .key != "ACR_PASSWORD") | .key'); do
+          kv_key=$(echo "$key" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+          ref_name="${kv_key}-ref"
+          set_cmd="$set_cmd --secrets $ref_name=@Microsoft.KeyVault(VaultName=$KEY_VAULT;SecretName=$kv_key)"
+        done
+        eval $set_cmd
 
-      - name: Upload secrets to Azure Key Vault (lowercase, hyphenated names)
-        run: |
-          secrets="DATABASE_URL SESSION_SECRET REDIS_HOST REDIS_PASSWORD REDIS_PORT FIREBASE_CLIENT_EMAIL FIREBASE_PRIVATE_KEY GOOGLE_API_KEY VITE_FIREBASE_API_KEY VITE_FIREBASE_APP_ID VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_MESSAGING_SENDER_ID VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_STORAGE_BUCKET CACHE_CANDIDATES_ENABLED CACHE_CANDIDATES_MIN_RECORDS CACHE_CANDIDATES_TTL CACHE_EMPLOYERS_ENABLED CACHE_EMPLOYERS_MIN_RECORDS CACHE_EMPLOYERS_TTL CACHE_ENABLED CACHE_JOBS_ENABLED CACHE_JOBS_MIN_RECORDS CACHE_JOBS_TTL CACHE_MIN_RECORDS CACHE_TTL"
-          for secret in $secrets; do
-            secretname=$(echo "$secret" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
-            val="${!secret}"
-            echo "Uploading $secret as $secretname to Key Vault"
-            az keyvault secret set --vault-name $KEYVAULT_NAME --name "$secretname" --value "$val"
-          done
+    # ----------------- 5. Map all secret refs to env vars in Container App (in-memory) -----------------
+    - name: Map all secret refs to env vars in Container App (in-memory)
+      env:
+        ALL_SECRETS: ${{ toJson(secrets) }}
+        CONTAINER_APP_NAME: ${{ env.CONTAINER_APP_NAME }}
+        RESOURCE_GROUP: ${{ env.RESOURCE_GROUP }}
+      run: |
+        update_env="az containerapp update --name $CONTAINER_APP_NAME --resource-group $RESOURCE_GROUP --set-env-vars"
+        for key in $(echo $ALL_SECRETS | jq -r 'to_entries[] | select(.key != "AZURE_CREDENTIALS" and .key != "ACR_USERNAME" and .key != "ACR_PASSWORD") | .key'); do
+          kv_key=$(echo "$key" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+          ref_name="${kv_key}-ref"
+          update_env="$update_env $key=secretref:$ref_name"
+        done
+        eval $update_env
 
-      - name: Create or update Azure Container App with Key Vault secrets
-        shell: bash
-        run: |
-          secrets="DATABASE_URL SESSION_SECRET REDIS_HOST REDIS_PASSWORD REDIS_PORT FIREBASE_CLIENT_EMAIL FIREBASE_PRIVATE_KEY GOOGLE_API_KEY VITE_FIREBASE_API_KEY VITE_FIREBASE_APP_ID VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_MESSAGING_SENDER_ID VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_STORAGE_BUCKET CACHE_CANDIDATES_ENABLED CACHE_CANDIDATES_MIN_RECORDS CACHE_CANDIDATES_TTL CACHE_EMPLOYERS_ENABLED CACHE_EMPLOYERS_MIN_RECORDS CACHE_EMPLOYERS_TTL CACHE_ENABLED CACHE_JOBS_ENABLED CACHE_JOBS_MIN_RECORDS CACHE_JOBS_TTL CACHE_MIN_RECORDS CACHE_TTL"
-      
-          vault_name="$KEYVAULT_NAME"
-          vault_uri="https://$vault_name.vault.azure.net/secrets"
-      
-          # Prepare secrets as one comma-separated string
-          secrets_arg=""
-          for secret in $secrets; do
-            secret_lower=$(echo "$secret" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
-            if [[ -n "$secrets_arg" ]]; then
-              secrets_arg+=","
-            fi
-            secrets_arg+="${secret_lower}=keyvaultref:${vault_uri}/${secret_lower}"
-          done
-      
-          # Prepare env-vars as an array of repeated --env-vars arguments
-          env_vars_args=()
-          for secret in $secrets; do
-            secret_lower=$(echo "$secret" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
-            env_vars_args+=( --env-vars "$secret=$secret_lower" )
-          done
-      
-          if az containerapp show --name "$CONTAINERAPP_NAME" --resource-group "$RESOURCE_GROUP" &> /dev/null; then
-            echo "Updating container app..."
-            az containerapp update \
-              --name "$CONTAINERAPP_NAME" \
-              --resource-group "$RESOURCE_GROUP" \
-              --image "$IMAGE_NAME:$GIT_SHA"
-          else
-            echo "Creating container app..."
-            az containerapp create \
-              --name "$CONTAINERAPP_NAME" \
-              --resource-group "$RESOURCE_GROUP" \
-              --environment "$CONTAINERAPP_ENV" \
-              --image "$IMAGE_NAME:$GIT_SHA" \
-              --target-port 5000 \
-              --ingress external \
-              --registry-server "$ACR_SERVER" \
-              --registry-username "${{ secrets.ACR_USERNAME }}" \
-              --registry-password "${{ secrets.ACR_PASSWORD }}" \
-              --secrets "$secrets_arg" \
-              "${env_vars_args[@]}"
-          fi
+    # ----------------- 6. Build Docker image with ONLY SPECIFIED BUILD ARGS -----------------
+    - name: Build Docker image with selected build args only (in-memory)
+      env:
+        IMAGE_NAME: ${{ env.IMAGE_NAME }}
+        VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+        VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+        VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+        VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+        VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+        VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+      run: |
+        docker build \
+          --build-arg VITE_FIREBASE_API_KEY="$VITE_FIREBASE_API_KEY" \
+          --build-arg VITE_FIREBASE_AUTH_DOMAIN="$VITE_FIREBASE_AUTH_DOMAIN" \
+          --build-arg VITE_FIREBASE_PROJECT_ID="$VITE_FIREBASE_PROJECT_ID" \
+          --build-arg VITE_FIREBASE_STORAGE_BUCKET="$VITE_FIREBASE_STORAGE_BUCKET" \
+          --build-arg VITE_FIREBASE_MESSAGING_SENDER_ID="$VITE_FIREBASE_MESSAGING_SENDER_ID" \
+          --build-arg VITE_FIREBASE_APP_ID="$VITE_FIREBASE_APP_ID" \
+          -t $IMAGE_NAME .
+
+    # ----------------- 7. Push Docker image to ACR -----------------
+    - name: Push Docker image to ACR
+      env:
+        IMAGE_NAME: ${{ env.IMAGE_NAME }}
+      run: |
+        docker push $IMAGE_NAME
+
+    # ----------------- 8. Update Container App with new image -----------------
+    - name: Update Container App with new image
+      env:
+        CONTAINER_APP_NAME: ${{ env.CONTAINER_APP_NAME }}
+        RESOURCE_GROUP: ${{ env.RESOURCE_GROUP }}
+        IMAGE_NAME: ${{ env.IMAGE_NAME }}
+      run: |
+        az containerapp update \
+          --name $CONTAINER_APP_NAME \
+          --resource-group $RESOURCE_GROUP \
+          --image $IMAGE_NAME
+
+    # ----------------- 9. Restart Container App to refresh secrets -----------------
+    - name: Restart Container App
+      env:
+        CONTAINER_APP_NAME: ${{ env.CONTAINER_APP_NAME }}
+        RESOURCE_GROUP: ${{ env.RESOURCE_GROUP }}
+      run: |
+        az containerapp revision restart \
+          --name $CONTAINER_APP_NAME \
+          --resource-group $RESOURCE_GROUP
