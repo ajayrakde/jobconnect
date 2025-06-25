@@ -121,6 +121,47 @@ export const AdminCandidateDetails: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {candidate.documents && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Briefcase className="h-5 w-5" />
+              Documents
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {Object.entries(candidate.documents).map(([key, value]) => {
+              try {
+                const doc = JSON.parse(value as unknown as string);
+                return (
+                  <div key={key} className="flex items-center justify-between">
+                    <span className="capitalize text-muted-foreground">{key}:</span>
+                    {doc?.data ? (
+                      <a
+                        href={doc.data}
+                        download={doc.name || `${key}.pdf`}
+                        className="text-primary hover:underline"
+                      >
+                        Download {doc.name || key}
+                      </a>
+                    ) : (
+                      <span className="font-medium">{doc?.name || 'N/A'}</span>
+                    )}
+                  </div>
+                );
+              } catch {
+                return (
+                  <div key={key} className="flex items-center justify-between">
+                    <span className="capitalize text-muted-foreground">{key}:</span>
+                    <span className="font-medium">{value as string}</span>
+                  </div>
+                );
+              }
+            })}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

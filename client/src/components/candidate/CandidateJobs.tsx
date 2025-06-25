@@ -146,7 +146,6 @@ export const CandidateJobs: React.FC = () => {
             key={job.id}
             job={{
               title: job.title,
-              code: job.jobCode,
               positions: job.vacancy,
               qualification: job.minQualification,
               experience: job.experienceRequired,

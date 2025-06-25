@@ -1,6 +1,5 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "../ui/badge";
 
 export interface EmployerInfo {
   organizationName: string;
@@ -85,7 +84,6 @@ export const JobCard: React.FC<{
 }> = ({ job, actions, children }) => {
   const { title, positions, qualification, experience, city, jobCode } = job;
   const details = [
-    positions !== undefined ? `Positions: ${positions}` : undefined,
     qualification,
     experience,
     city,
@@ -98,13 +96,6 @@ export const JobCard: React.FC<{
     <Card className="bg-card border-border">
       <div className="flex items-start justify-between">
         <CardHeader className="p-4">
-          {job.jobCode && (
-    <div className="mb-2">
-      <Badge variant="outline" className="border-border text-xs">
-        {job.jobCode}
-      </Badge>
-    </div>
-  )}
           <CardTitle className="text-base font-semibold">{title}</CardTitle>
           <CardDescription>{details}</CardDescription>
         </CardHeader>
