@@ -71,15 +71,19 @@ export const CandidateJobs: React.FC = () => {
 
   const isLoading = jobsLoading || appsLoading;
 
-  const appliedJobIds = new Set(
+  const applicationMap = new Map(
     Array.isArray(applications)
-      ? applications.map((a: any) => a.jobPostId)
+      ? applications.map((a: any) => [a.jobPostId, a])
       : [],
   );
+
+  const appliedJobIds = new Set([...applicationMap.keys()]);
 
   const availableJobs = Array.isArray(jobs)
     ? jobs.filter((job: any) => !appliedJobIds.has(job.id))
     : [];
+
+  const allJobs = Array.isArray(jobs) ? jobs : [];
 
   if (isLoading) {
     return (
@@ -126,6 +130,22 @@ export const CandidateJobs: React.FC = () => {
     return "Fair Match";
   };
 
+  const getApplicationStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "applied":
+        return "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400";
+      case "shortlisted":
+        return "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400";
+      case "accepted":
+      case "hired":
+        return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400";
+      case "rejected":
+        return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400";
+      default:
+        return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400";
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -141,39 +161,51 @@ export const CandidateJobs: React.FC = () => {
       </div>
 
       <div className="space-y-4">
-        {availableJobs.map((job: Job) => (
-          <JobCard
-            key={job.id}
-            job={{
-              title: job.title,
-              positions: job.vacancy,
-              qualification: job.minQualification,
-              experience: job.experienceRequired,
-              city: job.location,
-              jobCode: job.jobCode,
-            }}
-            actions={
-              <div className="flex items-center gap-2">
-                <Link href={`/candidate/jobs/${job.id}`}>
-                  <Button variant="outline" size="sm" className="flex items-center gap-1">
-                    <Eye className="h-4 w-4" />
-                    View
+        {allJobs.map((job: Job) => {
+          const application: any | undefined = applicationMap.get(job.id);
+          return (
+            <JobCard
+              key={job.id}
+              job={{
+                title: job.title,
+                code: job.jobCode,
+                positions: job.vacancy,
+                qualification: job.minQualification,
+                experience: job.experienceRequired,
+                city: job.location,
+                jobCode: job.jobCode,
+              }}
+              actions={
+                <div className="flex items-center gap-2">
+                  <Link href={`/candidate/jobs/${job.id}`}>
+                    <Button variant="outline" size="sm" className="flex items-center gap-1">
+                      <Eye className="h-4 w-4" />
+                      View
+                    </Button>
+                  </Link>
+                  <Button
+                    size="sm"
+                    className="bg-primary hover:bg-primary-dark text-primary-foreground flex items-center gap-1"
+                    onClick={() => applyMutation.mutate(job.id)}
+                    disabled={
+                      applyMutation.isLoading || appsLoading || appliedJobIds.has(job.id)
+                    }
+                  >
+                    {appliedJobIds.has(job.id) ? 'Applied' : 'Apply'}
                   </Button>
-                </Link>
-                <Button
-                  size="sm"
-                  className="bg-primary hover:bg-primary-dark text-primary-foreground flex items-center gap-1"
-                  onClick={() => applyMutation.mutate(job.id)}
-                  disabled={
-                    applyMutation.isLoading || appsLoading || appliedJobIds.has(job.id)
-                  }
-                >
-                  {appliedJobIds.has(job.id) ? 'Applied' : 'Apply'}
-                </Button>
-              </div>}
-          >
-          </JobCard>
-        ))}
+                </div>
+              }
+            >
+              {application?.status && (
+                <div className="px-4 pb-4">
+                  <Badge className={getApplicationStatusColor(application.status)}>
+                    {application.status}
+                  </Badge>
+                </div>
+              )}
+            </JobCard>
+          );
+        })}
       </div>
     </div>
   );

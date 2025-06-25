@@ -101,6 +101,7 @@ export const JobCard: React.FC<{
         </CardHeader>
         {actions && <div className="flex items-end pr-4 pt-10">{actions}</div>}
       </div>
+      {children && <div className="px-4 pb-4">{children}</div>}
     </Card>
   );
 };
