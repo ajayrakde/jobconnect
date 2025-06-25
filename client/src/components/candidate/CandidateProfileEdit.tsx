@@ -6,12 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Save, X, User, Briefcase, Upload, FileText, Download, GraduationCap, Plus, Minus } from "lucide-react";
+import { Edit, Save, X, User, Briefcase, Upload, FileText, Download, GraduationCap, Plus, Minus } from "lucide-react";
+import { BackButton } from "@/components/common";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "wouter";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { genders, maritalStatuses } from "@shared/constants";
 
@@ -216,12 +216,13 @@ export const CandidateProfileEdit: React.FC = () => {
     <div className="max-w-4xl mx-auto">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <Link href="/candidate/dashboard">
-            <Button variant="ghost" size="sm" className="hover:bg-accent">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Go to Dashboard
-            </Button>
-          </Link>
+          <BackButton
+            fallback="/candidate/profile"
+            variant="ghost"
+            size="sm"
+            className="hover:bg-accent"
+            label="Back to Profile"
+          />
           <div>
             <h1 className="text-xl font-bold text-foreground">Profile Overview</h1>
             <p className="text-sm text-muted-foreground">View and edit your profile information section by section</p>
