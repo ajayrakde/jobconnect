@@ -99,17 +99,18 @@ export const JobCard: React.FC<{
       <div className="flex items-start justify-between">
         <CardHeader className="p-4">
           {job.jobCode && (
-    <div className="mb-2">
-      <Badge variant="outline" className="border-border text-xs">
-        {job.jobCode}
-      </Badge>
-    </div>
-  )}
+            <div className="mb-2">
+              <Badge variant="outline" className="border-border text-xs">
+                {job.jobCode}
+              </Badge>
+            </div>
+          )}
           <CardTitle className="text-base font-semibold">{title}</CardTitle>
           <CardDescription>{details}</CardDescription>
         </CardHeader>
         {actions && <div className="flex items-end pr-4 pt-10">{actions}</div>}
       </div>
+      {children && <div className="px-4 pb-4">{children}</div>}
     </Card>
   );
 };

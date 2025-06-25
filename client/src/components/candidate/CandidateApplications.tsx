@@ -34,6 +34,22 @@ export const CandidateApplications: React.FC = () => {
       )
     : [];
 
+  const getApplicationStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "applied":
+        return "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400";
+      case "shortlisted":
+        return "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400";
+      case "accepted":
+      case "hired":
+        return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400";
+      case "rejected":
+        return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400";
+      default:
+        return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400";
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -96,7 +112,15 @@ export const CandidateApplications: React.FC = () => {
                 </Button>
               </Link>
             }
-          />
+          >
+            {application.status && (
+              <div className="px-4 pb-4">
+                <Badge className={getApplicationStatusColor(application.status)}>
+                  {application.status}
+                </Badge>
+              </div>
+            )}
+          </JobCard>
         ))}
       </div>
     </div>
