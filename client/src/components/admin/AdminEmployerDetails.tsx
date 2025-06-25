@@ -3,7 +3,8 @@ import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Building2 } from "lucide-react";
+import { Building2 } from "lucide-react";
+import { BackButton } from "@/components/common";
 
 export const AdminEmployerDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,12 +34,7 @@ export const AdminEmployerDetails: React.FC = () => {
         <Card>
           <CardContent className="p-12 text-center">
             <h3 className="text-lg font-medium text-foreground mb-2">Employer not found</h3>
-            <Link href="/admin/tools">
-              <Button>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-            </Link>
+            <BackButton fallback="/admin/dashboard" />
           </CardContent>
         </Card>
       </div>
@@ -48,12 +44,7 @@ export const AdminEmployerDetails: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-2">
-        <Link href="/admin/tools">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-        </Link>
+        <BackButton fallback="/admin/dashboard" variant="outline" size="sm" />
         <h1 className="text-3xl font-bold text-foreground">Employer Details</h1>
       </div>
 

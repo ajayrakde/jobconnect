@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  ArrowLeft,
   MapPin,
   Calendar,
   Users,
@@ -36,6 +35,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { JobPost, Application } from "@shared/types";
 import { formatDistanceToNow } from "date-fns";
 import { useLocation } from "wouter";
+import { BackButton } from "@/components/common";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -178,12 +178,7 @@ export const JobDetails: React.FC = () => {
             <p className="text-muted-foreground mb-6">
               The job you're looking for doesn't exist or has been removed.
             </p>
-            <Link href="/jobs">
-              <Button>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Jobs
-              </Button>
-            </Link>
+            <BackButton fallback="/jobs" label="Back to Jobs" />
           </CardContent>
         </Card>
       </div>
@@ -248,12 +243,7 @@ export const JobDetails: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/jobs">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Jobs
-            </Button>
-          </Link>
+          <BackButton fallback="/jobs" label="Back to Jobs" variant="outline" size="sm" />
           <div>
             <h1 className="text-3xl font-bold text-foreground">{job.title}</h1>
             <p className="text-muted-foreground">Job Code: {job.jobCode}</p>

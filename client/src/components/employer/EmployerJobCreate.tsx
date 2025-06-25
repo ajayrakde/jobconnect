@@ -21,7 +21,8 @@ import { useToast } from "@/hooks/use-toast";
 import { qualifications, experienceLevels } from "@shared/constants";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Briefcase, Plus, Minus } from "lucide-react";
+import { Briefcase, Plus, Minus } from "lucide-react";
+import { BackButton } from "@/components/common";
 import { jobPostValidationSchema } from "@shared/zod";
 import { z } from "zod";
 
@@ -196,18 +197,17 @@ export const EmployerJobCreate: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Button
+        <BackButton
+          fallback="/jobs"
           variant="outline"
           size="sm"
+          label={referrer === 'jobs' ? 'Back to Jobs' : 'Back to Dashboard'}
+          className="border-border hover:bg-accent"
           onClick={() => {
             const targetPage = referrer === 'jobs' ? '/jobs' : '/employer/dashboard';
             setLocation(targetPage);
           }}
-          className="border-border hover:bg-accent"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to {referrer === 'jobs' ? 'Jobs' : 'Dashboard'}
-        </Button>
+        />
         <div>
           <h1 className="text-3xl font-bold text-foreground">Create Job Post</h1>
           <p className="text-muted-foreground">Fill in the details to post a new job opening</p>

@@ -22,8 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
- import {
-  ArrowLeft,
+import {
   MapPin,
   Calendar,
   Users,
@@ -40,6 +39,7 @@ import {
   Mail,
   Phone,
 } from "lucide-react";
+import { BackButton } from "@/components/common";
 import type { JobPost, Application, Employer } from "@shared/types";
 import { formatDistanceToNow } from "date-fns";
 
@@ -101,12 +101,7 @@ export const AdminJobDetails: React.FC = () => {
         <Card>
           <CardContent className="p-12 text-center">
             <h3 className="text-lg font-medium text-foreground mb-2">Job not found</h3>
-            <Link href="/admin/dashboard">
-              <Button>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-            </Link>
+            <BackButton fallback="/admin/dashboard" />
           </CardContent>
         </Card>
       </div>
@@ -169,12 +164,7 @@ export const AdminJobDetails: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex items-center gap-2">
-        <Link href="/admin/dashboard">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-        </Link>
+        <BackButton fallback="/admin/dashboard" variant="outline" size="sm" />
         <h1 className="text-3xl font-bold text-foreground">{job.title}</h1>
         <Badge className={getStatusColor(getJobStatus(job))}>
           {getStatusIcon(getJobStatus(job))}
