@@ -126,7 +126,6 @@ export class EmployerRepository {
    * Get employer statistics
    */
   static async getEmployerStats(employerId: number) {
-    // Add your statistics query here
     const stats = await db.transaction(async (tx: any) => {
       const [activeJobsCount] = await tx
         .select({ count: sql<number>`count(*)` })
@@ -139,10 +138,21 @@ export class EmployerRepository {
           )
         );
 
-      const [totalApplications] = await tx
+      const [fulfilledJobsCount] = await tx
         .select({ count: sql<number>`count(*)` })
         .from(jobPosts)
-        .leftJoin(applications, eq(applications.jobPostId, jobPosts.id))
+        .where(
+          and(
+            eq(jobPosts.employerId, employerId),
+            eq(jobPosts.jobStatus, 'FULFILLED'),
+            eq(jobPosts.deleted, false)
+          )
+        );
+
+      const [applicationsCount] = await tx
+        .select({ count: sql<number>`count(${applications.id})` })
+        .from(applications)
+        .innerJoin(jobPosts, eq(applications.jobPostId, jobPosts.id))
         .where(
           and(
             eq(jobPosts.employerId, employerId),
@@ -152,7 +162,8 @@ export class EmployerRepository {
 
       return {
         activeJobs: activeJobsCount.count,
-        totalApplications: totalApplications.count
+        fulfilledJobs: fulfilledJobsCount.count,
+        totalApplications: applicationsCount.count
       };
     });
 
