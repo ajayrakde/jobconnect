@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { genders, maritalStatuses } from "@shared/constants";
 
@@ -36,6 +36,7 @@ export const CandidateProfileEdit: React.FC = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editData, setEditData] = useState<any>({});
@@ -60,6 +61,7 @@ export const CandidateProfileEdit: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["/api/candidates/stats"] });
       setEditingSection(null);
       setEditData({});
+      setLocation("/candidate/profile");
     },
     onError: (error: any) => {
       toast({
