@@ -122,14 +122,12 @@ export const EmployerJobCreate: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employers/stats"] });
 
       const newJobId = result?.data?.id;
-      if (cloneData && newJobId) {
+      if (newJobId) {
         setLocation(`/jobs/${newJobId}`);
-        return;
+      } else {
+        const targetPage = referrer === 'jobs' ? '/jobs' : '/employer/dashboard';
+        setLocation(targetPage);
       }
-
-      // Navigate back to the referring page
-      const targetPage = referrer === 'jobs' ? '/jobs' : '/employer/dashboard';
-      setLocation(targetPage);
     },
     onError: (error: any) => {
       toast({
