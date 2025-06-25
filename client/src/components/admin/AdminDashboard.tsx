@@ -9,6 +9,8 @@ import { debugLog } from "@/lib/logger";
 export const AdminDashboard: React.FC = () => {
   const { data: stats } = useQuery({
     queryKey: ["/api/admin/stats"],
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
 

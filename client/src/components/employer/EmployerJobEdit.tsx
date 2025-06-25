@@ -12,7 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save } from "lucide-react";
+import { Save } from "lucide-react";
+import { BackButton } from "@/components/common";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -145,10 +146,7 @@ export const EmployerJobEdit: React.FC = () => {
             <p className="text-muted-foreground mb-6">
               The job you're trying to edit doesn't exist or has been removed.
             </p>
-            <Button onClick={() => setLocation("/jobs")}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Jobs
-            </Button>
+            <BackButton fallback="/jobs" label="Back to Jobs" />
           </CardContent>
         </Card>
       </div>
@@ -166,12 +164,9 @@ export const EmployerJobEdit: React.FC = () => {
               This job has been marked as fulfilled and cannot be edited. You can clone this job to create a new posting.
             </p>
             <div className="flex gap-4 justify-center">
-              <Button onClick={() => setLocation("/jobs")}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Jobs
-              </Button>
-              <Button 
-                variant="outline" 
+              <BackButton fallback="/jobs" label="Back to Jobs" />
+              <Button
+                variant="outline"
                 onClick={() => {
                   // Clone job functionality would go here
                   setLocation("/jobs/create");
@@ -189,10 +184,7 @@ export const EmployerJobEdit: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="outline" onClick={() => setLocation("/jobs")}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Jobs
-        </Button>
+        <BackButton fallback="/jobs" label="Back to Jobs" variant="outline" />
         <div>
           <h1 className="text-3xl font-bold text-foreground">Edit Job</h1>
           <p className="text-muted-foreground">Update job details and requirements</p>

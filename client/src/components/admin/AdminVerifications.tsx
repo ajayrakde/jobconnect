@@ -226,6 +226,7 @@ export const AdminVerifications: React.FC = () => {
           qualification: item.minQualification,
           experience: item.experienceRequired,
           city: item.location,
+          jobCode: item.jobCode,
           postedOn: formatDate(item.createdAt),
         }}
         actions={actions}

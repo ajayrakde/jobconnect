@@ -1,10 +1,11 @@
 import React from "react";
-import { useParams, Link } from "wouter";
+import { useParams } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Calendar, ArrowLeft, IndianRupee } from "lucide-react";
+import { MapPin, Calendar, IndianRupee } from "lucide-react";
+import { BackButton } from "@/components/common";
 import { formatDistanceToNow } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -80,12 +81,7 @@ export const CandidateJobDetails: React.FC = () => {
       <Card>
         <CardContent className="p-12 text-center space-y-4">
           <p className="text-muted-foreground">Job not found</p>
-          <Link href="/candidate/jobs">
-            <Button>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Jobs
-            </Button>
-          </Link>
+          <BackButton fallback="/jobs" label="Back to Jobs" />
         </CardContent>
       </Card>
     );
@@ -93,12 +89,12 @@ export const CandidateJobDetails: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <Link href="/candidate/jobs">
-        <Button variant="outline" size="sm" className="flex items-center gap-1">
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Button>
-      </Link>
+      <BackButton
+        fallback="/jobs"
+        variant="outline"
+        size="sm"
+        className="flex items-center gap-1"
+      />
 
       <Card>
         <CardHeader>
