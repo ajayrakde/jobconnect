@@ -88,7 +88,7 @@ export class AdminRepository {
       const [jobStats] = await tx
         .select({
           totalJobs: sql<number>`count(*)`,
-          activeJobs: sql<number>`sum(case when job_status = 'ACTIVE' then 1 else 0 end)`
+          activeJobs: sql<number>`sum(case when job_status in ('ACTIVE', 'ON_HOLD') then 1 else 0 end)`
         })
         .from(jobPosts)
         .where(eq(jobPosts.deleted, false));
