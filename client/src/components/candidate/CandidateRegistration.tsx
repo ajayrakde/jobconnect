@@ -180,9 +180,9 @@ export const CandidateRegistration: React.FC = () => {
         description: "Profile created successfully!",
       });
       
-      // Refresh profile and navigate to jobs page
+      // Refresh profile and navigate to the newly created profile page
       refreshProfile();
-      setLocation("/candidate/jobs");
+      setLocation("/candidate/profile");
     } catch (error) {
       toast({
         title: "Error",

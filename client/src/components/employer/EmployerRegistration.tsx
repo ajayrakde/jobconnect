@@ -55,7 +55,7 @@ export const EmployerRegistration: React.FC = () => {
 
   useEffect(() => {
     if (existingProfile && !checkingProfile) {
-      setLocation("/employer/dashboard");
+      setLocation("/employer/profile");
     }
   }, [existingProfile, checkingProfile, setLocation]);
 
@@ -77,7 +77,7 @@ export const EmployerRegistration: React.FC = () => {
             description: "Redirecting to your existing profile",
           });
           refreshProfile();
-          setLocation("/employer/dashboard");
+          setLocation("/employer/profile");
           return;
         }
         throw error;
@@ -90,7 +90,7 @@ export const EmployerRegistration: React.FC = () => {
         description: "Your employer profile has been created successfully",
       });
       refreshProfile();
-      setLocation("/employer/dashboard");
+      setLocation("/employer/profile");
     },
     onError: (error: any) => {
       console.error("Registration mutation error:", error);
@@ -102,7 +102,7 @@ export const EmployerRegistration: React.FC = () => {
           description: "Redirecting to your existing profile",
         });
         refreshProfile();
-        setLocation("/employer/dashboard");
+        setLocation("/employer/profile");
         return;
       }
       

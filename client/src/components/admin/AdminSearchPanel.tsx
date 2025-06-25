@@ -347,7 +347,7 @@ export const AdminSearchPanel: React.FC = () => {
           key={item.id}
           job={{
             title: job?.title ?? item.title,
-            code: job?.jobCode ?? item.jobCode,
+            jobCode: job?.jobCode ?? item.jobCode,
             positions: job?.vacancy ?? item.vacancy,
             qualification: job?.minQualification ?? item.minQualification,
             experience: job?.experienceRequired ?? item.experienceRequired,

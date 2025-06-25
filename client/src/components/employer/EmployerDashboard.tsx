@@ -384,10 +384,12 @@ export const EmployerDashboard: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="border-border hover:bg-accent">
-                        <Eye className="h-4 w-4 mr-1" />
-                        Review
-                      </Button>
+                      <Link href={`/employer/candidates/${application.candidateId}`}>
+                        <Button variant="outline" size="sm" className="border-border hover:bg-accent">
+                          <Eye className="h-4 w-4 mr-1" />
+                          Review
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 ))
@@ -454,6 +456,7 @@ export const EmployerDashboard: React.FC = () => {
                         qualification: job.minQualification,
                         experience: job.experienceRequired,
                         city: job.location,
+                        jobCode: job.jobCode,
                         postedOn: new Date(job.createdAt).toLocaleDateString(),
                       }}
                       actions={actions}
@@ -473,10 +476,6 @@ export const EmployerDashboard: React.FC = () => {
                         <div className="flex items-center gap-1">
                           <Users className="h-4 w-4" />
                           {job.applicationsCount || 0} applications
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Briefcase className="h-4 w-4" />
-                          {job.jobCode}
                         </div>
                       </div>
                       <p className="text-muted-foreground text-sm line-clamp-2">{job.description}</p>

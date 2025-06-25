@@ -3,7 +3,8 @@ import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, User, Briefcase } from "lucide-react";
+import { User, Briefcase } from "lucide-react";
+import { BackButton } from "@/components/common";
 
 export const AdminCandidateDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,12 +36,7 @@ export const AdminCandidateDetails: React.FC = () => {
             <h3 className="text-lg font-medium text-foreground mb-2">
               Candidate not found
             </h3>
-            <Link href="/admin/tools">
-              <Button>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-            </Link>
+            <BackButton fallback="/admin/dashboard" />
           </CardContent>
         </Card>
       </div>
@@ -50,12 +46,7 @@ export const AdminCandidateDetails: React.FC = () => {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center gap-2">
-        <Link href="/admin/tools">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-        </Link>
+        <BackButton fallback="/admin/dashboard" variant="outline" size="sm" />
         <h1 className="text-3xl font-bold text-foreground">Candidate Details</h1>
       </div>
 
@@ -130,6 +121,47 @@ export const AdminCandidateDetails: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {candidate.documents && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Briefcase className="h-5 w-5" />
+              Documents
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {Object.entries(candidate.documents).map(([key, value]) => {
+              try {
+                const doc = JSON.parse(value as unknown as string);
+                return (
+                  <div key={key} className="flex items-center justify-between">
+                    <span className="capitalize text-muted-foreground">{key}:</span>
+                    {doc?.data ? (
+                      <a
+                        href={doc.data}
+                        download={doc.name || `${key}.pdf`}
+                        className="text-primary hover:underline"
+                      >
+                        Download {doc.name || key}
+                      </a>
+                    ) : (
+                      <span className="font-medium">{doc?.name || 'N/A'}</span>
+                    )}
+                  </div>
+                );
+              } catch {
+                return (
+                  <div key={key} className="flex items-center justify-between">
+                    <span className="capitalize text-muted-foreground">{key}:</span>
+                    <span className="font-medium">{value as string}</span>
+                  </div>
+                );
+              }
+            })}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
