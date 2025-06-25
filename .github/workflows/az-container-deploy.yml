@@ -6,7 +6,7 @@ on:
 
 env:
   RESOURCE_GROUP: rg-sbx-ltin
-  CONTAINER_APP_NAME: ca-sbx-ltin
+  CONTAINER_APP_NAME: sbxlokaltalentin
   CONTAINER_REGISTRY: acrltin.azurecr.io
   IMAGE_NAME: acrltin.azurecr.io/your-app:${{ github.sha }}
   KEY_VAULT: kv-lokaltalentin
