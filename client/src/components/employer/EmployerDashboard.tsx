@@ -384,10 +384,12 @@ export const EmployerDashboard: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="border-border hover:bg-accent">
-                        <Eye className="h-4 w-4 mr-1" />
-                        Review
-                      </Button>
+                      <Link href={`/employer/candidates/${application.candidateId}`}>
+                        <Button variant="outline" size="sm" className="border-border hover:bg-accent">
+                          <Eye className="h-4 w-4 mr-1" />
+                          Review
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 ))
