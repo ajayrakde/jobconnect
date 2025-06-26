@@ -64,6 +64,7 @@ jobs:
         ALL_SECRETS: ${{ toJson(secrets) }}
         CONTAINER_APP_NAME: ${{ env.CONTAINER_APP_NAME }}
         RESOURCE_GROUP: ${{ env.RESOURCE_GROUP }}
+        KEY_VAULT: ${{ env.KEY_VAULT }}
       run: |
         env_args=""
         for key in $(echo $ALL_SECRETS | jq -r 'to_entries[] | select(.key != "AZURE_CREDENTIALS" and .key != "ACR_USERNAME" and .key != "ACR_PASSWORD" and .key != "FIREBASE_PRIVATE_KEY_B64") | .key'); do
@@ -71,6 +72,7 @@ jobs:
           ref_name="${kv_key}-ref"
           env_args="$env_args $key=secretref:$ref_name"
         done
+        env_args="$env_args KEY_VAULT_NAME=$KEY_VAULT"
         az containerapp update --name "$CONTAINER_APP_NAME" --resource-group "$RESOURCE_GROUP" --set-env-vars $env_args
 
     # ----------------- 6. Build Docker image with ONLY SPECIFIED BUILD ARGS -----------------

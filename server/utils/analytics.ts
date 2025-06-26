@@ -24,12 +24,12 @@ export async function trackSearchQuery(data: SearchAnalyticsData): Promise<void>
     });
 
     // Update popular searches cache every 100 searches
-    const totalSearches = await db
-      .select({ count: sql`count(*)` })
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
       .from(searchAnalytics)
       .where(eq(searchAnalytics.searchType, data.searchType));
 
-    if (totalSearches % 100 === 0) {
+    if (count % 100 === 0) {
       await updatePopularSearchesCache(data.searchType);
     }
   } catch (error) {
