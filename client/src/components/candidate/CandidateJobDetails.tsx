@@ -9,11 +9,14 @@ import { BackButton } from "@/components/common";
 import { formatDistanceToNow } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export const CandidateJobDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { userProfile } = useAuth();
+  const isVerified = userProfile?.candidate?.profileStatus === "verified";
 
   const {
     data: job,
@@ -113,7 +116,11 @@ export const CandidateJobDetails: React.FC = () => {
             <Button
               onClick={handleApply}
               disabled={
-                applyMutation.isLoading || appsLoading || jobLoading || applied
+                !isVerified ||
+                applyMutation.isLoading ||
+                appsLoading ||
+                jobLoading ||
+                applied
               }
               className="bg-primary hover:bg-primary-dark text-primary-foreground"
             >

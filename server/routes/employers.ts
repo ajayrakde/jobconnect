@@ -205,14 +205,14 @@ employersRouter.patch(
   asyncHandler(async (req: any, res) => {
     const employer = req.employer;
     const jobId = parseInt(req.params.id);
-    const job = await JobPostRepository.findById(jobId);
+    const job = await storage.getJobPost(jobId);
     if (!job || (job as any).employerId !== employer.id) {
       return res.status(404).json({ message: 'Job not found' });
     }
     if (!isValidTransition(job.jobStatus as any, 'FULFILLED', job.deleted)) {
       return res.status(400).json({ message: 'Invalid status transition' });
     }
-    const fulfilledJob = await JobPostRepository.update(jobId, { jobStatus: 'FULFILLED' } as any);
+    const fulfilledJob = await storage.markJobAsFulfilled(jobId);
     res.json(fulfilledJob);
   })
 );
