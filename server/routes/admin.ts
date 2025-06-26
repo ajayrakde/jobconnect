@@ -74,7 +74,7 @@ adminRouter.get('/jobs', authenticateUser, asyncHandler(async (req: any, res) =>
   if (!user || user.role !== 'admin') {
     return res.status(403).json({ message: 'Access denied' });
   }
-  const jobs = await storage.getAllJobPosts();
+  const jobs = await storage.getActiveJobPosts();
   res.json(jobs);
 }));
 
@@ -248,6 +248,32 @@ adminRouter.get('/employers/:id', authenticateUser, asyncHandler(async (req: any
     return res.status(404).json({ message: 'Employer not found' });
   }
   res.json(employer);
+}));
+
+adminRouter.get('/employers/:id/documents/:docKey', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const id = parseInt(req.params.id);
+  const key = req.params.docKey;
+  const employer = await storage.getEmployer(id);
+  const value = employer?.documents && (employer.documents as any)[key];
+  if (!value) return res.status(404).json({ message: 'Document not found' });
+  try {
+    const doc = JSON.parse(value as any);
+    if (doc.data) {
+      const base = doc.data.split(',')[1] || doc.data;
+      const buffer = Buffer.from(base, 'base64');
+      res.setHeader('Content-Type', doc.type || 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="${doc.name || key}"`);
+      return res.send(buffer);
+    }
+    if (doc.url) {
+      return res.redirect(doc.url);
+    }
+  } catch {}
+  res.status(404).json({ message: 'Document not found' });
 }));
 
 adminRouter.get('/unverified-candidates', authenticateUser, asyncHandler(async (req: any, res) => {
@@ -518,6 +544,32 @@ adminRouter.get('/candidates/:id', authenticateUser, asyncHandler(async (req: an
     return res.status(404).json({ message: 'Candidate not found' });
   }
   res.json(candidate);
+}));
+
+adminRouter.get('/candidates/:id/documents/:docKey', authenticateUser, asyncHandler(async (req: any, res) => {
+  const user = await storage.getUserByFirebaseUid(req.user.uid);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  const id = parseInt(req.params.id);
+  const key = req.params.docKey;
+  const candidate = await storage.getCandidate(id);
+  const value = candidate?.documents && (candidate.documents as any)[key];
+  if (!value) return res.status(404).json({ message: 'Document not found' });
+  try {
+    const doc = JSON.parse(value as any);
+    if (doc.data) {
+      const base = doc.data.split(',')[1] || doc.data;
+      const buffer = Buffer.from(base, 'base64');
+      res.setHeader('Content-Type', doc.type || 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="${doc.name || key}"`);
+      return res.send(buffer);
+    }
+    if (doc.url) {
+      return res.redirect(doc.url);
+    }
+  } catch {}
+  res.status(404).json({ message: 'Document not found' });
 }));
 
 adminRouter.get('/jobs/:jobId/matches', authenticateUser, asyncHandler(async (req: any, res) => {

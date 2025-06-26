@@ -100,17 +100,12 @@ export const AdminEmployerDetails: React.FC = () => {
                 return (
                   <div key={key} className="flex items-center justify-between">
                     <span className="capitalize text-muted-foreground">{key}:</span>
-                    {doc?.data ? (
-                      <a
-                        href={doc.data}
-                        download={doc.name || `${key}.pdf`}
-                        className="text-primary hover:underline"
-                      >
-                        Download {doc.name || key}
-                      </a>
-                    ) : (
-                      <span className="font-medium">{doc?.name || 'N/A'}</span>
-                    )}
+                    <a
+                      href={`/api/admin/employers/${id}/documents/${key}`}
+                      className="text-primary hover:underline"
+                    >
+                      Download {doc?.name || key}
+                    </a>
                   </div>
                 );
               } catch {

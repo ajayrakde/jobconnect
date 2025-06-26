@@ -37,11 +37,14 @@ export const CandidateJobs: React.FC = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  const [appliedIds, setAppliedIds] = React.useState<Set<number>>(new Set());
+
   const applyMutation = useMutation({
     mutationFn: async (jobId: number) => {
       return apiRequest(`/api/candidates/jobs/${jobId}/apply`, "POST");
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
+      setAppliedIds(prev => new Set(prev).add(variables));
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["/api/candidates/applications"] }),
         queryClient.invalidateQueries({ queryKey: ["/api/candidates/jobs"] }),
@@ -77,7 +80,7 @@ export const CandidateJobs: React.FC = () => {
       : [],
   );
 
-  const appliedJobIds = new Set([...applicationMap.keys()]);
+  const appliedJobIds = new Set([...applicationMap.keys(), ...Array.from(appliedIds)]);
 
   const availableJobs = Array.isArray(jobs)
     ? jobs.filter((job: any) => !appliedJobIds.has(job.id))
