@@ -178,7 +178,7 @@ export const JobDetails: React.FC = () => {
             <p className="text-muted-foreground mb-6">
               The job you're looking for doesn't exist or has been removed.
             </p>
-            <BackButton fallback="/jobs" label="Back to Jobs" />
+            <BackButton fallback="/employer/jobs" label="Back to Jobs" />
           </CardContent>
         </Card>
       </div>
@@ -243,7 +243,7 @@ export const JobDetails: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <BackButton fallback="/jobs" label="Back to Jobs" variant="outline" size="sm" />
+          <BackButton fallback="/employer/jobs" label="Back to Jobs" variant="outline" size="sm" />
           <div>
             <h1 className="text-3xl font-bold text-foreground">{job.title}</h1>
             <p className="text-muted-foreground">Job Code: {job.jobCode}</p>

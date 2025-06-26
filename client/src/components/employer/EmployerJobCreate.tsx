@@ -126,7 +126,7 @@ export const EmployerJobCreate: React.FC = () => {
       if (newJobId) {
         setLocation(`/jobs/${newJobId}`);
       } else {
-        const targetPage = referrer === 'jobs' ? '/jobs' : '/employer/dashboard';
+        const targetPage = referrer === 'jobs' ? '/employer/jobs' : '/employer/dashboard';
         setLocation(targetPage);
       }
     },
@@ -198,13 +198,13 @@ export const EmployerJobCreate: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
         <BackButton
-          fallback="/jobs"
+          fallback="/employer/jobs"
           variant="outline"
           size="sm"
           label={referrer === 'jobs' ? 'Back to Jobs' : 'Back to Dashboard'}
           className="border-border hover:bg-accent"
           onClick={() => {
-            const targetPage = referrer === 'jobs' ? '/jobs' : '/employer/dashboard';
+            const targetPage = referrer === 'jobs' ? '/employer/jobs' : '/employer/dashboard';
             setLocation(targetPage);
           }}
         />
@@ -426,7 +426,7 @@ export const EmployerJobCreate: React.FC = () => {
             type="button"
             variant="outline"
             onClick={() => {
-              const targetPage = referrer === 'jobs' ? '/jobs' : '/employer/dashboard';
+              const targetPage = referrer === 'jobs' ? '/employer/jobs' : '/employer/dashboard';
               setLocation(targetPage);
             }}
             className="border-border hover:bg-accent"
