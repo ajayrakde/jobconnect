@@ -21,6 +21,7 @@ import { EmployerJobs } from "./components/employer/EmployerJobs";
 import { EmployerJobCreate } from "./components/employer/EmployerJobCreate";
 import { EmployerJobEdit } from "./components/employer/EmployerJobEdit";
 import { JobDetails } from "./components/employer/JobDetails";
+import { EmployerCandidateDetails } from "./components/employer/EmployerCandidateDetails";
 import { EmployerProfile } from "./components/employer/EmployerProfile";
 import { AdminCandidateDetails } from "./components/admin/AdminCandidateDetails";
 import { AdminJobDetails } from "./components/admin/AdminJobDetails";
@@ -377,6 +378,15 @@ function Router() {
             <div className="min-h-screen bg-background">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <JobDetails />
+              </div>
+            </div>
+          </ProtectedRoute>
+        </Route>
+        <Route path="/employer/candidates/:id">
+          <ProtectedRoute roles={["employer"]}>
+            <div className="min-h-screen bg-background">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <EmployerCandidateDetails />
               </div>
             </div>
           </ProtectedRoute>

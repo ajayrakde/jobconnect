@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { debugLog } from "@/lib/logger";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import {
   qualifications,
   experienceLevels,
@@ -150,6 +150,11 @@ export const AdminSearchPanel: React.FC = () => {
     sort
   );
 
+  const handleDelete = async (entity: string, id: number) => {
+    if (!confirm('Are you sure you want to delete this record?')) return;
+    await apiRequest(`/api/admin/${entity}s/${id}`, 'DELETE');
+  };
+
   // Filter definitions per type with predefined options
   const filterOptions = {
     candidate: [
@@ -221,9 +226,11 @@ export const AdminSearchPanel: React.FC = () => {
       const user = getNested(item, ["user", "users"]);
       const actions = (
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Eye className="h-4 w-4" />
-          </Button>
+          <Link href={`/admin/candidates/${candidate?.id || item.id}`}> 
+            <Button variant="outline" size="sm">
+              <Eye className="h-4 w-4" />
+            </Button>
+          </Link>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -231,17 +238,16 @@ export const AdminSearchPanel: React.FC = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <CheckCircle className="h-4 w-4 mr-2" />Verify
+              <DropdownMenuItem asChild>
+                <Link href={`/admin/candidates/${candidate?.id || item.id}/edit`}>
+                  <Edit className="h-4 w-4 mr-2" />Edit
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Edit className="h-4 w-4 mr-2" />Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDelete('candidate', candidate?.id || item.id)}>
                 <Trash2 className="h-4 w-4 mr-2" />Delete
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Eye className="h-4 w-4 mr-2" />View As
+              <DropdownMenuItem disabled>
+                <FlaskConical className="h-4 w-4 mr-2" />Run Compatibility
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -271,9 +277,11 @@ export const AdminSearchPanel: React.FC = () => {
       const employer = getNested(item, ["employer", "employers", "employerData"]);
       const actions = (
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Eye className="h-4 w-4" />
-          </Button>
+          <Link href={`/admin/employers/${employer?.id || item.id}`}> 
+            <Button variant="outline" size="sm">
+              <Eye className="h-4 w-4" />
+            </Button>
+          </Link>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -281,17 +289,16 @@ export const AdminSearchPanel: React.FC = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <CheckCircle className="h-4 w-4 mr-2" />Verify
+              <DropdownMenuItem asChild>
+                <Link href={`/admin/employers/${employer?.id || item.id}/edit`}>
+                  <Edit className="h-4 w-4 mr-2" />Edit
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Edit className="h-4 w-4 mr-2" />Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDelete('employer', employer?.id || item.id)}>
                 <Trash2 className="h-4 w-4 mr-2" />Delete
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Eye className="h-4 w-4 mr-2" />View As
+              <DropdownMenuItem disabled>
+                <FlaskConical className="h-4 w-4 mr-2" />Run Compatibility
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -315,9 +322,11 @@ export const AdminSearchPanel: React.FC = () => {
       const job = getNested(item, ["job", "jobPost", "jobPosts"]);
       const actions = (
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Eye className="h-4 w-4" />
-          </Button>
+          <Link href={`/admin/jobs/${job?.id || item.id}`}> 
+            <Button variant="outline" size="sm">
+              <Eye className="h-4 w-4" />
+            </Button>
+          </Link>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -325,16 +334,15 @@ export const AdminSearchPanel: React.FC = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <CheckCircle className="h-4 w-4 mr-2" />Approve
+              <DropdownMenuItem asChild>
+                <Link href={`/admin/jobs/${job?.id || item.id}/edit`}>
+                  <Edit className="h-4 w-4 mr-2" />Edit
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Edit className="h-4 w-4 mr-2" />Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDelete('job', job?.id || item.id)}>
                 <Trash2 className="h-4 w-4 mr-2" />Delete
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem disabled>
                 <FlaskConical className="h-4 w-4 mr-2" />Run Compatibility
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -396,19 +404,25 @@ export const AdminSearchPanel: React.FC = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm"><Eye className="h-4 w-4" /></Button>
+            <Link href={item.type === 'candidate' ? `/admin/candidates/${candidate?.id || item.id}` : item.type === 'employer' ? `/admin/employers/${employer?.id || item.id}` : `/admin/jobs/${job?.id || item.id}` }>
+              <Button variant="outline" size="sm"><Eye className="h-4 w-4" /></Button>
+            </Link>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm"><MoreVertical className="h-4 w-4" /></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {item.type === "candidate" && <DropdownMenuItem><CheckCircle className="h-4 w-4 mr-2" />Verify</DropdownMenuItem>}
-                {item.type === "employer" && <DropdownMenuItem><CheckCircle className="h-4 w-4 mr-2" />Verify</DropdownMenuItem>}
-                {item.type === "job" && <DropdownMenuItem><CheckCircle className="h-4 w-4 mr-2" />Approve</DropdownMenuItem>}
-                <DropdownMenuItem><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
-                <DropdownMenuItem><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
-                <DropdownMenuItem><Eye className="h-4 w-4 mr-2" />View As</DropdownMenuItem>
-                {item.type === "job" && <DropdownMenuItem><FlaskConical className="h-4 w-4 mr-2" />Run Compatibility</DropdownMenuItem>}
+                <DropdownMenuItem asChild>
+                  <Link href={item.type === 'candidate' ? `/admin/candidates/${candidate?.id || item.id}/edit` : item.type === 'employer' ? `/admin/employers/${employer?.id || item.id}/edit` : `/admin/jobs/${job?.id || item.id}/edit`}>
+                    <Edit className="h-4 w-4 mr-2" />Edit
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDelete(item.type, item.id)}>
+                  <Trash2 className="h-4 w-4 mr-2" />Delete
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled>
+                  <FlaskConical className="h-4 w-4 mr-2" />Run Compatibility
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

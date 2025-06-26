@@ -74,6 +74,16 @@ export class JobRepository {
       return jobs.map((j: JobPost) => ({ ...j, status: getJobStatus(j) }));
   }
 
+  static async getActiveJobPosts(): Promise<(JobPost & { status: string })[]> {
+      const jobs = await db
+        .select()
+        .from(jobPosts)
+        .where(
+          and(eq(jobPosts.jobStatus, 'ACTIVE'), eq(jobPosts.deleted, false))
+        );
+      return jobs.map((j: JobPost) => ({ ...j, status: getJobStatus(j) }));
+  }
+
   static async getInactiveJobs(): Promise<(JobPost & { status: string })[]> {
       const jobs = await db
         .select()

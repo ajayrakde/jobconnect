@@ -71,6 +71,7 @@ export interface IStorage {
   updateJobPost(id: number, updates: Partial<JobPost>): Promise<JobPost & { status: string }>;
   getJobPostsByEmployer(employerId: number): Promise<(JobPost & { status: string })[]>;
   getAllJobPosts(): Promise<(JobPost & { status: string })[]>;
+  getActiveJobPosts(): Promise<(JobPost & { status: string })[]>;
   getInactiveJobPosts(): Promise<(JobPost & { status: string })[]>;
   softDeleteJobPost(id: number): Promise<JobPost & { status: string }>;
   getEmployerStats(employerId: number): Promise<any>;
@@ -255,6 +256,11 @@ export class DatabaseStorage implements IStorage {
 
   async getAllJobPosts(): Promise<(JobPost & { status: string })[]> {
     const jobs = await JobRepository.getAllJobPosts();
+    return jobs.filter(job => !job.deleted);
+  }
+
+  async getActiveJobPosts(): Promise<(JobPost & { status: string })[]> {
+    const jobs = await JobRepository.getActiveJobPosts();
     return jobs.filter(job => !job.deleted);
   }
 

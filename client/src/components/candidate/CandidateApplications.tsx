@@ -2,6 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, FileText } from "lucide-react";
 import { JobCard } from "@/components/common";
 import { Link } from "wouter";
@@ -22,6 +23,8 @@ interface Application {
 export const CandidateApplications: React.FC = () => {
   const { userProfile } = useAuth();
 
+  const [statusFilter, setStatusFilter] = React.useState('all');
+
   const { data: applications = [], isLoading } = useQuery({
     queryKey: ["/api/candidates/applications"],
     enabled: !!userProfile?.candidate,
@@ -33,6 +36,10 @@ export const CandidateApplications: React.FC = () => {
           new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime(),
       )
     : [];
+
+  const filteredApps = sortedApps.filter(app =>
+    statusFilter === 'all' ? true : app.status?.toLowerCase() === statusFilter
+  );
 
   const getApplicationStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -90,13 +97,27 @@ export const CandidateApplications: React.FC = () => {
             Track the status of your job applications
           </p>
         </div>
-        <Badge variant="outline" className="text-sm border-border">
-          {sortedApps.length} application{sortedApps.length !== 1 ? 's' : ''}
-        </Badge>
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className="text-sm border-border">
+            {sortedApps.length} application{sortedApps.length !== 1 ? 's' : ''}
+          </Badge>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="applied">Applied</SelectItem>
+              <SelectItem value="shortlisted">Shortlisted</SelectItem>
+              <SelectItem value="hired">Hired</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="space-y-4">
-        {sortedApps.map((application: Application) => (
+        {filteredApps.map((application: Application) => (
           <JobCard
             key={application.id}
             job={{
@@ -105,22 +126,21 @@ export const CandidateApplications: React.FC = () => {
               jobCode: application.jobCode,
             }}
             actions={
-              <Link href={`/candidate/jobs/${application.jobPostId}`}>
-                <Button variant="outline" size="sm" className="flex items-center gap-1">
-                  <Eye className="h-4 w-4" />
-                  View
-                </Button>
-              </Link>
-            }
-          >
-            {application.status && (
-              <div className="px-4 pb-4">
-                <Badge className={getApplicationStatusColor(application.status)}>
-                  {application.status}
-                </Badge>
+              <div className="flex items-center gap-2">
+                {application.status && (
+                  <Badge className={getApplicationStatusColor(application.status)}>
+                    {application.status}
+                  </Badge>
+                )}
+                <Link href={`/candidate/jobs/${application.jobPostId}`}>
+                  <Button variant="outline" size="sm" className="flex items-center gap-1">
+                    <Eye className="h-4 w-4" />
+                    View
+                  </Button>
+                </Link>
               </div>
-            )}
-          </JobCard>
+            }
+          />
         ))}
       </div>
     </div>

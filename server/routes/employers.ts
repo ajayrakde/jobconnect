@@ -163,6 +163,20 @@ employersRouter.get(
   })
 );
 
+employersRouter.get(
+  '/candidates/:id',
+  ...requireVerifiedRole('employer'),
+  asyncHandler(async (req: any, res) => {
+    const candidateId = parseInt(req.params.id);
+    const candidate = await storage.getCandidate(candidateId);
+    if (!candidate || candidate.deleted || candidate.profileStatus !== 'verified') {
+      return res.status(404).json({ message: 'Candidate not found' });
+    }
+    const { address, emergencyContact, dependents, dateOfBirth, ...rest } = candidate as any;
+    res.json(rest);
+  })
+);
+
 employersRouter.put(
   '/jobs/:id',
   ...requireVerifiedRole('employer'),
