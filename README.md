@@ -44,10 +44,21 @@ The application uses a `.env` file for configuration. A template file `.env.exam
 DATABASE_URL="postgresql://username:password@localhost:5432/lokaltalent"
 
 # Authentication
-FIREBASE_PROJECT_ID="your-project-id"
+VITE_FIREBASE_PROJECT_ID="your-project-id"
 FIREBASE_CLIENT_EMAIL="your-client-email"
-FIREBASE_PRIVATE_KEY="your-private-key"
+# Use either plain text with escaped newlines
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n"
+# Or provide the key as base64
+# FIREBASE_PRIVATE_KEY_B64="base64-encoded-key"
 ```
+
+When storing `FIREBASE_PRIVATE_KEY` as a secret, replace newline characters with
+`\n`. Alternatively, store the key in `FIREBASE_PRIVATE_KEY_B64` and decode it at
+runtime to avoid parsing errors in GitHub Actions and Azure Key Vault.
+
+The workflow `.github/workflows/az-container-deploy.yml` forwards this secret
+directly to Azure Key Vault, so ensure it is already formatted with `\n` escapes
+or base64-encoded before committing it to GitHub secrets.
 
 ### Optional Features
 
@@ -190,7 +201,7 @@ Configure these variables in the Function App settings (or `local.settings.json`
 
 - `DATABASE_URL`
 - `VITE_FIREBASE_PROJECT_ID`
-- `FIREBASE_PRIVATE_KEY`
+- `FIREBASE_PRIVATE_KEY` or `FIREBASE_PRIVATE_KEY_B64`
 - `FIREBASE_CLIENT_EMAIL`
 
 They are required for the server to start correctly.

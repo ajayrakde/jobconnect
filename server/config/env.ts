@@ -28,6 +28,7 @@ const envSchema = z.object({
   SESSION_SECRET: z.string().optional(),
   FIREBASE_CLIENT_EMAIL: z.string().optional(),
   FIREBASE_PRIVATE_KEY: z.string().optional(),
+  FIREBASE_PRIVATE_KEY_B64: z.string().optional(),
   GOOGLE_API_KEY: z.string().optional(),
   VITE_FIREBASE_API_KEY: z.string().optional(),
   VITE_FIREBASE_APP_ID: z.string().optional(),

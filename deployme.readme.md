@@ -49,7 +49,7 @@ Set these variables in the Function App **Configuration** settings (or `local.se
 
 - `DATABASE_URL`
 - `VITE_FIREBASE_PROJECT_ID`
-- `FIREBASE_PRIVATE_KEY`
+- `FIREBASE_PRIVATE_KEY` (escape newlines with `\\n`) or `FIREBASE_PRIVATE_KEY_B64`
 - `FIREBASE_CLIENT_EMAIL`
 
 ## 5. Map a custom domain and enable free SSL

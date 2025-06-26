@@ -3,17 +3,23 @@ config();
 import admin from 'firebase-admin';
 
 let firebaseApp: admin.app.App | undefined;
-if (
-  process.env.VITE_FIREBASE_PROJECT_ID &&
-  process.env.FIREBASE_PRIVATE_KEY &&
-  process.env.FIREBASE_CLIENT_EMAIL
-) {
+
+const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
+const rawKey = process.env.FIREBASE_PRIVATE_KEY;
+const b64Key = process.env.FIREBASE_PRIVATE_KEY_B64;
+const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+
+if (projectId && (rawKey || b64Key) && clientEmail) {
   // Initialize Firebase Admin SDK when credentials are available
+  const privateKey = b64Key
+    ? Buffer.from(b64Key, 'base64').toString('utf8')
+    : rawKey!.replace(/\\n/g, '\n');
+
   firebaseApp = admin.initializeApp({
     credential: admin.credential.cert({
-      projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      projectId,
+      privateKey,
+      clientEmail,
     }),
   });
 } else {
