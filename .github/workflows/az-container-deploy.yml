@@ -35,7 +35,7 @@ jobs:
         ALL_SECRETS: ${{ toJson(secrets) }}
         KEY_VAULT: ${{ env.KEY_VAULT }}
       run: |
-        for key in $(echo $ALL_SECRETS | jq -r 'to_entries[] | select(.key != "AZURE_CREDENTIALS" and .key != "ACR_USERNAME" and .key != "ACR_PASSWORD") | .key'); do
+        for key in $(echo $ALL_SECRETS | jq -r 'to_entries[] | select(.key != "AZURE_CREDENTIALS" and .key != "ACR_USERNAME" and .key != "ACR_PASSWORD" and .key != "FIREBASE_PRIVATE_KEY_B64") | .key'); do
           kv_key=$(echo "$key" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
           val=$(echo $ALL_SECRETS | jq -r --arg k "$key" '.[$k]')
           az keyvault secret set --vault-name $KEY_VAULT --name $kv_key --value "$val"
@@ -49,7 +49,7 @@ jobs:
         CONTAINER_APP_NAME: ${{ env.CONTAINER_APP_NAME }}
         RESOURCE_GROUP: ${{ env.RESOURCE_GROUP }}
       run: |
-        for key in $(echo $ALL_SECRETS | jq -r 'to_entries[] | select(.key != "AZURE_CREDENTIALS" and .key != "ACR_USERNAME" and .key != "ACR_PASSWORD") | .key'); do
+        for key in $(echo $ALL_SECRETS | jq -r 'to_entries[] | select(.key != "AZURE_CREDENTIALS" and .key != "ACR_USERNAME" and .key != "ACR_PASSWORD" and .key != "FIREBASE_PRIVATE_KEY_B64") | .key'); do
           kv_key=$(echo "$key" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
           ref_name="${kv_key}-ref"
           az containerapp secret set \
@@ -66,7 +66,7 @@ jobs:
         RESOURCE_GROUP: ${{ env.RESOURCE_GROUP }}
       run: |
         env_args=""
-        for key in $(echo $ALL_SECRETS | jq -r 'to_entries[] | select(.key != "AZURE_CREDENTIALS" and .key != "ACR_USERNAME" and .key != "ACR_PASSWORD") | .key'); do
+        for key in $(echo $ALL_SECRETS | jq -r 'to_entries[] | select(.key != "AZURE_CREDENTIALS" and .key != "ACR_USERNAME" and .key != "ACR_PASSWORD" and .key != "FIREBASE_PRIVATE_KEY_B64") | .key'); do
           kv_key=$(echo "$key" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
           ref_name="${kv_key}-ref"
           env_args="$env_args $key=secretref:$ref_name"
