@@ -374,6 +374,7 @@ export const EmployerDashboard: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
+                          <span className="font-mono text-xs">{application.jobCode}</span>
                           <Briefcase className="h-4 w-4" />
                           {application.jobTitle}
                         </div>
@@ -397,7 +398,6 @@ export const EmployerDashboard: React.FC = () => {
                 // Jobs display
                 cardContent.data.slice(0, 10).map((job: any) => {
                   const status = getJobStatus(job);
-                  const daysSinceCreated = Math.floor((new Date().getTime() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60 * 24));
 
                   const actions = (
                     <div className="flex gap-2 ml-4">
@@ -450,28 +450,21 @@ export const EmployerDashboard: React.FC = () => {
                   return (
                     <JobCard
                       key={job.id}
-                      job={{
-                        title: job.title,
-                        qualification: job.jobCode,
-                        experience: job.location,
-                        city: `${job.applicationsCount || 0} applications`,
-                        jobCode: job.salaryRange,
-                      }}
-                      actions={actions}
-                    >
-                      <div className="flex items-center gap-3 mb-2">
+                      job={{ title: job.title }}
+                      detailItems={[
+                        job.jobCode,
+                        job.location,
+                        `${job.applicationsCount || 0} applications`,
+                        job.salaryRange,
+                      ]}
+                      statusBadge={
                         <Badge className={getJobStatusColor(status)}>
                           {getStatusIcon(status)}
                           <span className="ml-1 capitalize">{status}</span>
                         </Badge>
-                        {status === "dormant" && (
-                          <Badge variant="outline" className="border-orange-500 text-orange-500">
-                            {daysSinceCreated}+ days old
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-6 text-sm text-muted-foreground mb-3" />
-                    </JobCard>
+                      }
+                      actions={actions}
+                    />
                   );
                 })
               )}
@@ -552,7 +545,7 @@ export const EmployerDashboard: React.FC = () => {
                     <p className="font-medium text-orange-800 dark:text-orange-400">Dormant Jobs</p>
                     <p className="text-sm text-orange-700 dark:text-orange-300">{stats.dormantJobs} jobs need attention</p>
                   </div>
-                  <Link href="/jobs?filter=dormant">
+                  <Link href="/employer/jobs?filter=dormant">
                     <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white">
                       Review
                     </Button>

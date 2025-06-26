@@ -86,10 +86,26 @@ export class JobPostRepository {
           onHold: validated.jobStatus === 'ON_HOLD',
         }
       : {};
-    const [updated] = await db.update(jobPosts)
+    await db.update(jobPosts)
       .set({ ...validated, ...flags })
-      .where(eq(jobPosts.id, id))
-      .returning();
+      .where(eq(jobPosts.id, id));
+
+    const updated = await db.query.jobPosts.findFirst({
+      where: eq(jobPosts.id, id),
+      with: {
+        employer: {
+          columns: {
+            id: true,
+            organizationName: true,
+            logo: true,
+          },
+        },
+      },
+    });
+
+    if (!updated) {
+      throw new Error('Job not found');
+    }
 
     return this.mapToResponse(updated);
   }

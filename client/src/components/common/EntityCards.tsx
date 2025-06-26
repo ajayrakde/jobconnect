@@ -81,14 +81,16 @@ export const JobCard: React.FC<{
   job: JobInfo;
   actions?: React.ReactNode;
   children?: React.ReactNode;
-}> = ({ job, actions, children }) => {
+  statusBadge?: React.ReactNode;
+  detailItems?: (string | number | undefined)[];
+}> = ({ job, actions, children, statusBadge, detailItems }) => {
   const { title, positions, qualification, experience, city, jobCode } = job;
-  const details = [
+  const details = (detailItems ?? [
     qualification,
     experience,
     city,
     jobCode,
-  ]
+  ])
     .filter(Boolean)
     .join(" • ");
 
@@ -96,7 +98,10 @@ export const JobCard: React.FC<{
     <Card className="bg-card border-border">
       <div className="flex items-start justify-between">
         <CardHeader className="p-4">
-          <CardTitle className="text-base font-semibold">{title}</CardTitle>
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            {title}
+            {statusBadge}
+          </CardTitle>
           <CardDescription>{details}</CardDescription>
         </CardHeader>
         {actions && <div className="flex items-end pr-4 pt-10">{actions}</div>}

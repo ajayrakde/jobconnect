@@ -56,7 +56,6 @@ interface Job {
   createdAt: string;
   updatedAt: string;
   status?: 'active' | 'pending' | 'onHold' | 'dormant' | 'fulfilled' | 'deleted';
-  daysSinceCreated?: number;
 }
 
 export const EmployerJobs: React.FC = () => {
@@ -256,7 +255,6 @@ export const EmployerJobs: React.FC = () => {
       <div className="space-y-4">
         {jobs.map((job) => {
           const status = getJobStatus(job);
-          const daysSinceCreated = Math.floor((new Date().getTime() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60 * 24));
           const getCardClassName = (status) => {
             let baseClasses = "border-border transition-colors";
             if (status === 'fulfilled') {
@@ -271,15 +269,19 @@ export const EmployerJobs: React.FC = () => {
           return (
             <JobCard
               key={job.id}
-              job={{
-                title: job.title,
-                positions: job.vacancy,
-                qualification: job.minQualification,
-                experience: job.experienceRequired,
-                city: job.location,
-                jobCode: job.jobCode,
-                postedOn: formatDistanceToNow(new Date(job.createdAt), { addSuffix: true }),
-              }}
+              job={{ title: job.title }}
+              detailItems={[
+                job.jobCode,
+                job.minQualification,
+                job.experienceRequired,
+                job.location,
+              ]}
+              statusBadge={
+                <Badge className={getStatusColor(status)}>
+                  {getStatusIcon(status)}
+                  <span className="ml-1 capitalize">{status}</span>
+                </Badge>
+              }
               actions={
                 <div className="flex items-center gap-2 ml-4">
                   <Link href={`/jobs/${job.id}`}>
@@ -335,28 +337,7 @@ export const EmployerJobs: React.FC = () => {
                   )}
                 </div>
               }
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <Badge className={getStatusColor(status)}>
-                  {getStatusIcon(status)}
-                  <span className="ml-1 capitalize">{status}</span>
-                </Badge>
-                {['dormant', 'pending', 'onHold'].includes(status) && (
-                  <Badge variant="outline" className="border-orange-500 text-orange-500">
-                    {daysSinceCreated}+ days old
-                  </Badge>
-                )}
-              </div>
-              <div className="flex items-center gap-6 text-sm text-muted-foreground mb-3">
-                <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  {job.applicationsCount || 0} applications
-                </div>
-              </div>
-              <p className="text-muted-foreground text-sm line-clamp-2">{job.description}</p>
-              <div className="mt-3">
-                <span className="text-sm font-medium text-green-600 dark:text-green-400">{job.salaryRange}</span>
-              </div>
+              >
             </JobCard>
           );
         })}
