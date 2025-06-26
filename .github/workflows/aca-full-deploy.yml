@@ -12,6 +12,9 @@ on:
           - dev
           - prd
 
+env:
+  ENV: ${{ github.event.inputs.environment }}
+
 jobs:
   # Step 1: Create/validate all infrastructure
   infra:
@@ -42,24 +45,24 @@ jobs:
 
       - name: Create or validate Azure resources
         run: |
-          az group create --name ${{ secrets.RESOURCE_GROUP }} --location ${{ secrets.LOCATION }}
-          az acr show --name ${{ secrets.ACR_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} || \
-            az acr create --name ${{ secrets.ACR_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --sku Basic
-          az keyvault show --name ${{ secrets.KEY_VAULT_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} || \
-            az keyvault create --name ${{ secrets.KEY_VAULT_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --location ${{ secrets.LOCATION }}
-          az containerapp env show --name ${{ secrets.APP_ENV }} --resource-group ${{ secrets.RESOURCE_GROUP }} || \
-            az containerapp env create --name ${{ secrets.APP_ENV }} --resource-group ${{ secrets.RESOURCE_GROUP }} --location ${{ secrets.LOCATION }}
-          az containerapp show --name ${{ secrets.CONTAINER_APP_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} || \
-            az containerapp create --name ${{ secrets.CONTAINER_APP_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --environment ${{ secrets.APP_ENV }} --image mcr.microsoft.com/azuredocs/containerapps-helloworld:latest --ingress external --target-port 80
+          az group create --name "$ENV-${{ secrets.RESOURCE_GROUP }}" --location ${{ secrets.LOCATION }}
+          az acr show --name "$ENV-${{ secrets.ACR_NAME }}" --resource-group "$ENV-${{ secrets.RESOURCE_GROUP }}" || \
+            az acr create --name "$ENV-${{ secrets.ACR_NAME }}" --resource-group "$ENV-${{ secrets.RESOURCE_GROUP }}" --sku Basic
+          az keyvault show --name "$ENV-${{ secrets.KEY_VAULT_NAME }}" --resource-group "$ENV-${{ secrets.RESOURCE_GROUP }}" || \
+            az keyvault create --name "$ENV-${{ secrets.KEY_VAULT_NAME }}" --resource-group "$ENV-${{ secrets.RESOURCE_GROUP }}" --location ${{ secrets.LOCATION }}
+          az containerapp env show --name "$ENV-${{ secrets.APP_ENV }}" --resource-group "$ENV-${{ secrets.RESOURCE_GROUP }}" || \
+            az containerapp env create --name "$ENV-${{ secrets.APP_ENV }}" --resource-group "$ENV-${{ secrets.RESOURCE_GROUP }}" --location ${{ secrets.LOCATION }}
+          az containerapp show --name "$ENV-${{ secrets.CONTAINER_APP_NAME }}" --resource-group "$ENV-${{ secrets.RESOURCE_GROUP }}" || \
+            az containerapp create --name "$ENV-${{ secrets.CONTAINER_APP_NAME }}" --resource-group "$ENV-${{ secrets.RESOURCE_GROUP }}" --environment "$ENV-${{ secrets.APP_ENV }}" --image mcr.microsoft.com/azuredocs/containerapps-helloworld:latest --ingress external --target-port 80
 
       - name: Assign RBAC roles to Service Principal
         run: |
           SUB_ID=${{ steps.sp.outputs.sub_id }}
           CLIENT_ID=${{ steps.sp.outputs.client_id }}
-          az role assignment create --assignee $CLIENT_ID --role Contributor --scope /subscriptions/$SUB_ID/resourceGroups/${{ secrets.RESOURCE_GROUP }}
-          ACR_ID=$(az acr show -n ${{ secrets.ACR_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --query id -o tsv)
+          az role assignment create --assignee $CLIENT_ID --role Contributor --scope /subscriptions/$SUB_ID/resourceGroups/$ENV-${{ secrets.RESOURCE_GROUP }}
+          ACR_ID=$(az acr show -n "$ENV-${{ secrets.ACR_NAME }}" --resource-group "$ENV-${{ secrets.RESOURCE_GROUP }}" --query id -o tsv)
           az role assignment create --assignee $CLIENT_ID --role AcrPush --scope $ACR_ID
-          KV_ID=$(az keyvault show -n ${{ secrets.KEY_VAULT_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --query id -o tsv)
+          KV_ID=$(az keyvault show -n "$ENV-${{ secrets.KEY_VAULT_NAME }}" --resource-group "$ENV-${{ secrets.RESOURCE_GROUP }}" --query id -o tsv)
           az role assignment create --assignee $CLIENT_ID --role "Key Vault Secrets User" --scope $KV_ID
 
   # Step 2: Upload secrets to Key Vault
@@ -75,14 +78,14 @@ jobs:
 
       - name: Store service principal credentials in Key Vault
         run: |
-          az keyvault secret set --vault-name ${{ secrets.KEY_VAULT_NAME }} --name azure-client-id --value '${{ needs.infra.outputs.client_id }}' --output none
-          az keyvault secret set --vault-name ${{ secrets.KEY_VAULT_NAME }} --name azure-client-secret --value '${{ needs.infra.outputs.client_secret }}' --output none
-          az keyvault secret set --vault-name ${{ secrets.KEY_VAULT_NAME }} --name azure-tenant-id --value '${{ needs.infra.outputs.tenant_id }}' --output none
+          az keyvault secret set --vault-name "$ENV-${{ secrets.KEY_VAULT_NAME }}" --name azure-client-id --value '${{ needs.infra.outputs.client_id }}' --output none
+          az keyvault secret set --vault-name "$ENV-${{ secrets.KEY_VAULT_NAME }}" --name azure-client-secret --value '${{ needs.infra.outputs.client_secret }}' --output none
+          az keyvault secret set --vault-name "$ENV-${{ secrets.KEY_VAULT_NAME }}" --name azure-tenant-id --value '${{ needs.infra.outputs.tenant_id }}' --output none
 
       - name: Upload GitHub Secrets to Key Vault
         env:
           ALL_SECRETS: ${{ toJson(secrets) }}
-          KEY_VAULT: ${{ secrets.KEY_VAULT_NAME }}
+          KEY_VAULT: $ENV-${{ secrets.KEY_VAULT_NAME }}
         run: |
           for key in $(echo "$ALL_SECRETS" | jq -r 'to_entries[] | select(.key != "AZURE_CREDENTIALS") | .key'); do
             kvkey=$(echo "$key" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
@@ -109,8 +112,8 @@ jobs:
       - name: Build and Push image
         id: build
         env:
-          REGISTRY: ${{ secrets.ACR_LOGIN_SERVER }}
-          ACR_NAME: ${{ secrets.ACR_NAME }}
+          REGISTRY: $ENV-${{ secrets.ACR_LOGIN_SERVER }}
+          ACR_NAME: $ENV-${{ secrets.ACR_NAME }}
           IMAGE_REPO: ${{ secrets.IMAGE_REPOSITORY }}
         run: |
           IMAGE="$REGISTRY/$IMAGE_REPO:${{ github.sha }}"
@@ -135,18 +138,18 @@ jobs:
           CLIENT_ID='${{ needs.infra.outputs.client_id }}'
           CLIENT_SECRET='${{ needs.infra.outputs.client_secret }}'
           az containerapp registry set \
-            --name ${{ secrets.CONTAINER_APP_NAME }} \
-            --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --server ${{ secrets.ACR_LOGIN_SERVER }} \
+            --name "$ENV-${{ secrets.CONTAINER_APP_NAME }}" \
+            --resource-group "$ENV-${{ secrets.RESOURCE_GROUP }}" \
+            --server "$ENV-${{ secrets.ACR_LOGIN_SERVER }}" \
             --username $CLIENT_ID \
             --password $CLIENT_SECRET
 
       - name: Add secret references to Container App
         env:
           ALL_SECRETS: ${{ toJson(secrets) }}
-          APP_NAME: ${{ secrets.CONTAINER_APP_NAME }}
-          RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
-          KEY_VAULT: ${{ secrets.KEY_VAULT_NAME }}
+          APP_NAME: $ENV-${{ secrets.CONTAINER_APP_NAME }}
+          RESOURCE_GROUP: $ENV-${{ secrets.RESOURCE_GROUP }}
+          KEY_VAULT: $ENV-${{ secrets.KEY_VAULT_NAME }}
         run: |
           for key in $(echo "$ALL_SECRETS" | jq -r 'to_entries[] | select(.key != "AZURE_CREDENTIALS") | .key'); do
             kvkey=$(echo "$key" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
@@ -165,9 +168,9 @@ jobs:
         run: |
           IMAGE="${{ needs.docker.outputs.image }}"
           az containerapp update \
-            --name ${{ secrets.CONTAINER_APP_NAME }} \
-            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --name "$ENV-${{ secrets.CONTAINER_APP_NAME }}" \
+            --resource-group "$ENV-${{ secrets.RESOURCE_GROUP }}" \
             --image $IMAGE
-          URL=$(az containerapp show --name ${{ secrets.CONTAINER_APP_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
+          URL=$(az containerapp show --name "$ENV-${{ secrets.CONTAINER_APP_NAME }}" --resource-group "$ENV-${{ secrets.RESOURCE_GROUP }}" --query properties.configuration.ingress.fqdn -o tsv)
           echo "Application URL: https://$URL"
           echo "Image SHA: $IMAGE"
