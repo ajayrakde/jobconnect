@@ -34,6 +34,7 @@ interface Job {
 
 export const CandidateJobs: React.FC = () => {
   const { userProfile } = useAuth();
+  const isVerified = userProfile?.candidate?.profileStatus === "verified";
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -191,7 +192,10 @@ export const CandidateJobs: React.FC = () => {
                     className="bg-primary hover:bg-primary-dark text-primary-foreground flex items-center gap-1"
                     onClick={() => applyMutation.mutate(job.id)}
                     disabled={
-                      applyMutation.isLoading || appsLoading || appliedJobIds.has(job.id)
+                      !isVerified ||
+                      applyMutation.isLoading ||
+                      appsLoading ||
+                      appliedJobIds.has(job.id)
                     }
                   >
                     {appliedJobIds.has(job.id) ? 'Applied' : 'Apply'}
