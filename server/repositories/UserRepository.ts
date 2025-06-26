@@ -37,10 +37,10 @@ export class UserRepository {
    * Create a new user
    */
   static async create(data: InsertUser) {
-    const [user] = await db
+    const [user] = (await db
       .insert(users)
       .values(data)
-      .returning();
+      .returning()) as any[];
     
     return user;
   }
@@ -49,11 +49,11 @@ export class UserRepository {
    * Update a user by their ID
    */
   static async update(id: number, data: Partial<InsertUser>) {
-    const [updated] = await db
+    const [updated] = (await db
       .update(users)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(users.id, id))
-      .returning();
+      .returning()) as any[];
     
     return updated;
   }

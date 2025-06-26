@@ -1,6 +1,13 @@
 import { config } from 'dotenv';
 import { z } from 'zod';
+import {
+  ConfigProvider,
+  EnvConfigProvider,
+  KeyVaultConfigProvider,
+  CompositeConfigProvider,
+} from './providers/ConfigProvider';
 
+// Load .env into process.env for local development
 config();
 
 const envSchema = z.object({
@@ -36,4 +43,22 @@ const envSchema = z.object({
   NODE_ENV: z.string().optional(),
 });
 
-export const env = envSchema.parse(process.env);
+async function loadEnv(): Promise<Record<string, string | undefined>> {
+  const providers: ConfigProvider[] = [new EnvConfigProvider()];
+
+  // If KEY_VAULT_NAME is provided, load secrets from Azure Key Vault
+  const vaultName = process.env.KEY_VAULT_NAME;
+  if (vaultName) {
+    providers.unshift(new KeyVaultConfigProvider(vaultName));
+  }
+
+  const composite = new CompositeConfigProvider(providers);
+  const keys = Object.keys(envSchema.shape);
+  const result: Record<string, string | undefined> = {};
+  for (const key of keys) {
+    result[key] = await composite.get(key);
+  }
+  return result;
+}
+
+export const env = await loadEnv().then((values) => envSchema.parse(values));

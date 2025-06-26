@@ -204,4 +204,48 @@ Configure these variables in the Function App settings (or `local.settings.json`
 - `FIREBASE_PRIVATE_KEY` or `FIREBASE_PRIVATE_KEY_B64`
 - `FIREBASE_CLIENT_EMAIL`
 
+### Key Vault Configuration
+
+To load secrets from Azure Key Vault in production, also set:
+
+- `KEY_VAULT_NAME` – the name of your vault (without the `.vault.azure.net` suffix)
+- `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, and `AZURE_CLIENT_SECRET` – credentials for a service principal with access to the vault
+- Or, instead of `AZURE_CLIENT_SECRET`, provide `AZURE_CLIENT_CERTIFICATE_PATH` for certificate-based auth
+
+When these variables are present, `server/config/env.ts` uses `DefaultAzureCredential` to authenticate and resolves configuration values from Key Vault before falling back to environment variables.
+
 They are required for the server to start correctly.
+
+## Secure Deployment Workflow
+
+The GitHub Actions file `.github/workflows/az-container-deploy.yml` demonstrates a full pipeline that stores secrets in Key Vault and injects them into an Azure Container App. Key steps include:
+
+1. **Login to Azure** using `azure/login` with a service principal stored in `AZURE_CREDENTIALS`.
+2. **Upload repository secrets** to Key Vault:
+   ```yaml
+   - name: Push all secrets to Azure Key Vault (in-memory)
+     env:
+       ALL_SECRETS: ${{ toJson(secrets) }}
+       KEY_VAULT: ${{ env.KEY_VAULT }}
+     run: |
+       for key in $(echo $ALL_SECRETS | jq -r 'to_entries[] | select(.key != "AZURE_CREDENTIALS" and .key != "ACR_USERNAME" and .key != "ACR_PASSWORD" and .key != "FIREBASE_PRIVATE_KEY_B64") | .key'); do
+         kv_key=$(echo "$key" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+         val=$(echo $ALL_SECRETS | jq -r --arg k "$key" '.[$k]')
+        az keyvault secret set --vault-name $KEY_VAULT --name $kv_key --value "$val"
+      done
+   ```
+3. **Reference those secrets** in the container app and map them to environment variables.
+   The workflow also sets `KEY_VAULT_NAME` so the app knows which vault to use:
+   ```yaml
+   - name: Add Key Vault secret references to Container App (one by one)
+     # ...
+   - name: Map all secret refs to env vars in Container App (in-memory)
+     # env_args="$env_args KEY_VAULT_NAME=$KEY_VAULT"
+     # ...
+   ```
+
+The server applies the same transformation when retrieving secrets, converting
+environment variable names like `DATABASE_URL` to `database-url` before calling
+Key Vault.
+
+With this workflow, the container runs with env vars like `AZURE_TENANT_ID` and `DATABASE_URL` sourced directly from Key Vault.
