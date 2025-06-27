@@ -10,7 +10,6 @@ interface Props {
   userType?: 'candidate' | 'employer';
   docs: Doc[];
   uid?: string;
-  baseUrl?: string;
   hideFilename?: boolean;
 }
 
@@ -18,7 +17,6 @@ export const DocumentList: React.FC<Props> = ({
   userType,
   docs,
   uid,
-  baseUrl,
   hideFilename,
 }) => {
   const { toast } = useToast();
@@ -28,16 +26,7 @@ export const DocumentList: React.FC<Props> = ({
       let blob: Blob;
       let name: string = doc.filename;
 
-      if (baseUrl) {
-        const res = await fetch(`${baseUrl}/${doc.type}?filename=${encodeURIComponent(doc.filename)}`, {
-          credentials: 'include',
-        });
-        if (!res.ok) throw new Error('Unable to download document');
-        blob = await res.blob();
-        const disposition = res.headers.get('Content-Disposition') || '';
-        const match = disposition.match(/filename="?([^";]+)"?/);
-        if (match) name = match[1];
-      } else if (userType) {
+      if (userType) {
         const result = await downloadDocument(userType, doc.type, doc.filename, uid);
         blob = result.blob;
         name = result.name;

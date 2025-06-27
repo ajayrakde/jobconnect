@@ -110,7 +110,8 @@ export const AdminEmployerDetails: React.FC = () => {
                   return null;
                 })
                 .filter(Boolean) as any}
-              baseUrl={`/api/admin/employers/${id}/documents`}
+              userType="employer"
+              uid={id}
               hideFilename
             />
           </CardContent>
