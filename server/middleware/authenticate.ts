@@ -8,6 +8,9 @@ export async function authenticateUser(req: Request & { user?: any }, res: Respo
       return res.status(401).json({ message: 'No token provided' });
     }
     const decodedToken = await verifyFirebaseToken(token);
+    if (!decodedToken.email_verified) {
+      return res.status(403).json({ message: 'Email not verified' });
+    }
     (req as any).user = decodedToken;
     next();
   } catch (error) {

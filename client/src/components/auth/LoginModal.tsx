@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/lib/auth";
+import { auth } from "@/lib/firebase";
 import { ConfirmationResult } from "firebase/auth";
 
 interface LoginModalProps {
@@ -33,6 +34,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [otp, setOtp] = useState("");
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showResend, setShowResend] = useState(false);
   const { toast } = useToast();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
@@ -40,15 +42,23 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setLoading(true);
 
     try {
-      await authService.signInWithEmail(email, password);
+      const user = await authService.signInWithEmail(email, password);
+      if (!user.emailVerified) {
+        setShowResend(true);
+        await authService.sendVerificationEmail(user);
+        await authService.signOut();
+        toast({
+          title: "Email Not Verified",
+          description: "Check your email to verify your account.",
+          variant: "destructive",
+        });
+        return;
+      }
       toast({
         title: "Success",
         description: "Logged in successfully!",
       });
       onClose();
-      if (onLoginSuccess) {
-        onLoginSuccess();
-      }
       if (onLoginSuccess) {
         onLoginSuccess();
       }
@@ -98,6 +108,39 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      const user = await authService.signInWithGoogle();
+      if (!user.emailVerified) {
+        setShowResend(true);
+        await authService.sendVerificationEmail(user);
+        await authService.signOut();
+        toast({
+          title: "Email Not Verified",
+          description: "Check your email to verify your account.",
+          variant: "destructive",
+        });
+        return;
+      }
+      toast({ title: "Success", description: "Logged in successfully!" });
+      onClose();
+      if (onLoginSuccess) onLoginSuccess();
+    } catch (error) {
+      toast({ title: "Error", description: "Google sign-in failed.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      await authService.sendVerificationEmail(user);
+      toast({ title: "Verification Sent", description: "Please check your email." });
     }
   };
 
@@ -166,6 +209,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Signing In..." : "Sign In"}
               </Button>
+              <Button type="button" variant="outline" className="w-full" onClick={handleGoogleLogin}>
+                Continue with Google
+              </Button>
+              {showResend && (
+                <Button type="button" variant="ghost" className="w-full" onClick={handleResend}>
+                  Resend Verification Email
+                </Button>
+              )}
             </form>
           </TabsContent>
 
