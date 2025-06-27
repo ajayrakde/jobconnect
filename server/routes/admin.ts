@@ -14,6 +14,10 @@ import { insertShortlistSchema, insertJobPostSchema } from '@shared/zod';
 import type { InsertJobPost } from '@shared/types';
 import { verifyFirebaseToken } from '../utils/firebase-admin';
 import { isValidTransition, canPerformAction } from '@shared/utils/jobStatus';
+import multer from 'multer';
+import rateLimit from 'express-rate-limit';
+import { fileStorage } from '../fileStorage';
+import { env } from '../config/env';
 
 // Validation schemas
 const searchQuerySchema = z.object({
@@ -23,6 +27,9 @@ const searchQuerySchema = z.object({
   page: z.number().optional(),
   limit: z.number().optional(),
 });
+
+const upload = multer({ limits: { fileSize: (parseInt(env.MAX_FILE_SIZE_MB || '5') * 1024 * 1024) } });
+const uploadLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 50 });
 
 export const adminRouter = Router();
 
@@ -664,3 +671,91 @@ adminRouter.post('/login', asyncHandler(async (req, res) => {
   }
   res.json({ success: true, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
 }));
+
+// ----- Document management -----
+adminRouter.post(
+  '/candidates/:uid/documents/:type',
+  authenticateUser,
+  requireRole('admin'),
+  uploadLimiter,
+  upload.single('file'),
+  asyncHandler(async (req: any, res) => {
+    const { uid, type } = req.params;
+    const file = req.file;
+    if (!file) return res.status(400).json({ message: 'No file uploaded' });
+    if (!file.mimetype.startsWith('image/') && file.mimetype !== 'application/pdf') {
+      return res.status(400).json({ message: 'Unsupported file type' });
+    }
+    const result = await fileStorage.uploadDocument('candidate', uid, type, file.buffer, file.mimetype, file.originalname);
+    res.json({ success: true, document: result });
+  })
+);
+
+adminRouter.get(
+  '/candidates/:uid/documents/:type',
+  authenticateUser,
+  requireRole('admin'),
+  asyncHandler(async (req: any, res) => {
+    const { uid, type } = req.params;
+    const docs = await fileStorage.listDocuments('candidate', uid);
+    const doc = docs.find(d => d.type === type);
+    if (!doc) return res.status(404).json({ message: 'Document not found' });
+    const file = await fileStorage.downloadDocument('candidate', uid, type, doc.filename);
+    res.setHeader('Content-Type', file.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${doc.filename}"`);
+    res.send(file.data);
+  })
+);
+
+adminRouter.get(
+  '/candidates/:uid/documents',
+  authenticateUser,
+  requireRole('admin'),
+  asyncHandler(async (req: any, res) => {
+    const docs = await fileStorage.listDocuments('candidate', req.params.uid);
+    res.json({ documents: docs });
+  })
+);
+
+adminRouter.post(
+  '/employers/:uid/documents/:type',
+  authenticateUser,
+  requireRole('admin'),
+  uploadLimiter,
+  upload.single('file'),
+  asyncHandler(async (req: any, res) => {
+    const { uid, type } = req.params;
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+    if (!req.file.mimetype.startsWith('image/') && req.file.mimetype !== 'application/pdf') {
+      return res.status(400).json({ message: 'Unsupported file type' });
+    }
+    const result = await fileStorage.uploadDocument('employer', uid, type, req.file.buffer, req.file.mimetype, req.file.originalname);
+    res.json({ success: true, document: result });
+  })
+);
+
+adminRouter.get(
+  '/employers/:uid/documents/:type',
+  authenticateUser,
+  requireRole('admin'),
+  asyncHandler(async (req: any, res) => {
+    const { uid, type } = req.params;
+    const docs = await fileStorage.listDocuments('employer', uid);
+    const doc = docs.find(d => d.type === type);
+    if (!doc) return res.status(404).json({ message: 'Document not found' });
+    const file = await fileStorage.downloadDocument('employer', uid, type, doc.filename);
+    res.setHeader('Content-Type', file.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${doc.filename}"`);
+    res.send(file.data);
+  })
+);
+
+adminRouter.get(
+  '/employers/:uid/documents',
+  authenticateUser,
+  requireRole('admin'),
+  asyncHandler(async (req: any, res) => {
+    const docs = await fileStorage.listDocuments('employer', req.params.uid);
+    res.json({ documents: docs });
+  })
+);
