@@ -10,6 +10,10 @@ import { validateBody } from '../middleware/validation';
 import { EmployerRepository, JobPostRepository } from '../repositories';
 import { storage } from '../storage';
 import { isValidTransition, canPerformAction } from '@shared/utils/jobStatus';
+import multer from 'multer';
+import rateLimit from 'express-rate-limit';
+import { fileStorage } from '../fileStorage';
+import { env } from '../config/env';
 
 export const employersRouter = Router();
 
@@ -295,5 +299,54 @@ employersRouter.post(
     const cloneData = { ...job, title: `Copy of ${job.title}`, employerId: employer.id, jobCode, jobStatus: 'PENDING' };
     const clonedJob = await storage.createJobPost(cloneData);
     res.json(clonedJob);
+  })
+);
+
+// ----- Document management -----
+const upload = multer({ limits: { fileSize: (parseInt(env.MAX_FILE_SIZE_MB || '5') * 1024 * 1024) } });
+const uploadLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
+const allowedDocs = ['registration', 'gst'];
+
+employersRouter.post(
+  '/documents/:type',
+  authenticateUser,
+  requireRole('employer'),
+  uploadLimiter,
+  upload.single('file'),
+  asyncHandler(async (req: any, res) => {
+    const { type } = req.params;
+    if (!allowedDocs.includes(type)) return res.status(400).json({ message: 'Invalid document type' });
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+    if (!req.file.mimetype.startsWith('image/') && req.file.mimetype !== 'application/pdf') {
+      return res.status(400).json({ message: 'Unsupported file type' });
+    }
+    const result = await fileStorage.uploadDocument('employer', req.user.uid, type, req.file.buffer, req.file.mimetype, req.file.originalname);
+    res.json({ success: true, document: result });
+  })
+);
+
+employersRouter.get(
+  '/documents',
+  authenticateUser,
+  requireRole('employer'),
+  asyncHandler(async (req: any, res) => {
+    const docs = await fileStorage.listDocuments('employer', req.user.uid);
+    res.json({ documents: docs });
+  })
+);
+
+employersRouter.get(
+  '/documents/:type',
+  authenticateUser,
+  requireRole('employer'),
+  asyncHandler(async (req: any, res) => {
+    const { type } = req.params;
+    const docs = await fileStorage.listDocuments('employer', req.user.uid);
+    const doc = docs.find(d => d.type === type);
+    if (!doc) return res.status(404).json({ message: 'Document not found' });
+    const file = await fileStorage.downloadDocument('employer', req.user.uid, type, doc.filename);
+    res.setHeader('Content-Type', file.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${doc.filename}"`);
+    res.send(file.data);
   })
 );

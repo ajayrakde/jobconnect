@@ -40,6 +40,11 @@ const envSchema = z.object({
   VITE_FIREBASE_API_KEY: z.string().optional(),
   VITE_FIREBASE_APP_ID: z.string().optional(),
   VITE_FIREBASE_PROJECT_ID: z.string().optional(),
+  FIREBASE_STORAGE_BUCKET: z.string().optional(),
+  STORAGE_PROVIDER: z.enum(['supabase', 'firebase']).optional(),
+  SUPABASE_URL: z.string().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  MAX_FILE_SIZE_MB: z.string().optional(),
   NODE_ENV: z.string().optional(),
 });
 

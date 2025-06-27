@@ -123,6 +123,13 @@ npm run build
 
 The command bundles the server and produces `dist/index.js` which can be deployed.
 
+## Storage Provider
+
+File uploads use a pluggable storage layer. Set `STORAGE_PROVIDER` in `.env` to `supabase` (default) or `firebase`.
+Supabase credentials require `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+The migration script `server/utils/migrateStorage.ts` copies all files from Supabase to Firebase.
+Run it with `ts-node` when switching providers.
+
 
 ## Schema Workflow
 

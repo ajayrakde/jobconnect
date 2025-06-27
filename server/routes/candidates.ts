@@ -8,6 +8,10 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { validateBody } from '../middleware/validation';
 import { CandidateRepository } from '../repositories';
 import { storage } from '../storage';
+import multer from 'multer';
+import rateLimit from 'express-rate-limit';
+import { fileStorage } from '../fileStorage';
+import { env } from '../config/env';
 
 export const candidatesRouter = Router();
 
@@ -139,5 +143,75 @@ candidatesRouter.post(
       candidateId: candidate.id,
     });
     res.json(application);
+  })
+);
+
+// ----- Document management -----
+const upload = multer({ limits: { fileSize: (parseInt(env.MAX_FILE_SIZE_MB || '5') * 1024 * 1024) } });
+const uploadLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
+
+const allowedDocs = ['aadhar', 'pan', 'resume', 'certificates'];
+
+candidatesRouter.post(
+  '/documents/certificates',
+  authenticateUser,
+  requireRole('candidate'),
+  uploadLimiter,
+  upload.array('files'),
+  asyncHandler(async (req: any, res) => {
+    const user = req.user;
+    const files = (req.files as Express.Multer.File[]) || [];
+    if (files.length === 0) return res.status(400).json({ message: 'No files uploaded' });
+    if (files.some(f => !f.mimetype.startsWith('image/') && f.mimetype !== 'application/pdf')) {
+      return res.status(400).json({ message: 'Unsupported file type' });
+    }
+    const results = await fileStorage.uploadMultiple!('candidate', user.uid, 'certificates', files.map(f => ({ buffer: f.buffer, mimetype: f.mimetype, originalname: f.originalname })));
+    res.json({ success: true, documents: results.map(r => ({ filename: r.filename, uploadedAt: r.uploadedAt })) });
+  })
+);
+
+candidatesRouter.post(
+  '/documents/:type',
+  authenticateUser,
+  requireRole('candidate'),
+  uploadLimiter,
+  upload.single('file'),
+  asyncHandler(async (req: any, res) => {
+    const { type } = req.params;
+    if (!allowedDocs.includes(type)) return res.status(400).json({ message: 'Invalid document type' });
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+    if (!req.file.mimetype.startsWith('image/') && req.file.mimetype !== 'application/pdf') {
+      return res.status(400).json({ message: 'Unsupported file type' });
+    }
+    if (type === 'certificates') return res.status(400).json({ message: 'Use certificates endpoint' });
+    const result = await fileStorage.uploadDocument('candidate', req.user.uid, type, req.file.buffer, req.file.mimetype, req.file.originalname);
+    res.json({ success: true, document: result });
+  })
+);
+
+candidatesRouter.get(
+  '/documents',
+  authenticateUser,
+  requireRole('candidate'),
+  asyncHandler(async (req: any, res) => {
+    const docs = await fileStorage.listDocuments('candidate', req.user.uid);
+    res.json({ documents: docs });
+  })
+);
+
+candidatesRouter.get(
+  '/documents/:type',
+  authenticateUser,
+  requireRole('candidate'),
+  asyncHandler(async (req: any, res) => {
+    const { type } = req.params;
+    const filename = req.query.filename as string | undefined;
+    const docs = await fileStorage.listDocuments('candidate', req.user.uid);
+    const doc = docs.find(d => d.type === type && (!filename || d.filename === filename));
+    if (!doc) return res.status(404).json({ message: 'Document not found' });
+    const file = await fileStorage.downloadDocument('candidate', req.user.uid, type, doc.filename);
+    res.setHeader('Content-Type', file.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${doc.filename}"`);
+    res.send(file.data);
   })
 );

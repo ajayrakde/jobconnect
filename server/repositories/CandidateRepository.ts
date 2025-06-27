@@ -32,7 +32,7 @@ export class CandidateRepository {
     const [candidate] = await db
       .insert(candidates)
       .values({ ...data, profileStatus: 'pending' } as any)
-      .returning();
+      .returning() as any;
     
     return candidate;
   }
