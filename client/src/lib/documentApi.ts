@@ -1,4 +1,3 @@
-import { API_BASE_URL } from '@/config/api';
 import { authService } from './auth';
 import { throwIfResNotOk } from './queryClient';
 
@@ -21,7 +20,7 @@ export async function uploadDocument(
   const base = uid
     ? `/api/admin/${userType}s/${uid}/documents`
     : `/api/${userType}s/documents`;
-  const res = await fetch(`${API_BASE_URL}${base}/${docType}`, {
+  const res = await fetch(`${base}/${docType}`, {
     method: 'POST',
     headers,
     body: formData,
@@ -36,7 +35,7 @@ export async function uploadCertificates(files: File[], uid?: string) {
   const formData = new FormData();
   files.forEach(f => formData.append('files', f));
   const base = uid ? `/api/admin/candidates/${uid}/documents` : '/api/candidates/documents';
-  const res = await fetch(`${API_BASE_URL}${base}/certificates`, {
+  const res = await fetch(`${base}/certificates`, {
     method: 'POST',
     headers,
     body: formData,
@@ -51,7 +50,7 @@ export async function listDocuments(userType: 'candidate' | 'employer', uid?: st
   const base = uid
     ? `/api/admin/${userType}s/${uid}/documents`
     : `/api/${userType}s/documents`;
-  const res = await fetch(`${API_BASE_URL}${base}`, {
+  const res = await fetch(`${base}`, {
     method: 'GET',
     headers,
     credentials: 'include',
@@ -70,7 +69,7 @@ export async function downloadDocument(
   const base = uid
     ? `/api/admin/${userType}s/${uid}/documents`
     : `/api/${userType}s/documents`;
-  const url = `${API_BASE_URL}${base}/${docType}?filename=${encodeURIComponent(filename)}`;
+  const url = `${base}/${docType}?filename=${encodeURIComponent(filename)}`;
   const res = await fetch(url, { headers, credentials: 'include' });
   await throwIfResNotOk(res);
   const blob = await res.blob();
