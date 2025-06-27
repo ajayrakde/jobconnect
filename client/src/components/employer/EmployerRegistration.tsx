@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Building, FileText, Upload, Save, X } from "lucide-react";
+import { uploadDocument } from "@/lib/documentApi";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -46,6 +47,7 @@ export const EmployerRegistration: React.FC = () => {
     contactPhone: "",
     documents: {}
   });
+  const [selectedFiles, setSelectedFiles] = useState<Record<string, File>>({});
 
   // Check if employer profile already exists
   const { data: existingProfile, isLoading: checkingProfile } = useQuery({
@@ -114,76 +116,34 @@ export const EmployerRegistration: React.FC = () => {
     }
   });
 
-  const handleFileUpload = async (file: File, documentType: string) => {
-    if (file.size > 10 * 1024 * 1024) {
+  const handleFileSelect = (file: File, documentType: string) => {
+    if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please select a file smaller than 10MB",
+        description: "Please select a file smaller than 5MB",
         variant: "destructive",
       });
       return;
     }
-
-    try {
-      // Convert file to base64 for local storage simulation
-      const reader = new FileReader();
-      
-      return new Promise<void>((resolve, reject) => {
-        reader.onload = () => {
-          try {
-            const base64Data = reader.result as string;
-            const fileData = {
-              name: file.name,
-              size: file.size,
-              type: file.type,
-              lastModified: file.lastModified,
-              uploadedAt: new Date().toISOString(),
-              data: base64Data // Store actual file data for local system
-            };
-
-            setFormData(prev => ({
-              ...prev,
-              documents: {
-                ...prev.documents,
-                [documentType]: JSON.stringify(fileData)
-              }
-            }));
-
-            toast({
-              title: "Document uploaded",
-              description: `${file.name} has been uploaded successfully`,
-            });
-            resolve();
-          } catch (error) {
-            console.error("File processing error:", error);
-            reject(error);
-          }
-        };
-        
-        reader.onerror = (error) => {
-          console.error("FileReader error:", error);
-          toast({
-            title: "Upload failed",
-            description: "Failed to upload document. Please try again.",
-            variant: "destructive",
-          });
-          reject(error);
-        };
-        
-        reader.readAsDataURL(file);
-      });
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast({
-        title: "Upload failed",
-        description: "Failed to upload document. Please try again.",
-        variant: "destructive",
-      });
-      throw error;
-    }
+    setSelectedFiles(prev => ({ ...prev, [documentType]: file }));
+    const fileInfo = {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified,
+      uploadedAt: new Date().toISOString(),
+    };
+    setFormData(prev => ({
+      ...prev,
+      documents: { ...prev.documents, [documentType]: JSON.stringify(fileInfo) },
+    }));
+    toast({
+      title: "File Selected",
+      description: `${file.name} ready for upload`,
+    });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const requiredFields = ['organizationName', 'registrationNumber', 'businessType', 'address', 'contactEmail', 'contactPhone'];
     const missingFields = requiredFields.filter(field => !formData[field as keyof EmployerFormData]);
 
@@ -196,7 +156,17 @@ export const EmployerRegistration: React.FC = () => {
       return;
     }
 
-    createEmployerMutation.mutate(formData);
+    const uploaded: Record<string, any> = {};
+    if (selectedFiles.registration) {
+      const res = await uploadDocument('employer', 'registration', selectedFiles.registration);
+      uploaded.registration = res.document;
+    }
+    if (selectedFiles.gst) {
+      const res = await uploadDocument('employer', 'gst', selectedFiles.gst);
+      uploaded.gst = res.document;
+    }
+
+    createEmployerMutation.mutate({ ...formData, documents: uploaded });
   };
 
 
@@ -373,11 +343,7 @@ export const EmployerRegistration: React.FC = () => {
                         onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            try {
-                              await handleFileUpload(file, "registration");
-                            } catch (error) {
-                              console.error("File upload error:", error);
-                            }
+                            handleFileSelect(file, "registration");
                           }
                         }}
                         className="hidden"
@@ -439,11 +405,7 @@ export const EmployerRegistration: React.FC = () => {
                         onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            try {
-                              await handleFileUpload(file, "gst");
-                            } catch (error) {
-                              console.error("File upload error:", error);
-                            }
+                            handleFileSelect(file, "gst");
                           }
                         }}
                         className="hidden"

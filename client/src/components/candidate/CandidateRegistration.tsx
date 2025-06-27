@@ -9,8 +9,8 @@ import { Progress } from "@/components/ui/progress";
 
 import { Plus, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useFileUpload } from "@/hooks/useFileUpload";
 import { apiRequest } from "@/lib/queryClient";
+import { uploadDocument, uploadCertificates } from "@/lib/documentApi";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLocation } from "wouter";
 
@@ -60,9 +60,9 @@ export const CandidateRegistration: React.FC = () => {
     documents: {},
   });
   const [loading, setLoading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<Record<string, File | File[]>>({});
   const { user, refreshProfile } = useAuth();
   const [, setLocation] = useLocation();
-  const { uploadFile, uploading } = useFileUpload();
   const { toast } = useToast();
 
   const totalSteps = 4;
@@ -97,7 +97,7 @@ export const CandidateRegistration: React.FC = () => {
     }));
   };
 
-  const handleFileUpload = async (file: File, documentType: string) => {
+  const handleFileSelect = (file: File, documentType: string) => {
     // Validate file type
     if (!allowedFileTypes.includes(file.type)) {
       toast({
@@ -119,18 +119,25 @@ export const CandidateRegistration: React.FC = () => {
       return;
     }
 
-    // Store file information locally (without external storage)
     const fileInfo = {
       name: file.name,
       size: file.size,
       type: file.type,
       lastModified: file.lastModified,
-      uploadedAt: new Date().toISOString()
+      uploadedAt: new Date().toISOString(),
     };
 
-    updateFormData("documents", { 
-      ...formData.documents, 
-      [documentType]: JSON.stringify(fileInfo)
+    setSelectedFiles(prev => {
+      if (documentType === 'certificates') {
+        const arr = (prev[documentType] as File[] | undefined) || [];
+        return { ...prev, [documentType]: [...arr, file] };
+      }
+      return { ...prev, [documentType]: file };
+    });
+
+    updateFormData('documents', {
+      ...formData.documents,
+      [documentType]: JSON.stringify(fileInfo),
     });
 
     toast({
@@ -170,9 +177,28 @@ export const CandidateRegistration: React.FC = () => {
 
     setLoading(true);
     try {
+      const uploadedDocs: Record<string, any> = {};
+      if (selectedFiles.aadhaar) {
+        const res = await uploadDocument('candidate', 'aadhar', selectedFiles.aadhaar as File);
+        uploadedDocs.aadhaar = res.document;
+      }
+      if (selectedFiles.pan) {
+        const res = await uploadDocument('candidate', 'pan', selectedFiles.pan as File);
+        uploadedDocs.pan = res.document;
+      }
+      if (selectedFiles.resume) {
+        const res = await uploadDocument('candidate', 'resume', selectedFiles.resume as File);
+        uploadedDocs.resume = res.document;
+      }
+      if (selectedFiles.certificates) {
+        const res = await uploadCertificates(selectedFiles.certificates as File[]);
+        uploadedDocs.certificates = res.documents;
+      }
+
       await apiRequest("/api/candidates", "POST", {
         userId: user?.uid,
         ...formData,
+        documents: uploadedDocs,
       });
 
       toast({
@@ -494,7 +520,7 @@ export const CandidateRegistration: React.FC = () => {
                       accept=".pdf,.jpg,.jpeg,.png,image/jpeg,image/png,application/pdf"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) handleFileUpload(file, docType);
+                        if (file) handleFileSelect(file, docType);
                       }}
                       className="hidden"
                       id={`upload-${docType}`}
@@ -543,7 +569,7 @@ export const CandidateRegistration: React.FC = () => {
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={loading || uploading}
+              disabled={loading}
             >
               {loading ? "Saving..." : currentStep === totalSteps ? "Complete Profile" : "Continue"}
             </Button>
