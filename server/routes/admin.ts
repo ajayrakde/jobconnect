@@ -265,22 +265,26 @@ adminRouter.get('/employers/:id/documents/:docKey', authenticateUser, asyncHandl
   const id = parseInt(req.params.id);
   const key = req.params.docKey;
   const employer = await storage.getEmployer(id);
-  const value = employer?.documents && (employer.documents as any)[key];
-  if (!value) return res.status(404).json({ message: 'Document not found' });
-  try {
-    const doc = JSON.parse(value as any);
-    if (doc.data) {
-      const base = doc.data.split(',')[1] || doc.data;
-      const buffer = Buffer.from(base, 'base64');
-      res.setHeader('Content-Type', doc.type || 'application/octet-stream');
-      res.setHeader('Content-Disposition', `attachment; filename="${doc.name || key}"`);
-      return res.send(buffer);
-    }
-    if (doc.url) {
-      return res.redirect(doc.url);
-    }
-  } catch {}
-  res.status(404).json({ message: 'Document not found' });
+  if (!employer) {
+    return res.status(404).json({ message: 'Employer not found' });
+  }
+
+  const empUser = await storage.getUser(employer.userId);
+  if (!empUser?.firebaseUid) {
+    return res.status(404).json({ message: 'Document not found' });
+  }
+
+  const filename = req.query.filename as string | undefined;
+  const docs = await fileStorage.listDocuments('employer', empUser.firebaseUid);
+  const doc = docs.find(d => d.type === key && (!filename || d.filename === filename));
+  if (!doc) {
+    return res.status(404).json({ message: 'Document not found' });
+  }
+
+  const file = await fileStorage.downloadDocument('employer', empUser.firebaseUid, key, doc.filename);
+  res.setHeader('Content-Type', file.contentType);
+  res.setHeader('Content-Disposition', `attachment; filename="${doc.filename}"`);
+  res.send(file.data);
 }));
 
 adminRouter.get('/unverified-candidates', authenticateUser, asyncHandler(async (req: any, res) => {
@@ -561,22 +565,26 @@ adminRouter.get('/candidates/:id/documents/:docKey', authenticateUser, asyncHand
   const id = parseInt(req.params.id);
   const key = req.params.docKey;
   const candidate = await storage.getCandidate(id);
-  const value = candidate?.documents && (candidate.documents as any)[key];
-  if (!value) return res.status(404).json({ message: 'Document not found' });
-  try {
-    const doc = JSON.parse(value as any);
-    if (doc.data) {
-      const base = doc.data.split(',')[1] || doc.data;
-      const buffer = Buffer.from(base, 'base64');
-      res.setHeader('Content-Type', doc.type || 'application/octet-stream');
-      res.setHeader('Content-Disposition', `attachment; filename="${doc.name || key}"`);
-      return res.send(buffer);
-    }
-    if (doc.url) {
-      return res.redirect(doc.url);
-    }
-  } catch {}
-  res.status(404).json({ message: 'Document not found' });
+  if (!candidate) {
+    return res.status(404).json({ message: 'Candidate not found' });
+  }
+
+  const candUser = await storage.getUser(candidate.userId);
+  if (!candUser?.firebaseUid) {
+    return res.status(404).json({ message: 'Document not found' });
+  }
+
+  const filename = req.query.filename as string | undefined;
+  const docs = await fileStorage.listDocuments('candidate', candUser.firebaseUid);
+  const doc = docs.find(d => d.type === key && (!filename || d.filename === filename));
+  if (!doc) {
+    return res.status(404).json({ message: 'Document not found' });
+  }
+
+  const file = await fileStorage.downloadDocument('candidate', candUser.firebaseUid, key, doc.filename);
+  res.setHeader('Content-Type', file.contentType);
+  res.setHeader('Content-Disposition', `attachment; filename="${doc.filename}"`);
+  res.send(file.data);
 }));
 
 adminRouter.get('/jobs/:jobId/matches', authenticateUser, asyncHandler(async (req: any, res) => {
