@@ -52,7 +52,7 @@ export const CandidateRegistration: React.FC = () => {
     address: "",
     emergencyContact: "",
     qualifications: [{ degree: "", institution: "", year: "", percentage: "" }],
-    experience: [{ company: "", position: "", duration: "", description: "" }],
+    experience: [],
     skills: [],
     languages: [],
     expectedSalary: 0,
@@ -153,7 +153,13 @@ export const CandidateRegistration: React.FC = () => {
       case 2:
         return formData.qualifications.some(q => q.degree && q.institution);
       case 3:
-        return formData.skills.length > 0;
+        const experienceValid = formData.experience.every(exp => {
+          const values = [exp.company, exp.position, exp.duration, exp.description];
+          const filled = values.filter(v => v && v.toString().trim() !== "").length;
+          if (filled === 0) return true;
+          return !!(exp.company && exp.position && exp.duration);
+        });
+        return formData.skills.length > 0 && experienceValid;
       case 4:
         return formData.expectedSalary > 0;
       default:
@@ -195,9 +201,14 @@ export const CandidateRegistration: React.FC = () => {
         uploadedDocs.certificates = res.documents;
       }
 
+      const cleanedExperience = formData.experience.filter(exp =>
+        Object.values(exp).some(v => v && v.toString().trim() !== "")
+      );
+
       await apiRequest("/api/candidates", "POST", {
         userId: user?.uid,
         ...formData,
+        experience: cleanedExperience,
         documents: uploadedDocs,
       });
 
@@ -379,15 +390,13 @@ export const CandidateRegistration: React.FC = () => {
                 <Card key={index} className="p-4 mb-4">
                   <div className="flex justify-between items-center mb-4">
                     <h5 className="font-medium">Experience {index + 1}</h5>
-                    {formData.experience.length > 1 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeArrayItem("experience", index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeArrayItem("experience", index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
