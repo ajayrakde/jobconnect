@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { insertUserSchema } from '@shared/zod';
+import { registerUserSchema } from '@shared/zod';
 import type { InsertUser } from '@shared/types';
 import { authenticateUser } from '../middleware/authenticate';
 import { asyncHandler } from '../utils/asyncHandler';
@@ -8,10 +8,10 @@ import { UserRepository, CandidateRepository, EmployerRepository } from '../repo
 
 export const authRouter = Router();
 
-authRouter.post('/register', 
-  validateBody(insertUserSchema),
+authRouter.post('/register',
+  validateBody(registerUserSchema),
   asyncHandler(async (req, res) => {
-    const userData = req.body as any;
+    const { password, ...userData } = req.body as any;
     
     const existingUserByUid = await UserRepository.findByFirebaseUid(userData.firebaseUid);
     if (existingUserByUid) {

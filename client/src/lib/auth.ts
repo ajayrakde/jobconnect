@@ -4,6 +4,10 @@ import {
   signInWithPhoneNumber,
   RecaptchaVerifier,
   ConfirmationResult,
+  GoogleAuthProvider,
+  signInWithPopup,
+  sendEmailVerification,
+  reload,
   signOut,
   onAuthStateChanged,
   User
@@ -28,6 +32,32 @@ export class AuthService {
       return result.user;
     } catch (error) {
       throw new Error(`Email sign-up failed: ${error}`);
+    }
+  }
+
+  async signInWithGoogle() {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      return result.user;
+    } catch (error) {
+      throw new Error(`Google sign-in failed: ${error}`);
+    }
+  }
+
+  async sendVerificationEmail(user: User) {
+    try {
+      await sendEmailVerification(user);
+    } catch (error) {
+      throw new Error(`Sending verification email failed: ${error}`);
+    }
+  }
+
+  async reloadUser(user: User) {
+    try {
+      await reload(user);
+    } catch (error) {
+      throw new Error(`Reload user failed: ${error}`);
     }
   }
 

@@ -20,7 +20,7 @@ interface RegisterModalProps {
   defaultRole?: string;
 }
 
-export const RegisterModal: React.FC<RegisterModalProps> = ({ 
+export const RegisterModal: React.FC<RegisterModalProps> = ({
   isOpen, 
   onClose, 
   defaultRole = "candidate" 
@@ -43,21 +43,43 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/;
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!emailRegex.test(formData.email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!passwordRegex.test(formData.password)) {
+      toast({
+        title: "Weak Password",
+        description:
+          "Password must be at least 8 characters and include uppercase, lowercase and special character.",
+        variant: "destructive",
+      });
+      return;
+    }
     setLoading(true);
 
     try {
       const user = await authService.signUpWithEmail(formData.email, formData.password);
-      
+      await authService.sendVerificationEmail(user);
+
       // Create user profile in backend
       await apiRequest("/api/auth/register", "POST", {
         firebaseUid: user.uid,
         email: formData.email,
+        password: formData.password,
         phone: formData.phone || null,
         name: formData.name,
         role: formData.role,
@@ -65,7 +87,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
 
       toast({
         title: "Success",
-        description: "Account created successfully!",
+        description: "Check your email to verify your account.",
       });
       onClose();
     } catch (error: any) {
@@ -128,16 +150,46 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     setLoading(true);
     try {
       const user = await authService.verifyOTP(confirmationResult, otp);
-      
+      if (formData.email) {
+        await authService.sendVerificationEmail(user);
+      }
+
       // Create user profile in backend
       await apiRequest("/api/auth/register", "POST", {
         firebaseUid: user.uid,
         email: formData.email || "",
+        password: formData.password,
         phone: formData.phone,
         name: formData.name,
         role: formData.role,
       });
 
+      toast({
+        title: "Success",
+        description: "Check your email to verify your account.",
+      });
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to verify OTP. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleRegister = async () => {
+    setLoading(true);
+    try {
+      const user = await authService.signInWithGoogle();
+      await apiRequest("/api/auth/register", "POST", {
+        firebaseUid: user.uid,
+        email: user.email,
+        name: user.displayName,
+        role: formData.role,
+      });
       toast({
         title: "Success",
         description: "Account created successfully!",
@@ -146,7 +198,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to verify OTP. Please try again.",
+        description: "Google sign-in failed.",
         variant: "destructive",
       });
     } finally {
@@ -225,6 +277,10 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
             className="w-full"
           >
             {loading ? "Creating Account..." : "Create Account"}
+          </Button>
+
+          <Button onClick={handleGoogleRegister} className="w-full" variant="outline">
+            Continue with Google
           </Button>
 
           <div id="recaptcha-container"></div>

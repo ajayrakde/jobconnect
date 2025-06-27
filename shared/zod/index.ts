@@ -6,3 +6,4 @@ export * from './applications';
 export * from './shortlists';
 export * from './adminInviteCodes';
 export * from './searchAnalytics';
+export * from './auth';
