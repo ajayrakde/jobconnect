@@ -147,7 +147,8 @@ export const AdminCandidateDetails: React.FC = () => {
                   return null;
                 })
                 .filter(Boolean) as any}
-              baseUrl={`/api/admin/candidates/${id}/documents`}
+              userType="candidate"
+              uid={id}
               hideFilename
             />
           </CardContent>
