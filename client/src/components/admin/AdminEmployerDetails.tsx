@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Building2 } from "lucide-react";
 import { BackButton } from "@/components/common";
+import { DocumentList } from "@/components/common/DocumentList";
 
 export const AdminEmployerDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -93,40 +94,25 @@ export const AdminEmployerDetails: React.FC = () => {
               Documents
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {Object.entries(employer.documents).map(([key, value]) => {
-              let doc: any = null;
-              if (typeof value === "string") {
-                try {
-                  doc = JSON.parse(value);
-                } catch {
-                  /* ignore */
-                }
-              } else if (value && typeof value === "object") {
-                doc = value;
-              }
-
-              if (doc && typeof doc === "object" && "filename" in doc) {
-                return (
-                  <div key={key} className="flex items-center justify-between">
-                    <span className="capitalize text-muted-foreground">{key}:</span>
-                    <a
-                      href={`/api/admin/employers/${id}/documents/${key}`}
-                      className="text-primary hover:underline"
-                    >
-                      Download {doc.filename || key}
-                    </a>
-                  </div>
-                );
-              }
-
-              return (
-                <div key={key} className="flex items-center justify-between">
-                  <span className="capitalize text-muted-foreground">{key}:</span>
-                  <span className="font-medium">{String(value)}</span>
-                </div>
-              );
-            })}
+          <CardContent>
+            <DocumentList
+              docs={Object.entries(employer.documents)
+                .map(([key, value]) => {
+                  let doc: any = null;
+                  if (typeof value === "string") {
+                    try { doc = JSON.parse(value); } catch {}
+                  } else if (value && typeof value === "object") {
+                    doc = value;
+                  }
+                  if (doc && typeof doc === "object" && "filename" in doc) {
+                    return { type: key, filename: doc.filename, uploadedAt: doc.uploadedAt || "" };
+                  }
+                  return null;
+                })
+                .filter(Boolean) as any}
+              baseUrl={`/api/admin/employers/${id}/documents`}
+              hideFilename
+            />
           </CardContent>
         </Card>
       )}

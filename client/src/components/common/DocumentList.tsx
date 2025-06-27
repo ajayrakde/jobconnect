@@ -7,17 +7,44 @@ import { useToast } from '@/hooks/use-toast';
 type Doc = { type: string; filename: string; uploadedAt: string };
 
 interface Props {
-  userType: 'candidate' | 'employer';
+  userType?: 'candidate' | 'employer';
   docs: Doc[];
   uid?: string;
+  baseUrl?: string;
+  hideFilename?: boolean;
 }
 
-export const DocumentList: React.FC<Props> = ({ userType, docs, uid }) => {
+export const DocumentList: React.FC<Props> = ({
+  userType,
+  docs,
+  uid,
+  baseUrl,
+  hideFilename,
+}) => {
   const { toast } = useToast();
 
   const handleDownload = async (doc: Doc) => {
     try {
-      const { blob, name } = await downloadDocument(userType, doc.type, doc.filename, uid);
+      let blob: Blob;
+      let name: string = doc.filename;
+
+      if (baseUrl) {
+        const res = await fetch(`${baseUrl}/${doc.type}?filename=${encodeURIComponent(doc.filename)}`, {
+          credentials: 'include',
+        });
+        if (!res.ok) throw new Error('Unable to download document');
+        blob = await res.blob();
+        const disposition = res.headers.get('Content-Disposition') || '';
+        const match = disposition.match(/filename="?([^";]+)"?/);
+        if (match) name = match[1];
+      } else if (userType) {
+        const result = await downloadDocument(userType, doc.type, doc.filename, uid);
+        blob = result.blob;
+        name = result.name;
+      } else {
+        throw new Error('Invalid download configuration');
+      }
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -46,7 +73,9 @@ export const DocumentList: React.FC<Props> = ({ userType, docs, uid }) => {
         >
           <div className="text-sm">
             <span className="font-medium capitalize mr-2">{doc.type}</span>
-            <span className="text-muted-foreground text-xs">{doc.filename}</span>
+            {!hideFilename && (
+              <span className="text-muted-foreground text-xs">{doc.filename}</span>
+            )}
           </div>
           <Button size="sm" variant="ghost" onClick={() => handleDownload(doc)}>
             <Download className="h-4 w-4 mr-1" /> Download
