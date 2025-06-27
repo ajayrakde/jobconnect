@@ -25,6 +25,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { listDocuments } from "@/lib/documentApi";
+import { DocumentList } from "@/components/common/DocumentList";
 
 interface EmployerData {
   id: number;
@@ -51,6 +53,11 @@ export const EmployerProfile: React.FC = () => {
 
   const { data, isLoading } = useQuery<EmployerData>({
     queryKey: ["/api/employers/profile"],
+    enabled: true,
+  });
+  const { data: docs } = useQuery({
+    queryKey: ["/api/employers/documents"],
+    queryFn: () => listDocuments('employer'),
     enabled: true,
   });
 
@@ -483,6 +490,14 @@ export const EmployerProfile: React.FC = () => {
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="text-foreground">Documents</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DocumentList userType="employer" docs={(docs as any)?.documents || []} />
         </CardContent>
       </Card>
     </div>

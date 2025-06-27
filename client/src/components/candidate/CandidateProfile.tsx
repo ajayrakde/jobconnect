@@ -4,12 +4,19 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useQuery } from "@tanstack/react-query";
+import { DocumentList } from "@/components/common/DocumentList";
+import { listDocuments } from "@/lib/documentApi";
 import { Link } from "wouter";
 
 export const CandidateProfile: React.FC = () => {
   const { userProfile } = useAuth();
   const { data, isLoading } = useQuery({
     queryKey: ["/api/candidates/profile"],
+    enabled: !!userProfile?.id,
+  });
+  const { data: docs } = useQuery({
+    queryKey: ["/api/candidates/documents"],
+    queryFn: () => listDocuments('candidate'),
     enabled: !!userProfile?.id,
   });
   const [section, setSection] = useState("personal");
@@ -41,6 +48,7 @@ export const CandidateProfile: React.FC = () => {
     { id: "qualifications", label: "Qualifications" },
     { id: "experience", label: "Experience" },
     { id: "skills", label: "Skills" },
+    { id: "documents", label: "Documents" },
   ];
 
   return (
@@ -250,6 +258,17 @@ export const CandidateProfile: React.FC = () => {
                     : "Not specified"}
                 </p>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {section === "documents" && (
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-foreground">Documents</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DocumentList userType="candidate" docs={(docs as any)?.documents || []} />
             </CardContent>
           </Card>
         )}
