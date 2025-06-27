@@ -132,8 +132,18 @@ export const AdminCandidateDetails: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-2">
             {Object.entries(candidate.documents).map(([key, value]) => {
-              try {
-                const doc = JSON.parse(value as unknown as string);
+              let doc: any = null;
+              if (typeof value === "string") {
+                try {
+                  doc = JSON.parse(value);
+                } catch {
+                  /* ignore */
+                }
+              } else if (value && typeof value === "object") {
+                doc = value;
+              }
+
+              if (doc && typeof doc === "object" && "filename" in doc) {
                 return (
                   <div key={key} className="flex items-center justify-between">
                     <span className="capitalize text-muted-foreground">{key}:</span>
@@ -141,18 +151,18 @@ export const AdminCandidateDetails: React.FC = () => {
                       href={`/api/admin/candidates/${id}/documents/${key}`}
                       className="text-primary hover:underline"
                     >
-                      Download {doc?.name || key}
+                      Download {doc.filename || key}
                     </a>
-                 </div>
-                );
-              } catch {
-                return (
-                  <div key={key} className="flex items-center justify-between">
-                    <span className="capitalize text-muted-foreground">{key}:</span>
-                    <span className="font-medium">{value as string}</span>
                   </div>
                 );
               }
+
+              return (
+                <div key={key} className="flex items-center justify-between">
+                  <span className="capitalize text-muted-foreground">{key}:</span>
+                  <span className="font-medium">{String(value)}</span>
+                </div>
+              );
             })}
           </CardContent>
         </Card>
