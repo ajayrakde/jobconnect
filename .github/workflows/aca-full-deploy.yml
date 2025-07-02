@@ -45,7 +45,7 @@ jobs:
 
       - name: Create or validate Azure resources
         run: |
-          az group create --name "$ENV-${{ secrets.RESOURCE_GROUP }}" --location ${{ secrets.LOCATION }}
+          az group create --name "$ENV-${{ secrets.RESOURCE_GROUP }}" --location centralIndia
           az acr show --name "$ENV-${{ secrets.ACR_NAME }}" --resource-group "$ENV-${{ secrets.RESOURCE_GROUP }}" || \
             az acr create --name "$ENV-${{ secrets.ACR_NAME }}" --resource-group "$ENV-${{ secrets.RESOURCE_GROUP }}" --sku Basic
           az keyvault show --name "$ENV-${{ secrets.KEY_VAULT_NAME }}" --resource-group "$ENV-${{ secrets.RESOURCE_GROUP }}" || \
